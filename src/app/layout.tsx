@@ -1,16 +1,16 @@
 import type { Metadata, Viewport } from "next";
-import { Fraunces, Work_Sans } from "next/font/google";
+import { Playfair_Display, DM_Sans } from "next/font/google";
 import "./globals.css";
 
-// Tipografías PROVISIONALES: el documento maestro deja pendientes los nombres
-// definitivos. La dirección sí está fijada: serif editorial + sans humanista.
-const editorial = Fraunces({
+// El prototipo pide Bodoni 72 y Avenir Next, que solo existen en dispositivos
+// Apple. Estas son sus equivalentes web y ya venían cargadas en el propio
+// prototipo, así que la app se ve igual en Android y en Windows.
+const editorial = Playfair_Display({
   subsets: ["latin"],
   variable: "--fuente-editorial",
-  axes: ["SOFT", "WONK", "opsz"],
 });
 
-const interfaz = Work_Sans({
+const interfaz = DM_Sans({
   subsets: ["latin"],
   variable: "--fuente-interfaz",
 });
@@ -42,7 +42,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#FBF6EE",
+  themeColor: "#F6F0E5",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",

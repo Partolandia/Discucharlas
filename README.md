@@ -12,8 +12,10 @@ El ciclo que sostiene el producto es **propuesta → votación → sesión → m
 | Esquema de base de datos, RLS y reglas de negocio | Listo y probado |
 | Landing pública + instalación PWA | Listo |
 | Autenticación (entrar, salir, recuperar contraseña) | Listo |
-| Cascarón de navegación e Inicio | Listo |
-| Calendario, Propuestas, Comunidad, Club, Administración | En construcción |
+| Sistema visual con los tokens del prototipo V135 | Listo |
+| Cascarón de navegación, Inicio y Calendario | Listo |
+| Detalle de discucharla (RSVP, aportes, notas, comentarios) | Listo |
+| Propuestas, Comunidad, Club, Administración | En construcción |
 
 ## Stack
 
@@ -96,8 +98,27 @@ Vienen del documento maestro y del paquete de handoff:
 
 Marcados como PENDIENTE en el documento maestro y **no inventados** aquí:
 
-- Valores HEX exactos y tipografías definitivas. Los actuales son provisionales
-  y viven todos en `src/app/globals.css`; los roles de color por sección sí son
-  los aprobados.
+- Fotografía y collages reales para los headers editoriales.
 Ya resueltos por el club (3 de septiembre de 2026): sí hay rol de propietaria,
 y las invitaciones caducan un día antes de la próxima discucharla.
+
+## Sistema visual
+
+Los tokens de `src/app/globals.css` salen del prototipo V135 aprobado. Nada más
+en la app codifica un color.
+
+| Sección | Color |
+| :-- | :-- |
+| Inicio | Coral `#F05D50` |
+| Calendario | Rosado `#C56F79` |
+| Propuestas | Olivo `#7F8750` |
+| Comunidad | Beige `#F7F0E5` con acento `#6F8F95` |
+| Club | Ocre `#C68A3A` |
+| Nuestras discucharlas y Guía | Morado oscuro `#54336E` |
+
+El prototipo declara la votación en violeta y luego la sobrescribe con el bloque
+olivo; nos quedamos con el olivo, que es además lo que fija el documento maestro.
+
+Las tipografías del prototipo (Bodoni 72 y Avenir Next) solo existen en
+dispositivos Apple. Usamos Playfair Display y DM Sans, que el propio prototipo ya
+cargaba, para que se vea igual en Android y Windows.

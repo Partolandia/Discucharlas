@@ -14,10 +14,22 @@ function esPublica(ruta: string) {
  */
 export async function middleware(peticion: NextRequest) {
   let respuesta = NextResponse.next({ request: peticion });
+  const ruta = peticion.nextUrl.pathname;
+
+  // La landing es pública y estática: no gasta una llamada de sesión.
+  if (ruta === "/") return respuesta;
+
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const llave = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  // Sin Supabase configurado no hay sesión que refrescar. Dejamos pasar en vez
+  // de tumbar el sitio entero: las páginas que sí necesitan datos fallarán solas
+  // con un mensaje claro, y las públicas siguen sirviéndose.
+  if (!url || !llave) return respuesta;
 
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    url,
+    llave,
     {
       cookies: {
         getAll: () => peticion.cookies.getAll(),
@@ -37,8 +49,6 @@ export async function middleware(peticion: NextRequest) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
-  const ruta = peticion.nextUrl.pathname;
 
   if (!user && !esPublica(ruta)) {
     const destino = peticion.nextUrl.clone();

@@ -8,8 +8,8 @@ const svg = readFileSync("public/icono.svg");
 // para que Android pueda recortarlo en círculo sin comerse la letra.
 const maskable = Buffer.from(`
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" fill="#DD5A44"/>
-  <text x="256" y="262" fill="#FBF6EE" font-family="Georgia, serif"
+  <rect width="512" height="512" fill="#F05D50"/>
+  <text x="256" y="262" fill="#F6F0E5" font-family="Georgia, serif"
         font-size="200" text-anchor="middle" dominant-baseline="central">D</text>
 </svg>`);
 

@@ -47,7 +47,7 @@ const SECCIONES = [
   },
   {
     nombre: "Comunidad",
-    color: "var(--color-comunidad-acento)",
+    color: "var(--color-comunidad-fuerte)",
     texto: "La conversación que sigue después de colgar los audífonos.",
   },
   {
@@ -69,17 +69,17 @@ export default function Landing() {
         <div
           aria-hidden
           className="absolute -top-40 -right-28 h-72 w-72 rounded-full opacity-80 sm:-top-32 sm:-right-24 sm:h-[26rem] sm:w-[26rem]"
-          style={{ background: "var(--color-inicio-claro)" }}
+          style={{ background: "var(--color-inicio-suave)" }}
         />
         <div
           aria-hidden
           className="absolute -left-24 top-64 h-56 w-56 rounded-full opacity-70 sm:top-40 sm:-left-28 sm:h-72 sm:w-72"
-          style={{ background: "var(--color-club-claro)" }}
+          style={{ background: "var(--color-club-medio)" }}
         />
         <div
           aria-hidden
           className="absolute -bottom-24 right-1/4 h-52 w-52 rotate-12 opacity-60 sm:right-1/3 sm:h-64 sm:w-64"
-          style={{ background: "var(--color-calendario-claro)", borderRadius: "44% 56% 61% 39%" }}
+          style={{ background: "var(--color-calendario-medio)", borderRadius: "44% 56% 61% 39%" }}
         />
         {/* Veladura de papel: deja ver el collage pero garantiza que la
             tipografía siempre caiga sobre fondo legible. */}

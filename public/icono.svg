@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Discucharlas">
-  <rect width="512" height="512" rx="112" fill="#DD5A44"/>
-  <circle cx="256" cy="256" r="150" fill="none" stroke="#FBF6EE" stroke-width="16" opacity="0.5"/>
-  <text x="256" y="256" fill="#FBF6EE" font-family="Georgia, 'Times New Roman', serif"
+  <rect width="512" height="512" rx="112" fill="#F05D50"/>
+  <circle cx="256" cy="256" r="150" fill="none" stroke="#F6F0E5" stroke-width="16" opacity="0.5"/>
+  <text x="256" y="256" fill="#F6F0E5" font-family="Georgia, 'Times New Roman', serif"
         font-size="248" font-weight="500" text-anchor="middle" dominant-baseline="central">D</text>
 </svg>

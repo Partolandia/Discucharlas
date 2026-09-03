@@ -27,8 +27,9 @@ particular valores HEX, tipografías, métricas e integraciones.
 - Rutas y nombres de dominio en español (`/propuestas`, `/discucharla/[id]`).
 - Copy cálido y directo; el vocabulario del club está en el documento maestro
   ("¿Vienes?", "¿Qué llevas?", "Nuestro círculo", "Volver a inicio").
-- El color vive en tokens (`src/app/globals.css`). Nada de HEX sueltos en
-  componentes.
+- El color vive en tokens (`src/app/globals.css`), extraídos del prototipo
+  V135. Nada de HEX sueltos en componentes.
+- Propuestas va en olivo, nunca en lila o violeta.
 - Fechas en UTC en la base; se muestran en `CLUB_TIMEZONE`.
 
 ## Antes de dar algo por terminado

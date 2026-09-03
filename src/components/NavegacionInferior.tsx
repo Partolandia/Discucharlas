@@ -16,7 +16,7 @@ const DESTINOS = [
   { href: "/inicio", texto: "Inicio", Icono: IconoInicio, color: "var(--color-inicio)" },
   { href: "/calendario", texto: "Calendario", Icono: IconoCalendario, color: "var(--color-calendario)" },
   { href: "/propuestas", texto: "Propuestas", Icono: IconoPropuestas, color: "var(--color-propuestas)" },
-  { href: "/comunidad", texto: "Comunidad", Icono: IconoComunidad, color: "var(--color-comunidad-acento)" },
+  { href: "/comunidad", texto: "Comunidad", Icono: IconoComunidad, color: "var(--color-comunidad-fuerte)" },
   { href: "/club", texto: "Club", Icono: IconoClub, color: "var(--color-club)" },
 ] as const;
 

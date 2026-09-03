@@ -155,7 +155,7 @@ export default async function Inicio() {
                   href={`/comunidad/${hilo.id}`}
                   className="block rounded-[var(--radius-suave)] border border-[var(--color-linea)] bg-[var(--color-comunidad)]/50 px-5 py-4"
                 >
-                  <p className="text-[14px] text-[var(--color-comunidad-acento)]">
+                  <p className="text-[14px] text-[var(--color-comunidad-fuerte)]">
                     {nombreDe(directorio, hilo.user_id)}
                   </p>
                   <p className="mt-1 line-clamp-2 text-[16px] leading-relaxed text-[var(--color-tinta)]">

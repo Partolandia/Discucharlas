@@ -2,39 +2,73 @@
 
 /* ---------------------------------------------------------------------------
    Tokens Discucharlas
-   Los roles de color están CONFIRMADOS por el documento maestro (una identidad
-   por sección dentro de una misma familia). Los valores HEX son PROVISIONALES:
-   el maestro los deja pendientes de extraerse del prototipo V135 aprobado.
-   Para cambiarlos basta editar este bloque; nada más en la app codifica color.
+   Extraídos del prototipo V135 aprobado. Los nombres de variable son nuestros;
+   los valores son los del prototipo. Para cambiar el sistema visual se edita
+   este bloque: ningún componente codifica un color a mano.
+
+   El prototipo declara la votación en violeta y luego la sobrescribe con el
+   bloque olivo. Nos quedamos con el olivo, que es además lo que fija el
+   documento maestro ("no usar lila como protagonista de Propuestas").
 --------------------------------------------------------------------------- */
 @theme {
-  /* base editorial cálida */
-  --color-papel:        #FBF6EE;
-  --color-papel-hondo:  #F3EADC;
-  --color-tinta:        #241D1A;
-  --color-tinta-suave:  #6B5F58;
-  --color-linea:        #E3D7C6;
+  /* base editorial */
+  --color-papel:        #F6F0E5;
+  --color-papel-hondo:  #F1E7D8;
+  --color-blanco:       #FFFDFA;
+  --color-tinta:        #24152E;  /* aubergine */
+  --color-tinta-suave:  #756D72;
+  --color-linea:        #DED3C5;
 
-  /* color protagonista por sección */
-  --color-inicio:       #DD5A44;  /* coral */
-  --color-inicio-claro: #F4A18F;
-  --color-calendario:   #D97A93;  /* rosado */
-  --color-calendario-claro: #F0BDCA;
-  --color-propuestas:   #2E5D4E;  /* verdes */
-  --color-propuestas-claro: #6E9B84;
-  --color-comunidad:    #E9DCC6;  /* beige editorial */
-  --color-comunidad-acento: #B4693F;
-  --color-club:         #E0A02F;  /* amarillo / ocre */
-  --color-club-claro:   #F2CE85;
-  --color-subpagina:    #3A2B48;  /* morado oscuro: Nuestras discucharlas, Guía */
+  /* Inicio — coral */
+  --color-inicio:        #F05D50;
+  --color-inicio-fuerte: #D95746;
+  --color-inicio-suave:  #F6D8CF;
+
+  /* Calendario — rosado */
+  --color-calendario:        #C56F79;
+  --color-calendario-fuerte: #A95563;
+  --color-calendario-suave:  #F8ECEC;
+  --color-calendario-medio:  #E6CDD4;
+
+  /* Propuestas — olivo */
+  --color-propuestas:        #7F8750;
+  --color-propuestas-fuerte: #646B3D;
+  --color-propuestas-hondo:  #3F4528;
+  --color-propuestas-suave:  #EEF0E1;
+
+  /* Comunidad — beige editorial con acento propio */
+  --color-comunidad:        #6F8F95;
+  --color-comunidad-fuerte: #476D74;
+  --color-comunidad-suave:  #E8EEEE;
+  --color-comunidad-crema:  #F7F0E5;
+
+  /* Club — amarillo / ocre */
+  --color-club:        #C68A3A;
+  --color-club-fuerte: #A66D28;
+  --color-club-suave:  #F7EEE1;
+  --color-club-medio:  #EBE1CF;
+
+  /* Subpáginas de Inicio — morado oscuro */
+  --color-subpagina:        #54336E;
+  --color-subpagina-fuerte: #43245E;
+
+  /* Memoria del club */
+  --color-archivo:        #8D6670;
+  --color-archivo-suave:  #E7D4D8;
+
+  /* Administración e invitaciones */
+  --color-admin-oro:  #D7A51C;
+  --color-invitar:    #6D2F43;
 
   /* estados */
-  --color-exito:  #2E5D4E;
-  --color-aviso:  #B4693F;
-  --color-error:  #A83A2C;
+  --color-exito:  #52663E;
+  --color-aviso:  #A56C11;
+  --color-error:  #7A3045;
 
-  --font-editorial: var(--fuente-editorial), Georgia, "Times New Roman", serif;
-  --font-interfaz:  var(--fuente-interfaz), ui-sans-serif, system-ui, sans-serif;
+  /* Bodoni 72 y Avenir Next son fuentes de Apple: en Android y Windows no
+     existen. Usamos las equivalentes web que el propio prototipo ya carga. */
+  --font-editorial: var(--fuente-editorial), "Bodoni 72", Didot, Baskerville, Georgia, serif;
+  --font-interfaz:  var(--fuente-interfaz), "Avenir Next", Avenir, ui-sans-serif, system-ui, sans-serif;
 
   --radius-suave: 14px;
   --radius-tarjeta: 22px;
@@ -60,7 +94,7 @@ body {
 h1, h2, h3, .editorial {
   font-family: var(--font-editorial);
   font-weight: 500;
-  letter-spacing: -0.015em;
+  letter-spacing: -0.01em;
 }
 
 /* Foco visible siempre: requisito de accesibilidad del QA. */
@@ -78,7 +112,7 @@ h1, h2, h3, .editorial {
   }
 }
 
-/* Utilidad: grano de papel para los bloques editoriales. */
+/* Grano de papel para los bloques editoriales. */
 .grano::after {
   content: "";
   position: absolute;
