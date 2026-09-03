@@ -15,11 +15,13 @@ export function CabeceraApp({
   nombre,
   inicial,
   sinLeer,
+  esAdmin,
   seccionForzada,
 }: {
   nombre: string;
   inicial: string;
   sinLeer: number;
+  esAdmin: boolean;
   seccionForzada?: ClaveSeccion;
 }) {
   const ruta = usePathname();
@@ -65,9 +67,13 @@ export function CabeceraApp({
           )}
         </Link>
 
-        <Link href="/ajustes" aria-label="Ajustes" className="shrink-0 p-1">
-          <IconoAjustes className="h-[21px] w-[21px]" />
-        </Link>
+        {/* El engrane lleva a Administración: quien no administra no tiene
+            nada que configurar aquí que no esté en su perfil. */}
+        {esAdmin && (
+          <Link href="/admin" aria-label="Administración" className="shrink-0 p-1">
+            <IconoAjustes className="h-[21px] w-[21px]" />
+          </Link>
+        )}
 
         <Link
           href="/perfil"

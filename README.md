@@ -11,11 +11,14 @@ El ciclo que sostiene el producto es **propuesta → votación → sesión → m
 | :-- | :-- |
 | Esquema de base de datos, RLS y reglas de negocio | Listo y probado |
 | Landing pública + instalación PWA | Listo |
-| Autenticación (entrar, salir, recuperar contraseña) | Listo |
+| Autenticación, alta por invitación y acceso de invitadas | Listo |
 | Sistema visual con los tokens del prototipo V135 | Listo |
-| Cascarón de navegación, Inicio y Calendario | Listo |
-| Detalle de discucharla (RSVP, aportes, notas, comentarios) | Listo |
-| Propuestas, Comunidad, Club, Administración | En construcción |
+| Inicio, Calendario y detalle de la discucharla | Listo |
+| Propuestas con votación, Comunidad y Club | Listo |
+| Administración: discucharlas, votación, integrantes y accesos | Listo |
+| Memoria del club, guía y avisos | Listo |
+| Correo transaccional y exportación a Excel | Pendiente |
+| Collages de los encabezados | Pendiente (ver `public/colaje/`) |
 
 ## Stack
 

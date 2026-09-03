@@ -1,7 +1,7 @@
 import { NavegacionInferior } from "@/components/NavegacionInferior";
 import { CabeceraApp } from "@/components/CabeceraApp";
 import { crearClienteServidor } from "@/lib/supabase/servidor";
-import { exigirIntegrante } from "@/lib/sesion";
+import { exigirIntegrante, esAdministradora } from "@/lib/sesion";
 
 export default async function CascaronIntegrante({
   children,
@@ -22,6 +22,7 @@ export default async function CascaronIntegrante({
         nombre={perfil.first_name}
         inicial={perfil.first_name.charAt(0).toUpperCase()}
         sinLeer={count ?? 0}
+        esAdmin={esAdministradora(perfil)}
       />
       {children}
       <NavegacionInferior />

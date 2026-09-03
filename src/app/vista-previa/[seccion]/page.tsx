@@ -36,7 +36,7 @@ export default async function VistaPrevia({
 
   return (
     <div className="mx-auto min-h-dvh max-w-md pb-28">
-      <CabeceraApp nombre="Isa" inicial="I" sinLeer={2} seccionForzada={clave} />
+      <CabeceraApp nombre="Isa" inicial="I" sinLeer={2} esAdmin seccionForzada={clave} />
 
       <main className="px-5 pb-8">
         {clave === "inicio" ? (
