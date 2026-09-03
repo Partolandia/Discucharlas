@@ -27,32 +27,33 @@ El ciclo que sostiene el producto es **propuesta → votación → sesión → m
 
 ## Primera vez, paso a paso
 
-Todo se corre desde una terminal **dentro de la carpeta del proyecto**. En
-Windows usa PowerShell; en Mac, la Terminal.
+Todo se corre desde una terminal **dentro de la carpeta del proyecto**. Los
+comandos de abajo están escritos para **Git Bash** en Windows, que también
+sirven tal cual en Mac y Linux.
 
 ### 1. Instala lo necesario
 
 - **Node.js 22 LTS** — https://nodejs.org (el instalador por omisión basta).
-- **Git** — https://git-scm.com/downloads
+- **Git para Windows**, que incluye Git Bash — https://git-scm.com/downloads
 
-Cierra y vuelve a abrir la terminal, y comprueba que responden:
+Cierra y vuelve a abrir Git Bash, y comprueba que responden:
 
-```powershell
+```bash
 node -v
 git --version
 ```
 
 ### 2. Baja el proyecto
 
-```powershell
-cd $HOME\Documents
+```bash
+cd ~/Documents
 git clone https://github.com/Partolandia/Discucharlas.git
 cd Discucharlas
 npm install
 ```
 
 A partir de aquí, **todos los comandos se corren dentro de esa carpeta**. Si
-abres una terminal nueva, vuelve con `cd $HOME\Documents\Discucharlas`.
+abres una terminal nueva, vuelve con `cd ~/Documents/Discucharlas`.
 
 ### 3. Conecta la base de datos
 
@@ -64,11 +65,15 @@ No hay que instalar nada más y es el mismo camino que usará producción.
 
 1. Crea un proyecto gratis en https://supabase.com.
 2. En *Project Settings → API*, copia la URL y las dos llaves.
-3. Crea el archivo `.env.local` en la carpeta del proyecto, copiando
-   `.env.example` y llenando los valores.
+3. Crea `.env.local` a partir de la plantilla y llena los valores:
+
+```bash
+cp .env.example .env.local
+```
+
 4. Aplica el esquema:
 
-```powershell
+```bash
 npx supabase login
 npx supabase link --project-ref TU_REF
 npx supabase db push
@@ -78,14 +83,14 @@ npx supabase db push
 
 Instala **Docker Desktop** (https://docker.com) y déjalo abierto. Después:
 
-```powershell
+```bash
 npx supabase start      # imprime la URL y las llaves para .env.local
 npx supabase db reset   # aplica migraciones y contenido inicial
 ```
 
 ### 4. Siembra un club de prueba y arranca
 
-```powershell
+```bash
 npm run sembrar
 npm run dev
 ```
@@ -96,15 +101,15 @@ Abre http://localhost:3000 y entra con `ana@discucharlas.local` y la contraseña
 Si estás en el camino A (nube), el sembrado se niega a correr por accidente
 contra algo que no sea local. Para autorizarlo:
 
-```powershell
-$env:SEMBRAR_EN_SERIO="si"; npm run sembrar
+```bash
+SEMBRAR_EN_SERIO=si npm run sembrar
 ```
 
 ### Después de la primera vez
 
 Solo necesitas esto para trabajar:
 
-```powershell
+```bash
 npm run dev
 ```
 
@@ -112,13 +117,23 @@ Y `npx supabase start` antes, si elegiste el camino B.
 
 ### Ver el sistema visual sin nada de lo anterior
 
-```powershell
+```bash
 npm install
 npm run dev
 ```
 
 Y abre http://localhost:3000/vista-previa/calendario. La landing y la vista
 previa funcionan sin base de datos.
+
+### Si algo se atora en Git Bash
+
+Git Bash no siempre entrega bien el teclado a los programas que hacen preguntas
+interactivas. Si un comando se queda colgado esperando respuesta, repítelo con
+`winpty` delante:
+
+```bash
+winpty npx supabase login
+```
 
 ## Estructura
 
