@@ -25,50 +25,100 @@ El ciclo que sostiene el producto es **propuesta → votación → sesión → m
 - **Vercel** — despliegue.
 - **PWA** — se instala desde el navegador. Sin App Store ni Google Play.
 
-## Poner a correr el proyecto
+## Primera vez, paso a paso
 
-```bash
+Todo se corre desde una terminal **dentro de la carpeta del proyecto**. En
+Windows usa PowerShell; en Mac, la Terminal.
+
+### 1. Instala lo necesario
+
+- **Node.js 22 LTS** — https://nodejs.org (el instalador por omisión basta).
+- **Git** — https://git-scm.com/downloads
+
+Cierra y vuelve a abrir la terminal, y comprueba que responden:
+
+```powershell
+node -v
+git --version
+```
+
+### 2. Baja el proyecto
+
+```powershell
+cd $HOME\Documents
+git clone https://github.com/Partolandia/Discucharlas.git
+cd Discucharlas
 npm install
-cp .env.example .env.local     # y llena las variables
-npm run dev
 ```
 
-### Base de datos
+A partir de aquí, **todos los comandos se corren dentro de esa carpeta**. Si
+abres una terminal nueva, vuelve con `cd $HOME\Documents\Discucharlas`.
 
-Hay dos caminos y el código es idéntico en ambos: solo cambian las variables de entorno.
+### 3. Conecta la base de datos
 
-**A. Supabase local (necesita Docker)**
+Elige un camino. El código es idéntico en los dos: solo cambian tres variables.
 
-```bash
-npx supabase start             # imprime URL y llaves para .env.local
-npx supabase db reset          # aplica supabase/migrations y supabase/seed.sql
-npm run sembrar                # club de demostración: cuentas, sesiones, votación
-```
+**A. Supabase en la nube (recomendado para empezar)**
 
-**B. Supabase en la nube**
+No hay que instalar nada más y es el mismo camino que usará producción.
 
-```bash
-npx supabase link --project-ref <ref>
+1. Crea un proyecto gratis en https://supabase.com.
+2. En *Project Settings → API*, copia la URL y las dos llaves.
+3. Crea el archivo `.env.local` en la carpeta del proyecto, copiando
+   `.env.example` y llenando los valores.
+4. Aplica el esquema:
+
+```powershell
+npx supabase login
+npx supabase link --project-ref TU_REF
 npx supabase db push
 ```
 
-La primera cuenta que se crea en un club vacío queda como **propietaria**; el
-resto entra como integrante. Con `npm run sembrar` la propietaria es
-`ana@discucharlas.local` / `discucharlas123`.
+**B. Supabase local (todo en tu máquina, necesita Docker)**
 
-### Probar las reglas sin Docker
+Instala **Docker Desktop** (https://docker.com) y déjalo abierto. Después:
 
-`npm run db:test` levanta el esquema sobre un Postgres normal (con un stub
-mínimo de `auth`) y corre 43 aserciones de aislamiento de datos y reglas de
-negocio: notas privadas, votos, datos de contacto, borradores, propietaria,
-última administradora, caducidad de invitaciones, una sola discucharla próxima
-y una sola votación activa.
+```powershell
+npx supabase start      # imprime la URL y las llaves para .env.local
+npx supabase db reset   # aplica migraciones y contenido inicial
+```
 
-### Tipos de TypeScript
+### 4. Siembra un club de prueba y arranca
 
-`npm run tipos` regenera `src/lib/supabase/tipos.ts` desde el esquema real
-(tablas, vistas, relaciones y funciones RPC). Córrelo después de cada
-migración. Con Docker, `npx supabase gen types typescript --local` hace lo mismo.
+```powershell
+npm run sembrar
+npm run dev
+```
+
+Abre http://localhost:3000 y entra con `ana@discucharlas.local` y la contraseña
+`discucharlas123`. Esa cuenta es la propietaria del club.
+
+Si estás en el camino A (nube), el sembrado se niega a correr por accidente
+contra algo que no sea local. Para autorizarlo:
+
+```powershell
+$env:SEMBRAR_EN_SERIO="si"; npm run sembrar
+```
+
+### Después de la primera vez
+
+Solo necesitas esto para trabajar:
+
+```powershell
+npm run dev
+```
+
+Y `npx supabase start` antes, si elegiste el camino B.
+
+### Ver el sistema visual sin nada de lo anterior
+
+```powershell
+npm install
+npm run dev
+```
+
+Y abre http://localhost:3000/vista-previa/calendario. La landing y la vista
+previa funcionan sin base de datos.
 
 ## Estructura
 
