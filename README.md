@@ -57,7 +57,7 @@ resto entra como integrante. Con `npm run sembrar` la propietaria es
 ### Probar las reglas sin Docker
 
 `npm run db:test` levanta el esquema sobre un Postgres normal (con un stub
-mínimo de `auth`) y corre 44 aserciones de aislamiento de datos y reglas de
+mínimo de `auth`) y corre 43 aserciones de aislamiento de datos y reglas de
 negocio: notas privadas, votos, datos de contacto, borradores, propietaria,
 última administradora, caducidad de invitaciones, una sola discucharla próxima
 y una sola votación activa.
