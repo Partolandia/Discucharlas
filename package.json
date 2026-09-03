@@ -13,7 +13,9 @@
     "tipos": "node scripts/generar-tipos.mjs",
     "sembrar": "node scripts/sembrar.mjs",
     "test:excel": "node --experimental-strip-types pruebas/exportar-libro.test.mts",
-    "diagnostico": "./scripts/diagnostico.sh"
+    "diagnostico": "./scripts/diagnostico.sh",
+    "configurar": "node scripts/configurar.mjs",
+    "verificar": "node scripts/verificar.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.5",

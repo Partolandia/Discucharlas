@@ -68,20 +68,32 @@ Elige un camino. El código es idéntico en los dos: solo cambian tres variables
 No hay que instalar nada más y es el mismo camino que usará producción.
 
 1. Crea un proyecto gratis en https://supabase.com.
-2. En *Project Settings → API*, copia la URL y las dos llaves.
-3. Crea `.env.local` a partir de la plantilla y llena los valores:
+2. Prepara la configuración con tu URL del proyecto:
 
 ```bash
-cp .env.example .env.local
+npm run configurar https://TU-PROYECTO.supabase.co
 ```
 
-4. Aplica el esquema:
+   Genera solo el secreto de invitadas y te dice qué falta. Abre `.env.local` y
+   pega la llave **anon public** y la **service_role**, las dos en
+   *Project Settings → API*.
+
+3. Aplica el esquema:
 
 ```bash
 npx supabase login
 npx supabase link --project-ref TU_REF
 npx supabase db push
 ```
+
+4. Comprueba que todo quedó bien:
+
+```bash
+npm run verificar
+```
+
+   Distingue los tres fallos que se confunden entre sí: configuración
+   incompleta, proyecto inalcanzable y migraciones sin aplicar.
 
 **B. Supabase local (todo en tu máquina, necesita Docker)**
 
