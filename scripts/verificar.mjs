@@ -31,15 +31,24 @@ const mal = (m, comoArreglar) => {
   if (comoArreglar) console.log(`       ${comoArreglar}`);
 };
 
+function comprobar(valor, etiqueta, comoArreglar) {
+  if (valor) bien(etiqueta);
+  else mal(`falta ${etiqueta}`, comoArreglar);
+}
+
 console.log("\nConfiguración");
-url ? bien("URL del proyecto") : mal("falta NEXT_PUBLIC_SUPABASE_URL", "npm run configurar");
-anon ? bien("llave pública") : mal("falta NEXT_PUBLIC_SUPABASE_ANON_KEY", "Project Settings → API");
-servicio
-  ? bien("llave de servicio")
-  : mal("falta SUPABASE_SERVICE_ROLE_KEY", "hace falta para invitaciones y acceso de invitadas");
-process.env.GUEST_SESSION_SECRET
-  ? bien("secreto de invitadas")
-  : mal("falta GUEST_SESSION_SECRET", "npm run configurar lo genera solo");
+comprobar(url, "NEXT_PUBLIC_SUPABASE_URL", "npm run configurar");
+comprobar(anon, "NEXT_PUBLIC_SUPABASE_ANON_KEY", "Project Settings → API → anon public");
+comprobar(
+  servicio,
+  "SUPABASE_SERVICE_ROLE_KEY",
+  "hace falta para invitaciones y acceso de invitadas"
+);
+comprobar(
+  process.env.GUEST_SESSION_SECRET,
+  "GUEST_SESSION_SECRET",
+  "npm run configurar lo genera solo"
+);
 
 if (!url || !anon) {
   console.log("\nSin esos dos no puedo seguir comprobando.");
