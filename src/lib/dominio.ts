@@ -23,11 +23,12 @@ export const CATEGORIAS_APORTE = [
 
 export type CategoriaAporte = (typeof CATEGORIAS_APORTE)[number]["valor"];
 
+// Colores de estado tomados de la leyenda del calendario del prototipo.
 export const ESTADOS_SESION = {
-  draft: { texto: "Borrador", color: "var(--color-tinta-suave)" },
-  upcoming: { texto: "Próxima", color: "var(--color-inicio)" },
-  past: { texto: "Realizada", color: "var(--color-propuestas)" },
-  cancelled: { texto: "Cancelada", color: "var(--color-error)" },
+  draft: { texto: "Borrador", color: "#61758D" },
+  upcoming: { texto: "Próxima", color: "#C56F79" },
+  past: { texto: "Realizada", color: "#8D6670" },
+  cancelled: { texto: "Cancelada", color: "#C68A3A" },
 } as const;
 
 export type EstadoSesion = keyof typeof ESTADOS_SESION;

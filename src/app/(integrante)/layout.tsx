@@ -1,6 +1,7 @@
-import Link from "next/link";
 import { NavegacionInferior } from "@/components/NavegacionInferior";
-import { exigirIntegrante, esAdministradora } from "@/lib/sesion";
+import { CabeceraApp } from "@/components/CabeceraApp";
+import { crearClienteServidor } from "@/lib/supabase/servidor";
+import { exigirIntegrante } from "@/lib/sesion";
 
 export default async function CascaronIntegrante({
   children,
@@ -8,34 +9,21 @@ export default async function CascaronIntegrante({
   children: React.ReactNode;
 }) {
   const perfil = await exigirIntegrante();
+  const supabase = await crearClienteServidor();
+
+  const { count } = await supabase
+    .from("notifications")
+    .select("id", { count: "exact", head: true })
+    .is("read_at", null);
 
   return (
-    <div className="mx-auto min-h-dvh max-w-md pb-24">
-      <header className="flex items-center justify-between px-6 pt-6 pb-2">
-        <Link href="/inicio" className="editorial text-[1.35rem] leading-none">
-          Discucharlas
-        </Link>
-        <div className="flex items-center gap-4">
-          {esAdministradora(perfil) && (
-            <Link
-              href="/admin"
-              className="text-[14px] text-[var(--color-tinta-suave)] underline underline-offset-4"
-            >
-              Administración
-            </Link>
-          )}
-          <Link
-            href="/perfil"
-            aria-label="Mi perfil"
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--color-club)] text-[15px] font-medium text-white"
-          >
-            {perfil.first_name.charAt(0).toUpperCase()}
-          </Link>
-        </div>
-      </header>
-
+    <div className="mx-auto min-h-dvh max-w-md pb-28">
+      <CabeceraApp
+        nombre={perfil.first_name}
+        inicial={perfil.first_name.charAt(0).toUpperCase()}
+        sinLeer={count ?? 0}
+      />
       {children}
-
       <NavegacionInferior />
     </div>
   );

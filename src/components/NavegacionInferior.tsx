@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { SECCIONES, ORDEN_NAV, seccionDe, type ClaveSeccion } from "@/lib/secciones";
 import {
   IconoInicio,
   IconoCalendario,
@@ -10,42 +11,51 @@ import {
   IconoClub,
 } from "@/components/Iconos";
 
-// Cinco destinos, cada uno con su color protagonista. Está fijado por el
-// documento maestro y no se cambia sin una decisión de producto.
-const DESTINOS = [
-  { href: "/inicio", texto: "Inicio", Icono: IconoInicio, color: "var(--color-inicio)" },
-  { href: "/calendario", texto: "Calendario", Icono: IconoCalendario, color: "var(--color-calendario)" },
-  { href: "/propuestas", texto: "Propuestas", Icono: IconoPropuestas, color: "var(--color-propuestas)" },
-  { href: "/comunidad", texto: "Comunidad", Icono: IconoComunidad, color: "var(--color-comunidad-fuerte)" },
-  { href: "/club", texto: "Club", Icono: IconoClub, color: "var(--color-club)" },
-] as const;
+const ICONOS = {
+  inicio: IconoInicio,
+  calendario: IconoCalendario,
+  propuestas: IconoPropuestas,
+  comunidad: IconoComunidad,
+  club: IconoClub,
+} as const;
 
-export function NavegacionInferior() {
+export function NavegacionInferior({ seccionForzada }: { seccionForzada?: ClaveSeccion } = {}) {
   const ruta = usePathname();
+  const actual = seccionForzada ?? seccionDe(ruta);
+  const color = SECCIONES[actual].color;
+
+  // La barra entera toma el tinte de la sección en la que estás. Para el texto
+  // inactivo oscurecemos ese color hacia la tinta: el matiz se conserva y el
+  // contraste sobre papel se sostiene, que a 11px importa.
+  const inactivo = `color-mix(in oklab, ${color} 45%, var(--color-tinta))`;
 
   return (
     <nav
       aria-label="Secciones del club"
-      className="fixed inset-x-0 bottom-0 z-30 border-t border-[var(--color-linea)] bg-[var(--color-papel)]/95 backdrop-blur"
-      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+      className="fixed inset-x-0 bottom-0 z-30 bg-[var(--color-papel)]"
+      style={{ borderTop: `2px solid ${color}`, paddingBottom: "env(safe-area-inset-bottom)" }}
     >
-      <ul className="mx-auto flex max-w-md items-stretch justify-between px-2 py-1.5">
-        {DESTINOS.map(({ href, texto, Icono, color }) => {
-          const activo = ruta === href || ruta.startsWith(`${href}/`);
+      <ul className="mx-auto flex max-w-md items-end justify-between px-2">
+        {ORDEN_NAV.map((clave) => {
+          const seccion = SECCIONES[clave];
+          const Icono = ICONOS[clave];
+          const activo = clave === actual;
+
           return (
-            <li key={href} className="flex-1">
+            <li key={clave} className="flex-1">
               <Link
-                href={href}
+                href={seccion.ruta}
                 aria-current={activo ? "page" : undefined}
-                // Sobre el color protagonista, ícono y texto van en blanco para
-                // conservar contraste.
-                className={`flex min-h-[56px] flex-col items-center justify-center gap-1 rounded-[var(--radius-suave)] px-1 py-1.5 transition ${
-                  activo ? "text-white" : "text-[var(--color-tinta-suave)]"
-                }`}
-                style={activo ? { background: color } : undefined}
+                className={
+                  activo
+                    ? // La pestaña activa se eleva por encima de la barra.
+                      "-mt-5 flex flex-col items-center gap-1.5 rounded-t-[18px] px-2 pt-4 pb-3 text-white"
+                    : "flex flex-col items-center gap-1.5 px-1 pt-3 pb-3"
+                }
+                style={activo ? { background: color } : { color: inactivo }}
               >
                 <Icono className="h-[22px] w-[22px]" />
-                <span className="text-[11px] leading-none font-medium">{texto}</span>
+                <span className="text-[11px] leading-none font-medium">{seccion.nav}</span>
               </Link>
             </li>
           );
