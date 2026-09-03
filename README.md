@@ -11,7 +11,9 @@ El ciclo que sostiene el producto es **propuesta → votación → sesión → m
 | :-- | :-- |
 | Esquema de base de datos, RLS y reglas de negocio | Listo y probado |
 | Landing pública + instalación PWA | Listo |
-| Autenticación, Inicio, Calendario, Propuestas, Comunidad, Club, Administración | En construcción |
+| Autenticación (entrar, salir, recuperar contraseña) | Listo |
+| Cascarón de navegación e Inicio | Listo |
+| Calendario, Propuestas, Comunidad, Club, Administración | En construcción |
 
 ## Stack
 
@@ -37,24 +39,34 @@ Hay dos caminos y el código es idéntico en ambos: solo cambian las variables d
 
 ```bash
 npx supabase start             # imprime URL y llaves para .env.local
-npx supabase db reset          # aplica supabase/migrations en orden
+npx supabase db reset          # aplica supabase/migrations y supabase/seed.sql
+npm run sembrar                # club de demostración: cuentas, sesiones, votación
 ```
 
 **B. Supabase en la nube**
-
-Crea un proyecto, copia URL y llaves a `.env.local` y aplica las migraciones:
 
 ```bash
 npx supabase link --project-ref <ref>
 npx supabase db push
 ```
 
+La primera cuenta que se crea en un club vacío queda como **propietaria**; el
+resto entra como integrante. Con `npm run sembrar` la propietaria es
+`ana@discucharlas.local` / `discucharlas123`.
+
 ### Probar las reglas sin Docker
 
 `npm run db:test` levanta el esquema sobre un Postgres normal (con un stub
-mínimo de `auth`) y corre la suite de aislamiento de datos: notas privadas,
-votos, datos de contacto, borradores, última administradora, una sola
-discucharla próxima y una sola votación activa.
+mínimo de `auth`) y corre 44 aserciones de aislamiento de datos y reglas de
+negocio: notas privadas, votos, datos de contacto, borradores, propietaria,
+última administradora, caducidad de invitaciones, una sola discucharla próxima
+y una sola votación activa.
+
+### Tipos de TypeScript
+
+`npm run tipos` regenera `src/lib/supabase/tipos.ts` desde el esquema real
+(tablas, vistas, relaciones y funciones RPC). Córrelo después de cada
+migración. Con Docker, `npx supabase gen types typescript --local` hace lo mismo.
 
 ## Estructura
 
@@ -87,5 +99,5 @@ Marcados como PENDIENTE en el documento maestro y **no inventados** aquí:
 - Valores HEX exactos y tipografías definitivas. Los actuales son provisionales
   y viven todos en `src/app/globals.css`; los roles de color por sección sí son
   los aprobados.
-- Si existe un rol de propietaria/fundadora distinto de las administradoras.
-- Caducidad de las invitaciones.
+Ya resueltos por el club (3 de septiembre de 2026): sí hay rol de propietaria,
+y las invitaciones caducan un día antes de la próxima discucharla.

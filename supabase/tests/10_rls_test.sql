@@ -250,4 +250,43 @@ begin
     'una integrante no ve el estado de las invitaciones');
 end $$;
 
+-- ---------------------------------------------------------------------------
+-- arranque del club
+-- ---------------------------------------------------------------------------
+do $$
+declare
+  primera uuid;
+  segunda uuid;
+begin
+  raise notice '--- primera cuenta ---';
+  -- Partimos de un club vacio, como en una instalacion nueva.
+  delete from public.votes;
+  delete from public.voting_candidates;
+  delete from public.voting_rounds;
+  delete from public.session_private_notes;
+  delete from public.podcast_proposals;
+  delete from public.sessions;
+  delete from public.member_invitations;
+  delete from public.admin_audit_log;
+  delete from public.profiles;
+  delete from auth.users;
+
+  insert into auth.users (email, raw_user_meta_data)
+  values ('fundadora@discucharlas.mx', '{"first_name":"Fundadora"}')
+  returning id into primera;
+
+  insert into auth.users (email, raw_user_meta_data)
+  values ('segunda@discucharlas.mx', '{"first_name":"Segunda"}')
+  returning id into segunda;
+
+  perform tests.assert(
+    (select role from public.profiles where id = primera) = 'admin'
+    and (select is_owner from public.profiles where id = primera),
+    'la primera cuenta del club queda como administradora y propietaria');
+  perform tests.assert(
+    (select role from public.profiles where id = segunda) = 'member'
+    and not (select is_owner from public.profiles where id = segunda),
+    'las cuentas siguientes entran como integrantes');
+end $$;
+
 select 'TODAS LAS PRUEBAS RLS PASARON' as resultado;
