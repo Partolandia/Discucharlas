@@ -71,12 +71,20 @@ No hay que instalar nada más y es el mismo camino que usará producción.
 2. Prepara la configuración con tu URL del proyecto:
 
 ```bash
-npm run configurar https://TU-PROYECTO.supabase.co
+npm run configurar -- https://TU-PROYECTO.supabase.co \
+  --anon "LLAVE_PUBLICA" --service "LLAVE_DE_SERVICIO"
 ```
 
-   Genera solo el secreto de invitadas y te dice qué falta. Abre `.env.local` y
-   pega la llave **anon public** y la **service_role**, las dos en
-   *Project Settings → API*.
+   Las dos están en *Project Settings → API*. Según la edad del proyecto se
+   llaman **anon public** y **service_role**, o **publishable** y **secret**;
+   el script reconoce ambos formatos.
+
+   Si prefieres, corre solo `npm run configurar -- https://…` y edita después
+   el archivo: te dice su ruta exacta.
+
+   Antes de escribir nada comprueba que ninguna llave quedó en la ranura
+   equivocada. Importa: la pública viaja al navegador, así que la de servicio
+   ahí dentro publicaría el acceso completo a la base.
 
 3. Aplica el esquema:
 

@@ -8,6 +8,7 @@
  */
 import { readFileSync } from "node:fs";
 import { createClient } from "@supabase/supabase-js";
+import { llaveMalColocada } from "./llaves.mjs";
 
 try {
   for (const linea of readFileSync(".env.local", "utf8").split("\n")) {
@@ -49,6 +50,16 @@ comprobar(
   "GUEST_SESSION_SECRET",
   "npm run configurar lo genera solo"
 );
+
+// Una llave en la ranura equivocada no es un descuido menor: la pública viaja
+// al navegador.
+for (const [llave, ranura, nombre] of [
+  [anon, "publica", "NEXT_PUBLIC_SUPABASE_ANON_KEY"],
+  [servicio, "servicio", "SUPABASE_SERVICE_ROLE_KEY"],
+]) {
+  const aviso = llaveMalColocada(llave, ranura);
+  if (aviso) mal(`${nombre} está mal puesta`, aviso);
+}
 
 if (!url || !anon) {
   console.log("\nSin esos dos no puedo seguir comprobando.");

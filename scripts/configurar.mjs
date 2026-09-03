@@ -8,8 +8,16 @@
  */
 import { randomBytes } from "node:crypto";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { llaveMalColocada } from "./llaves.mjs";
 
 const RUTA = ".env.local";
+
+/** Lee --anon y --service de la línea de comandos. */
+function bandera(nombre) {
+  const i = process.argv.indexOf(`--${nombre}`);
+  return i !== -1 ? process.argv[i + 1]?.trim() : undefined;
+}
 
 function leer() {
   if (!existsSync(RUTA)) return {};
@@ -22,12 +30,27 @@ function leer() {
 }
 
 const actual = leer();
-const url = process.argv[2] ?? actual.NEXT_PUBLIC_SUPABASE_URL ?? "";
+const posicional = process.argv[2]?.startsWith("http") ? process.argv[2] : undefined;
+const url = posicional ?? actual.NEXT_PUBLIC_SUPABASE_URL ?? "";
+const anon = bandera("anon") ?? actual.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
+const servicio = bandera("service") ?? actual.SUPABASE_SERVICE_ROLE_KEY ?? "";
+
+// Antes de escribir nada: que ninguna llave quede en la ranura equivocada.
+for (const [llave, ranura, nombre] of [
+  [anon, "publica", "NEXT_PUBLIC_SUPABASE_ANON_KEY"],
+  [servicio, "servicio", "SUPABASE_SERVICE_ROLE_KEY"],
+]) {
+  const aviso = llaveMalColocada(llave, ranura);
+  if (aviso) {
+    console.error(`\nNo escribí nada. ${nombre}:\n  ${aviso}\n`);
+    process.exit(1);
+  }
+}
 
 const valores = {
   NEXT_PUBLIC_SUPABASE_URL: url,
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: actual.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "",
-  SUPABASE_SERVICE_ROLE_KEY: actual.SUPABASE_SERVICE_ROLE_KEY ?? "",
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: anon,
+  SUPABASE_SERVICE_ROLE_KEY: servicio,
   RESEND_API_KEY: actual.RESEND_API_KEY ?? "",
   EMAIL_FROM: actual.EMAIL_FROM ?? "Discucharlas <hola@discucharlas.mx>",
   NEXT_PUBLIC_SITE_URL: actual.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
@@ -52,7 +75,7 @@ GUEST_SESSION_SECRET=${valores.GUEST_SESSION_SECRET}
 `;
 
 writeFileSync(RUTA, contenido);
-console.log(`Escrito ${RUTA}\n`);
+console.log(`Escrito ${resolve(RUTA)}\n`);
 
 const faltan = [
   ["NEXT_PUBLIC_SUPABASE_URL", "Project Settings → API → Project URL"],
@@ -63,7 +86,11 @@ const faltan = [
 if (faltan.length === 0) {
   console.log("Todo listo. Sigue con:  npm run verificar");
 } else {
-  console.log("Ábrelo y pega estos valores desde el panel de Supabase:\n");
+  console.log("Faltan estos valores, en el panel de Supabase:\n");
   for (const [clave, donde] of faltan) console.log(`  ${clave}\n      ${donde}\n`);
+  console.log("Puedes pasármelos aquí mismo, sin abrir el archivo:\n");
+  console.log('  npm run configurar -- --anon "PEGA_LA_PUBLICA" --service "PEGA_LA_DE_SERVICIO"\n');
+  console.log("O editar el archivo a mano:\n");
+  console.log(`  notepad ${resolve(RUTA)}\n`);
   console.log("Cuando los tengas:  npm run verificar");
 }
