@@ -1,0 +1,90 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+   Tokens Discucharlas
+   Los roles de color están CONFIRMADOS por el documento maestro (una identidad
+   por sección dentro de una misma familia). Los valores HEX son PROVISIONALES:
+   el maestro los deja pendientes de extraerse del prototipo V135 aprobado.
+   Para cambiarlos basta editar este bloque; nada más en la app codifica color.
+--------------------------------------------------------------------------- */
+@theme {
+  /* base editorial cálida */
+  --color-papel:        #FBF6EE;
+  --color-papel-hondo:  #F3EADC;
+  --color-tinta:        #241D1A;
+  --color-tinta-suave:  #6B5F58;
+  --color-linea:        #E3D7C6;
+
+  /* color protagonista por sección */
+  --color-inicio:       #DD5A44;  /* coral */
+  --color-inicio-claro: #F4A18F;
+  --color-calendario:   #D97A93;  /* rosado */
+  --color-calendario-claro: #F0BDCA;
+  --color-propuestas:   #2E5D4E;  /* verdes */
+  --color-propuestas-claro: #6E9B84;
+  --color-comunidad:    #E9DCC6;  /* beige editorial */
+  --color-comunidad-acento: #B4693F;
+  --color-club:         #E0A02F;  /* amarillo / ocre */
+  --color-club-claro:   #F2CE85;
+  --color-subpagina:    #3A2B48;  /* morado oscuro: Nuestras discucharlas, Guía */
+
+  /* estados */
+  --color-exito:  #2E5D4E;
+  --color-aviso:  #B4693F;
+  --color-error:  #A83A2C;
+
+  --font-editorial: var(--fuente-editorial), Georgia, "Times New Roman", serif;
+  --font-interfaz:  var(--fuente-interfaz), ui-sans-serif, system-ui, sans-serif;
+
+  --radius-suave: 14px;
+  --radius-tarjeta: 22px;
+}
+
+:root {
+  color-scheme: light;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--color-papel);
+  color: var(--color-tinta);
+  font-family: var(--font-interfaz);
+  -webkit-font-smoothing: antialiased;
+  /* La app vive a ~430px y se instala como PWA: respetamos el notch. */
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+h1, h2, h3, .editorial {
+  font-family: var(--font-editorial);
+  font-weight: 500;
+  letter-spacing: -0.015em;
+}
+
+/* Foco visible siempre: requisito de accesibilidad del QA. */
+:focus-visible {
+  outline: 2px solid var(--color-tinta);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Utilidad: grano de papel para los bloques editoriales. */
+.grano::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.22;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+}

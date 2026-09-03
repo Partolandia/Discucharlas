@@ -1,0 +1,25 @@
+{
+  "name": "Discucharlas",
+  "short_name": "Discucharlas",
+  "description": "El hogar digital de nuestro club de escucha y conversación sobre podcasts.",
+  "id": "/inicio",
+  "start_url": "/inicio",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FBF6EE",
+  "theme_color": "#FBF6EE",
+  "lang": "es-MX",
+  "dir": "ltr",
+  "categories": ["social", "lifestyle"],
+  "icons": [
+    { "src": "/icono-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icono-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icono-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Próxima discucharla", "url": "/inicio" },
+    { "name": "Propuestas", "url": "/propuestas" },
+    { "name": "Comunidad", "url": "/comunidad" }
+  ]
+}
