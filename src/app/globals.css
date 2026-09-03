@@ -52,6 +52,13 @@
   --color-subpagina:        #54336E;
   --color-subpagina-fuerte: #43245E;
 
+  /* Votación activa: el prototipo la resuelve en morado dentro de la sección
+     olivo. Son dos cosas distintas y conviven. */
+  --color-votacion:        #34204F;
+  --color-votacion-boton:  #7952B3;
+  --color-votacion-acento: #9167CC;
+  --color-votacion-sello:  #F4CF56;
+
   /* Memoria del club */
   --color-archivo:        #8D6670;
   --color-archivo-suave:  #E7D4D8;
