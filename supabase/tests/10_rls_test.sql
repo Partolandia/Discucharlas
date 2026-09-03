@@ -184,4 +184,70 @@ begin
     'una integrante no puede crear la clave de invitadas');
 end $$;
 
+-- ---------------------------------------------------------------------------
+-- propietaria del club y caducidad de invitaciones
+-- ---------------------------------------------------------------------------
+do $$
+declare
+  ana uuid  := (select v from tests.ids where k = 'ana');
+  bea uuid  := (select v from tests.ids where k = 'bea');
+  cris uuid := (select v from tests.ids where k = 'cris');
+  esperado timestamptz;
+begin
+  raise notice '--- propietaria ---';
+  -- Ana queda como propietaria; Bea vuelve a ser administradora.
+  perform set_config('discucharlas.privilege_change', 'on', true);
+  update public.profiles set is_owner = true where id = ana;
+  update public.profiles set role = 'admin' where id = bea;
+  perform set_config('discucharlas.privilege_change', 'off', true);
+
+  perform tests.assert(
+    tests.denied(bea, format('select public.set_member_role(%L, ''member'')', ana)),
+    'otra administradora no puede quitarle el rol a la propietaria');
+  perform tests.assert(
+    tests.denied(bea, format('select public.set_member_status(%L, ''suspended'')', ana)),
+    'la propietaria no puede ser suspendida');
+  perform tests.assert(
+    tests.denied(bea, format('select public.transfer_ownership(%L)', bea)),
+    'solo la propietaria puede transferir la propiedad');
+  perform tests.assert(
+    tests.denied(cris, format('update public.profiles set is_owner = true where id = %L', cris)),
+    'una integrante no puede auto-nombrarse propietaria');
+
+  perform tests.assert(
+    not tests.denied(ana, format('select public.transfer_ownership(%L)', bea)),
+    'la propietaria si puede transferir la propiedad');
+  perform tests.assert((select count(*) from public.profiles where is_owner) = 1,
+    'el club tiene exactamente una propietaria');
+  perform tests.assert((select is_owner from public.profiles where id = bea),
+    'la propiedad quedo en quien la recibio');
+  perform tests.assert((select role from public.profiles where id = ana) = 'admin',
+    'la propietaria saliente sigue siendo administradora');
+
+  raise notice '--- caducidad de invitaciones ---';
+  -- La proxima discucharla es dentro de 7 dias: la invitacion deja de servir
+  -- al empezar el dia previo.
+  select ((current_date + 6)::timestamp at time zone 'America/Mexico_City') into esperado;
+
+  perform tests.assert(
+    not tests.denied(bea, 'insert into public.member_invitations (invitee_name, invitee_email, token_hash) values (''Sofia'', ''sofia@example.mx'', ''hash-1'')'),
+    'administracion puede emitir una invitacion');
+  perform tests.assert(
+    (select expires_at from public.member_invitations where token_hash = 'hash-1') = esperado,
+    'la invitacion caduca un dia antes de la proxima discucharla');
+
+  insert into public.member_invitations (invitee_name, invitee_email, token_hash, expires_at)
+  values ('Vieja', 'vieja@example.mx', 'hash-2', now() - interval '1 day');
+
+  perform tests.assert(
+    tests.as_user(bea, 'select count(*) from public.invitation_status where effective_status = ''expired''') = 1,
+    'una invitacion vencida se reporta como caducada');
+  perform tests.assert(
+    tests.as_user(bea, 'select count(*) from public.invitation_status where effective_status = ''unused''') = 1,
+    'la invitacion vigente sigue disponible');
+  perform tests.assert(
+    tests.as_user(cris, 'select count(*) from public.invitation_status') = 0,
+    'una integrante no ve el estado de las invitaciones');
+end $$;
+
 select 'TODAS LAS PRUEBAS RLS PASARON' as resultado;
