@@ -25,6 +25,11 @@ const SECCIONES = [
     titulo: "Accesos",
     texto: "Invitaciones de integrante y clave de invitadas.",
   },
+  {
+    href: "/admin/historial",
+    titulo: "Historial",
+    texto: "Revisar las discucharlas pasadas y descargarlas en Excel.",
+  },
 ];
 
 export default async function PanelAdmin() {

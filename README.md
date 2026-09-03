@@ -17,7 +17,8 @@ El ciclo que sostiene el producto es **propuesta → votación → sesión → m
 | Propuestas con votación, Comunidad y Club | Listo |
 | Administración: discucharlas, votación, integrantes y accesos | Listo |
 | Memoria del club, guía y avisos | Listo |
-| Correo transaccional y exportación a Excel | Pendiente |
+| Exportación del historial a Excel | Listo y probado |
+| Correo transaccional | Pendiente (falta la llave de Resend) |
 | Collages de los encabezados | Pendiente (ver `public/colaje/`) |
 
 ## Stack

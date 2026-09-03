@@ -11,7 +11,8 @@
     "db:test": "./scripts/local-db.sh && psql -h /tmp -p ${PGPORT_LOCAL:-54322} -U postgres -d discucharlas_test -v ON_ERROR_STOP=1 -f supabase/tests/10_rls_test.sql",
     "iconos": "node scripts/generar-iconos.mjs",
     "tipos": "node scripts/generar-tipos.mjs",
-    "sembrar": "node scripts/sembrar.mjs"
+    "sembrar": "node scripts/sembrar.mjs",
+    "test:excel": "node --experimental-strip-types pruebas/exportar-libro.test.mts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.5",
