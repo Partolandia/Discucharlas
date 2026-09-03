@@ -46,9 +46,16 @@ export async function middleware(peticion: NextRequest) {
     }
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Si Supabase no responde, la sesión queda sin resolver. No es motivo para
+  // tumbar el sitio entero: las páginas públicas siguen sirviéndose y las
+  // privadas mandan a entrar, que es lo mismo que haríamos sin sesión.
+  let user = null;
+  try {
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
+  } catch (fallo) {
+    console.error("[discucharlas] no se pudo verificar la sesión:", fallo);
+  }
 
   if (!user && !esPublica(ruta)) {
     const destino = peticion.nextUrl.clone();

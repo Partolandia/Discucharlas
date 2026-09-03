@@ -129,6 +129,18 @@ npm run dev
 Y abre http://localhost:3000/vista-previa/calendario. La landing y la vista
 previa funcionan sin base de datos.
 
+### Abrirla desde el teléfono o desde otra máquina
+
+El servidor de desarrollo solo confía en `localhost`. Si entras por la IP de tu
+red, Next bloquea los recursos de desarrollo y la página se ve en blanco. Pasa
+tu IP para que la acepte:
+
+```bash
+DEV_ORIGINS=10.240.9.83 npm run dev
+```
+
+En producción esto no aplica: solo afecta a `npm run dev`.
+
 ### Si algo se atora en Git Bash
 
 Git Bash no siempre entrega bien el teclado a los programas que hacen preguntas

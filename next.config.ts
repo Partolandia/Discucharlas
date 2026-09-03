@@ -20,7 +20,22 @@ function versionCompilada() {
   }
 }
 
+/**
+ * Orígenes desde los que se permite entrar al servidor de desarrollo.
+ *
+ * Al abrir la app desde el teléfono o desde otra máquina de la red, la petición
+ * llega con un origen distinto de localhost y Next bloquea los recursos de
+ * desarrollo: la página queda en blanco. Añade aquí tu IP, o pásala en
+ * DEV_ORIGINS separada por comas.
+ */
+const origenesDeDesarrollo = [
+  ...(process.env.DEV_ORIGINS?.split(",").map((o) => o.trim()).filter(Boolean) ?? []),
+  "127.0.0.1",
+  "localhost",
+];
+
 const nextConfig: NextConfig = {
+  allowedDevOrigins: origenesDeDesarrollo,
   env: {
     VERSION_COMPILADA: versionCompilada(),
     COMPILADA_EN: new Date().toISOString(),
