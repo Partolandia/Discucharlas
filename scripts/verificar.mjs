@@ -70,9 +70,13 @@ if (url && anon) {
 console.log("\nConexión");
 
 /**
- * Preguntamos por HTTP directo antes que con la librería: así vemos el código
- * y el cuerpo tal cual los manda Supabase. Clasificar sin enseñar el original
- * fue justo lo que nos hizo perder tiempo.
+ * Preguntamos por HTTP directo: así vemos el código y el cuerpo tal cual los
+ * manda Supabase, en vez de una interpretación nuestra.
+ *
+ * Ojo con lo que se considera éxito. Las migraciones le quitan al rol anónimo
+ * todo privilegio sobre las tablas del club, así que un "permission denied"
+ * aquí NO es un fallo: es la prueba de que el blindaje está puesto. Lo que
+ * sería alarmante es que contestara 200.
  */
 let estado = 0;
 let cuerpo = "";
@@ -86,40 +90,44 @@ try {
   mal("no alcanzo el proyecto", `${fallo.message} — revisa la URL y tu conexión`);
 }
 
+const deniegaAlAnonimo = /permission denied|42501/i.test(cuerpo);
+const faltanTablas = /PGRST205|does not exist|schema cache/i.test(cuerpo);
+
 if (estado) {
-  if (estado === 200) {
+  if (deniegaAlAnonimo) {
+    bien("el proyecto responde y acepta la llave");
+    bien("las tablas están creadas");
+    bien("el rol anónimo no puede leer nada del club");
+  } else if (estado === 200) {
     bien("el proyecto responde");
     bien("las tablas están creadas");
+    mal(
+      "el rol anónimo PUEDE leer la tabla de perfiles",
+      "no debería. Vuelve a aplicar las migraciones: npx supabase db push"
+    );
+  } else if (faltanTablas) {
+    bien("el proyecto responde y acepta la llave");
+    mal(
+      "las tablas no están creadas todavía",
+      "npx supabase link --project-ref TU_REF  &&  npx supabase db push"
+    );
   } else if (estado === 401) {
     mal(
       "la llave pública fue rechazada",
       "cópiala otra vez de Project Settings → API. Si tu proyecto usa el formato " +
         "nuevo, es la que empieza con sb_publishable_"
     );
-  } else if (estado === 403) {
-    // Un 403 puede venir de Supabase o de algo en medio (un proxy, una VPN, la
-    // red de una oficina). El cuerpo de abajo lo aclara.
-    mal(
-      "acceso denegado",
-      "puede ser la llave, o algo entre tu máquina y Supabase. Mira la respuesta"
-    );
-  } else if (estado === 404) {
-    bien("el proyecto responde y acepta la llave");
-    mal(
-      "las tablas no están creadas todavía",
-      "npx supabase link --project-ref TU_REF  &&  npx supabase db push"
-    );
   } else {
     mal(`respuesta inesperada (HTTP ${estado})`);
   }
 
-  // El cuerpo original, siempre que algo no haya salido bien.
-  if (estado !== 200 && cuerpo) {
+  // El cuerpo original cuando algo no cuadra, para no volver a adivinar.
+  const todoBien = deniegaAlAnonimo || estado === 200;
+  if (!todoBien && cuerpo) {
     console.log("\n  Lo que contestó Supabase, tal cual:");
     for (const linea of cuerpo.split("\n")) console.log(`    ${linea}`);
   }
 }
-
 }
 
 if (url && anon && servicio && problemas === 0) {
