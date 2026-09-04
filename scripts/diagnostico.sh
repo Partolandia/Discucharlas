@@ -18,3 +18,15 @@ git status --short 2>&1 | head -10 || true
 echo
 echo "compilación previa en caché: $([ -d .next ] && echo "sí (.next existe)" || echo "no")"
 echo "node: $(node -v 2>&1)"
+echo
+echo "migraciones en el disco:"
+if compgen -G "supabase/migrations/*.sql" > /dev/null; then
+  for f in supabase/migrations/*.sql; do
+    echo "  $(basename "$f")  ($(wc -l < "$f") líneas)"
+  done
+else
+  echo "  NINGUNA - por eso 'supabase db push' diría que no hay nada que aplicar"
+fi
+echo
+echo "estado contra el proyecto remoto:"
+npx --no-install supabase migration list 2>&1 | head -20 || echo "  (no se pudo consultar)"
