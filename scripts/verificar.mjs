@@ -17,7 +17,7 @@ try {
   }
 } catch {
   console.error("No encuentro .env.local. Corre primero:  npm run configurar");
-  process.exit(1);
+  process.exitCode = 1;
 }
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -63,29 +63,66 @@ for (const [llave, ranura, nombre] of [
 
 if (!url || !anon) {
   console.log("\nSin esos dos no puedo seguir comprobando.");
-  process.exit(1);
+  process.exitCode = 1;
 }
 
+if (url && anon) {
 console.log("\nConexión");
-const db = createClient(url, anon, { auth: { persistSession: false } });
 
-const { error } = await db.from("profiles").select("id").limit(1);
-
-if (!error) {
-  bien("el proyecto responde");
-  bien("las tablas están creadas");
-} else if (/fetch failed|ENOTFOUND|network/i.test(error.message)) {
-  mal("no alcanzo el proyecto", "revisa la URL y tu conexión");
-} else if (error.code === "PGRST205" || /does not exist|schema cache/i.test(error.message)) {
-  bien("el proyecto responde");
-  mal("las tablas no están creadas", "npx supabase link --project-ref TU_REF && npx supabase db push");
-} else if (error.code === "42501" || /permission|JWT|API key/i.test(error.message)) {
-  mal("la llave pública no sirve", "cópiala otra vez de Project Settings → API");
-} else {
-  mal(`respuesta inesperada: ${error.message}`);
+/**
+ * Preguntamos por HTTP directo antes que con la librería: así vemos el código
+ * y el cuerpo tal cual los manda Supabase. Clasificar sin enseñar el original
+ * fue justo lo que nos hizo perder tiempo.
+ */
+let estado = 0;
+let cuerpo = "";
+try {
+  const respuesta = await fetch(`${url}/rest/v1/profiles?select=id&limit=1`, {
+    headers: { apikey: anon, Authorization: `Bearer ${anon}` },
+  });
+  estado = respuesta.status;
+  cuerpo = (await respuesta.text()).slice(0, 400);
+} catch (fallo) {
+  mal("no alcanzo el proyecto", `${fallo.message} — revisa la URL y tu conexión`);
 }
 
-if (servicio && problemas === 0) {
+if (estado) {
+  if (estado === 200) {
+    bien("el proyecto responde");
+    bien("las tablas están creadas");
+  } else if (estado === 401) {
+    mal(
+      "la llave pública fue rechazada",
+      "cópiala otra vez de Project Settings → API. Si tu proyecto usa el formato " +
+        "nuevo, es la que empieza con sb_publishable_"
+    );
+  } else if (estado === 403) {
+    // Un 403 puede venir de Supabase o de algo en medio (un proxy, una VPN, la
+    // red de una oficina). El cuerpo de abajo lo aclara.
+    mal(
+      "acceso denegado",
+      "puede ser la llave, o algo entre tu máquina y Supabase. Mira la respuesta"
+    );
+  } else if (estado === 404) {
+    bien("el proyecto responde y acepta la llave");
+    mal(
+      "las tablas no están creadas todavía",
+      "npx supabase link --project-ref TU_REF  &&  npx supabase db push"
+    );
+  } else {
+    mal(`respuesta inesperada (HTTP ${estado})`);
+  }
+
+  // El cuerpo original, siempre que algo no haya salido bien.
+  if (estado !== 200 && cuerpo) {
+    console.log("\n  Lo que contestó Supabase, tal cual:");
+    for (const linea of cuerpo.split("\n")) console.log(`    ${linea}`);
+  }
+}
+
+}
+
+if (url && anon && servicio && problemas === 0) {
   console.log("\nContenido");
   const admin = createClient(url, servicio, { auth: { persistSession: false } });
 
@@ -108,4 +145,7 @@ console.log(
     ? "\nTodo en orden. Arranca con:  npm run dev"
     : `\n${problemas} ${problemas === 1 ? "cosa" : "cosas"} por resolver.`
 );
-process.exit(problemas === 0 ? 0 : 1);
+
+// Marcamos el código de salida en vez de forzar la salida: process.exit() con
+// peticiones todavía abiertas hace que Node reviente en Windows.
+process.exitCode = problemas === 0 ? 0 : 1;
