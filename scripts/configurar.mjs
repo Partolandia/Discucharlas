@@ -29,9 +29,46 @@ function leer() {
   return valores;
 }
 
+/**
+ * Comprueba que la URL sea un proyecto de verdad.
+ *
+ * Existe porque un texto de ejemplo copiado tal cual —con puntos suspensivos o
+ * con TU-PROYECTO dentro— se escribía sin protestar, y el fallo aparecía mucho
+ * más tarde y disfrazado de otra cosa.
+ */
+function urlUsable(valor) {
+  if (!valor) return "Falta la URL del proyecto.";
+  let host;
+  try {
+    const u = new URL(valor);
+    if (u.protocol !== "https:") return "La URL debe empezar con https://";
+    host = u.hostname;
+  } catch {
+    return `"${valor}" no es una URL válida.`;
+  }
+  if (!/^[a-z0-9.-]+$/.test(host)) {
+    return `"${valor}" trae caracteres que no van en una URL. ¿Copiaste el ejemplo con "…"?`;
+  }
+  if (/tu-proyecto|tu_proyecto|ejemplo/i.test(host)) {
+    return `"${valor}" es el texto de ejemplo. Sustitúyelo por la URL de tu proyecto.`;
+  }
+  if (!host.endsWith(".supabase.co") && !host.includes("localhost") && !host.includes("127.0.0.1")) {
+    return `"${valor}" no parece un proyecto de Supabase (se espera algo.supabase.co).`;
+  }
+  return null;
+}
+
 const actual = leer();
 const posicional = process.argv[2]?.startsWith("http") ? process.argv[2] : undefined;
 const url = posicional ?? actual.NEXT_PUBLIC_SUPABASE_URL ?? "";
+
+const problemaConLaUrl = urlUsable(url);
+if (problemaConLaUrl) {
+  console.error(`\nNo escribí nada. ${problemaConLaUrl}\n`);
+  console.error("La encuentras en el panel de Supabase, en Project Settings → API → Project URL.");
+  console.error("Se ve así:  https://abcdefghijklm.supabase.co\n");
+  process.exit(1);
+}
 const anon = bandera("anon") ?? actual.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
 const servicio = bandera("service") ?? actual.SUPABASE_SERVICE_ROLE_KEY ?? "";
 

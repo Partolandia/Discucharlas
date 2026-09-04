@@ -79,8 +79,8 @@ npm run configurar -- https://TU-PROYECTO.supabase.co \
    llaman **anon public** y **service_role**, o **publishable** y **secret**;
    el script reconoce ambos formatos.
 
-   Si prefieres, corre solo `npm run configurar -- https://…` y edita después
-   el archivo: te dice su ruta exacta.
+   Si prefieres editar el archivo a mano, corre el comando solo con la URL y
+   te dice su ruta exacta.
 
    Antes de escribir nada comprueba que ninguna llave quedó en la ranura
    equivocada. Importa: la pública viaja al navegador, así que la de servicio
