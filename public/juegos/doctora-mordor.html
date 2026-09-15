@@ -1,0 +1,1870 @@
+<!doctype html>
+<!--
+  La Doctora contra Mordor — juego de plataformas, pequeño y autónomo.
+
+  Vive en public/ a propósito: es un archivo estático, no toca la app del club
+  (ni rutas, ni tokens, ni base de datos). Se abre en /juegos/doctora-mordor.html
+  o con doble clic sobre el archivo.
+
+  Los mapas de los niveles salen de scripts/generar-niveles-juego.py, que
+  comprueba que cada pozo se pueda saltar, que ninguna plataforma haga techo
+  sobre un pozo y que todo objeto esté sobre una plataforma alcanzable. Si
+  cambias un nivel a mano, vuelve a pasar esas comprobaciones.
+  La leyenda de los símbolos está junto a la constante NIVELES.
+-->
+<html lang="es-MX">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+<title>La Doctora contra Mordor</title>
+<meta name="description" content="Plataformas estilo arcade: la doctora salva pacientes y se abre paso entre los orcos de Mordor." />
+<meta name="theme-color" content="#0b0712" />
+<style>
+  :root {
+    --noche: #0b0712;
+    --noche-suave: #151024;
+    --borde: #2b2140;
+    --hueso: #f4efe6;
+    --tenue: #a79bc0;
+    --brasa: #ff7a33;
+    --sangre: #e0454f;
+    --bata: #ffffff;
+    --curar: #4fd0a6;
+    --jeringa: #7fc8ff;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--noche);
+    color: var(--hueso);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    overscroll-behavior: none;
+  }
+
+  body {
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  h1 {
+    font-size: 15px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin: 4px 0 0;
+    color: var(--tenue);
+    font-weight: 700;
+    text-align: center;
+  }
+
+  #escenario {
+    position: relative;
+    width: 100%;
+    max-width: 720px;
+    border: 2px solid var(--borde);
+    border-radius: 10px;
+    overflow: hidden;
+    background: #000;
+    box-shadow: 0 0 0 1px #000 inset, 0 14px 40px rgba(0, 0, 0, 0.6);
+  }
+
+  canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 320 / 192;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+  }
+
+  .capa {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-align: center;
+    padding: 16px;
+    background: rgba(8, 5, 16, 0.86);
+    backdrop-filter: blur(2px);
+  }
+
+  .capa[hidden] { display: none; }
+
+  .capa h2 {
+    margin: 0;
+    font-size: clamp(18px, 5vw, 26px);
+    letter-spacing: 0.06em;
+  }
+
+  .capa p {
+    margin: 0;
+    font-size: clamp(12px, 3.2vw, 14px);
+    line-height: 1.5;
+    color: var(--tenue);
+    max-width: 44ch;
+  }
+
+  .capa .marcador { color: var(--hueso); font-size: clamp(13px, 3.4vw, 15px); }
+
+  .capa strong { color: var(--hueso); }
+
+  button {
+    font: inherit;
+    font-weight: 700;
+    color: var(--noche);
+    background: var(--hueso);
+    border: none;
+    border-radius: 999px;
+    padding: 11px 22px;
+    cursor: pointer;
+    letter-spacing: 0.03em;
+  }
+
+  button:active { transform: translateY(1px); }
+
+  .mandos {
+    width: 100%;
+    max-width: 720px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    align-items: end;
+  }
+
+  .grupo { display: flex; gap: 10px; }
+  .grupo.derecha { justify-content: flex-end; }
+
+  .tecla {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: none;
+    width: 68px;
+    height: 58px;
+    border-radius: 14px;
+    border: 1px solid var(--borde);
+    background: var(--noche-suave);
+    color: var(--hueso);
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    line-height: 1.1;
+    padding: 0;
+  }
+
+  .tecla .icono { font-size: 18px; }
+  .tecla.activa { background: #2a2040; border-color: #4a3a6b; }
+  .tecla[data-accion="curar"] { border-color: #2f6a58; }
+  .tecla[data-accion="jeringa"] { border-color: #2f5a78; }
+
+  .pie {
+    width: 100%;
+    max-width: 720px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    font-size: 11px;
+    color: var(--tenue);
+  }
+
+  .pie button {
+    background: transparent;
+    color: var(--tenue);
+    border: 1px solid var(--borde);
+    padding: 7px 12px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .ayuda-teclado { display: none; }
+
+  @media (hover: hover) and (pointer: fine) {
+    .mandos { display: none; }
+    .ayuda-teclado { display: block; }
+  }
+</style>
+</head>
+<body>
+  <h1>La Doctora contra Mordor</h1>
+
+  <div id="escenario">
+    <canvas id="lienzo" width="320" height="192" aria-label="Juego de plataformas"></canvas>
+
+    <div class="capa" id="capa-inicio">
+      <h2>La Doctora contra Mordor</h2>
+      <p>Los orcos bajaron de la montaña y dejaron heridos por todo el camino.
+         Salva a cada paciente: <strong>opera</strong> a quien lo necesita y
+         <strong>da medicina</strong> a quien la pide. Luego corre a la ambulancia.</p>
+      <p>Salta encima de los orcos o lánzales una jeringa. Si te tocan, pierdes un corazón.</p>
+      <button id="btn-jugar">Empezar turno</button>
+      <p class="ayuda-teclado">Teclado: ← → mover · ↑ / espacio saltar · X jeringa · Z curar · P pausa</p>
+    </div>
+
+    <div class="capa" id="capa-mensaje" hidden>
+      <h2 id="mensaje-titulo">Nivel superado</h2>
+      <p id="mensaje-texto"></p>
+      <p class="marcador" id="mensaje-marcador"></p>
+      <button id="btn-continuar">Continuar</button>
+    </div>
+  </div>
+
+  <div class="mandos" id="mandos">
+    <div class="grupo">
+      <button class="tecla" data-accion="izquierda" aria-label="Izquierda"><span class="icono">◀</span></button>
+      <button class="tecla" data-accion="derecha" aria-label="Derecha"><span class="icono">▶</span></button>
+    </div>
+    <div class="grupo derecha">
+      <button class="tecla" data-accion="curar" aria-label="Curar"><span class="icono">✚</span>curar</button>
+      <button class="tecla" data-accion="jeringa" aria-label="Jeringa"><span class="icono">💉</span>lanzar</button>
+      <button class="tecla" data-accion="saltar" aria-label="Saltar"><span class="icono">▲</span>saltar</button>
+    </div>
+  </div>
+
+  <div class="pie">
+    <span id="pie-nivel">Nivel 1</span>
+    <span>
+      <button id="btn-sonido" aria-pressed="true">Sonido: sí</button>
+      <button id="btn-pausa">Pausa</button>
+    </span>
+  </div>
+
+<script>
+"use strict";
+
+/* ───────────────────────────── Constantes ───────────────────────────── */
+
+const BALDOSA = 16;            // lado de cada tile, en píxeles
+const ANCHO_VISTA = 320;
+const ALTO_VISTA = 192;
+const FILAS = 12;              // todos los niveles miden 12 baldosas de alto
+
+const GRAVEDAD = 900;          // px/s²
+const VEL_CAMINAR = 92;        // px/s: casi seis baldosas por segundo
+const IMPULSO_SALTO = 345;     // px/s: sube 66 px, cuatro baldosas con holgura
+const SALTO_MINIMO = 205;      // px/s: un toque corto todavía sube una baldosa y media
+const VEL_JERINGA = 190;
+const TIEMPO_INVULNERABLE = 1.4;
+const ALCANCE_CURACION = 22;   // distancia horizontal para poder atender a alguien
+
+const SOLIDAS = new Set(["#", "=", "X"]);
+const MORTALES = new Set(["~", "^"]);
+
+/* ───────────────────────────── Sprites ───────────────────────────── */
+/*
+  Cada sprite es una rejilla de caracteres; cada carácter es un píxel de color.
+  Se rasterizan una sola vez a un canvas fuera de pantalla y luego se dibujan
+  con drawImage, que es mucho más barato que miles de fillRect por cuadro.
+*/
+
+const PALETA = {
+  ".": null,             // transparente
+  h: "#241d3a",          // pelo
+  H: "#3a2f5c",          // pelo con luz
+  s: "#f3d2a9",          // piel
+  S: "#d9ae82",          // piel en sombra
+  g: "#1a1a22",          // armazón de los lentes
+  w: "#ffffff",          // bata / cristal
+  W: "#d9dfef",          // sombra de la bata
+  b: "#7a4242",          // blusa
+  m: "#c8566c",          // boca
+  p: "#2a9fb8",          // pantalón
+  P: "#1d7b90",          // pantalón en sombra
+  z: "#4a3a3a",          // zapatos
+  c: "#e0454f",          // cruz roja / detalles
+  o: "#6f9146",          // piel de orco
+  O: "#4e6a32",          // piel de orco en sombra
+  d: "#3a3644",          // armadura
+  D: "#25222c",          // armadura oscura
+  e: "#ff5a45",          // ojos de orco
+  t: "#efe7d4",          // colmillos
+  x: "#7a4a2a",          // correas de cuero
+  k: "#b9c0c9",          // metal
+  r: "#8e1f2a",          // capa del capitán
+};
+
+function crearSprite(rejilla) {
+  const alto = rejilla.length;
+  const ancho = rejilla[0].length;
+  const lienzo = document.createElement("canvas");
+  lienzo.width = ancho;
+  lienzo.height = alto;
+  const pincel = lienzo.getContext("2d");
+  for (let y = 0; y < alto; y++) {
+    for (let x = 0; x < ancho; x++) {
+      const color = PALETA[rejilla[y][x]];
+      if (!color) continue;
+      pincel.fillStyle = color;
+      pincel.fillRect(x, y, 1, 1);
+    }
+  }
+  return lienzo;
+}
+
+// La doctora: 12 × 16 px. Bata blanca sobre blusa café, jeans y lentes.
+const DOCTORA_QUIETA = [
+  "...hhhhhh...",
+  "..hhhhhhhh..",
+  ".hhhhhhhhhh.",
+  ".hhssssssHh.",
+  ".hhssssssHh.",
+  ".hggssssggh.",
+  ".hgwgssgwgh.",
+  ".hhsssssshh.",
+  ".hhsmmmmshh.",
+  "..hhssssHh..",
+  "..wwbbbbww..",
+  ".swwbbbbwws.",
+  ".swwWbbWwws.",
+  "..ppp..ppp..",
+  "..ppp..ppp..",
+  "..zzz..zzz..",
+];
+
+const DOCTORA_PASO = [
+  "...hhhhhh...",
+  "..hhhhhhhh..",
+  ".hhhhhhhhhh.",
+  ".hhssssssHh.",
+  ".hhssssssHh.",
+  ".hggssssggh.",
+  ".hgwgssgwgh.",
+  ".hhsssssshh.",
+  ".hhsmmmmshh.",
+  "..hhssssHh..",
+  "..wwbbbbww..",
+  ".swwbbbbwws.",
+  "..wwWbbWww.s",
+  "..ppp..ppp..",
+  ".ppp....ppp.",
+  ".zz......zz.",
+];
+
+const DOCTORA_SALTO = [
+  "...hhhhhh...",
+  "..hhhhhhhh..",
+  ".hhhhhhhhhh.",
+  ".hhssssssHh.",
+  ".hhssssssHh.",
+  ".hggssssggh.",
+  ".hgwgssgwgh.",
+  ".hhsssssshh.",
+  "shhsmmmmshhs",
+  ".shhssssHhs.",
+  "..wwbbbbww..",
+  "..wwbbbbww..",
+  "..wwWbbWww..",
+  "..pppppp....",
+  "...ppp.ppp..",
+  "...zzz.zz...",
+];
+
+const DOCTORA_CURA = [
+  "...hhhhhh...",
+  "..hhhhhhhh..",
+  ".hhhhhhhhhh.",
+  ".hhssssssHh.",
+  ".hhssssssHh.",
+  ".hggssssggh.",
+  ".hgwgssgwgh.",
+  ".hhsssssshh.",
+  ".hhsmmmmshh.",
+  "..hhssssHh..",
+  "..wwbbbbww..",
+  ".wwwbbbbwwss",
+  ".wwWWbbWww..",
+  "..ppp..ppp..",
+  "..ppp..ppp..",
+  "..zzz..zzz..",
+];
+
+// Orco: 12 × 14 px.
+const ORCO_A = [
+  "..dddddddd..",
+  ".dddddddddd.",
+  ".dooooooood.",
+  ".dooooooood.",
+  "..oeoooeoo..",
+  "..oooooooo..",
+  "..otooooto..",
+  "...oooooo...",
+  "..ddoooodd..",
+  ".dddxxxxddd.",
+  ".ddxxxxxxdd.",
+  "..OOO..OOO..",
+  "..OOO..OOO..",
+  "..ddd..ddd..",
+];
+
+const ORCO_B = [
+  "..dddddddd..",
+  ".dddddddddd.",
+  ".dooooooood.",
+  ".dooooooood.",
+  "..oeoooeoo..",
+  "..oooooooo..",
+  "..otooooto..",
+  "...oooooo...",
+  "..ddoooodd..",
+  ".dddxxxxddd.",
+  ".ddxxxxxxdd.",
+  "..OOO..OOO..",
+  ".OOO....OOO.",
+  ".dd......dd.",
+];
+
+// El Capitán de Mordor: 14 × 18 px, con yelmo de cuernos y capa.
+const CAPITAN = [
+  ".k..........k.",
+  ".kk.dddddd.kk.",
+  "..dddddddddd..",
+  ".rddddddddddr.",
+  ".rdoooooooodr.",
+  ".rdoooooooodr.",
+  ".rdoeooooeodr.",
+  ".rdoooooooodr.",
+  ".rdotooootodr.",
+  ".rroooooooorr.",
+  ".rddooooooddr.",
+  ".rdxxxxxxxxdr.",
+  "..dxxxxxxxxd..",
+  "..ddxxxxxxdd..",
+  "...OOO..OOO...",
+  "...OOO..OOO...",
+  "...OOO..OOO...",
+  "...ddd..ddd...",
+];
+
+const SPR = {
+  quieta: crearSprite(DOCTORA_QUIETA),
+  paso: crearSprite(DOCTORA_PASO),
+  salto: crearSprite(DOCTORA_SALTO),
+  cura: crearSprite(DOCTORA_CURA),
+  orcoA: crearSprite(ORCO_A),
+  orcoB: crearSprite(ORCO_B),
+  capitan: crearSprite(CAPITAN),
+};
+
+/* ───────────────────────────── Niveles ─────────────────────────────
+   Leyenda del mapa:
+     #  roca         =  plataforma      ~  lava        ^  púas
+     P  la doctora   o  orco            C  el Capitán  A  ambulancia (salida)
+     Q  paciente que necesita cirugía   R  paciente que necesita medicina
+     m  caja de medicina                j  jeringas    v  corazón
+*/
+const NIVELES = [
+  {
+    nombre: "Las puertas negras",
+    lema: "Tu primer turno de guardia.",
+    filas: [
+      "................................................................................",
+      "................................................................................",
+      "................................................................................",
+      ".......................................v........................................",
+      "......................................====......................................",
+      "................................................................................",
+      ".......................j...........o........m..............j....................",
+      "......................====........====.....====...........====..................",
+      "................................................................................",
+      "..P..............o.........Q...o................o..............o....R.....A.....",
+      "##########..#########################################.##########################",
+      "##########~~#########################################~##########################",
+    ],
+  },
+  {
+    nombre: "El desfiladero",
+    lema: "Las púas y la lava no perdonan.",
+    filas: [
+      "................................................v...............................................",
+      "..............................................=====.............................................",
+      "................................................................................................",
+      ".........................j.................................................j....................",
+      "........................====................====..........................====..................",
+      "................................................................................................",
+      ".....................o...................m...................m.................o................",
+      "....................====................====................====..............====..............",
+      "................................................................................................",
+      "..P.......o........Q......o.........^^.......o...R........o......^.Q........o.......R...o...A...",
+      "##############...#############...###################...###############..########################",
+      "##############~~~#############~~~###################~~~###############~~########################",
+    ],
+  },
+  {
+    nombre: "La montaña de fuego",
+    lema: "Hasta el Capitán necesita anestesia.",
+    filas: [
+      "..........................................................v.................................................",
+      "........................................................=====...............................................",
+      "............................................................................................................",
+      ".............................j.........................................j....................................",
+      "............................====......................====............====..................................",
+      "............................................................................................................",
+      ".........................o.............j...........m...............m........................................",
+      "........................====..........====........====............====......................................",
+      "............................................................................................................",
+      "..P.........o.......Q.o.....^^.............o.....R.........o...........^........o...Q...o.......C.......A...",
+      "################...###############...########...##############...##########...##############################",
+      "################~~~###############~~~########~~~##############~~~##########~~~##############################",
+    ],
+  },
+];
+
+/* ───────────────────────────── Estado ───────────────────────────── */
+
+const lienzo = document.getElementById("lienzo");
+const ctx = lienzo.getContext("2d");
+ctx.imageSmoothingEnabled = false;
+
+const juego = {
+  pantalla: "inicio",   // inicio | jugando | pausa | mensaje
+  nivel: 0,
+  puntos: 0,
+  corazones: 3,
+  jeringas: 4,
+  medicinas: 0,
+  sonido: true,
+  mejor: 0,
+};
+
+let mundo = null;
+let reloj = 0;
+
+/* ───────────────────────────── Sonido ───────────────────────────── */
+
+let audio = null;
+
+function pitido(frecuencia, duracion, forma, volumen) {
+  if (!juego.sonido) return;
+  try {
+    if (!audio) audio = new (window.AudioContext || window.webkitAudioContext)();
+    if (audio.state === "suspended") audio.resume();
+    const osc = audio.createOscillator();
+    const ganancia = audio.createGain();
+    osc.type = forma || "square";
+    osc.frequency.setValueAtTime(frecuencia, audio.currentTime);
+    ganancia.gain.setValueAtTime(volumen || 0.05, audio.currentTime);
+    ganancia.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + duracion);
+    osc.connect(ganancia).connect(audio.destination);
+    osc.start();
+    osc.stop(audio.currentTime + duracion);
+  } catch (error) {
+    juego.sonido = false; // si el navegador no deja, seguimos en silencio
+  }
+}
+
+const SONIDO = {
+  salto: () => pitido(520, 0.12, "square", 0.04),
+  pisotón: () => pitido(180, 0.14, "square", 0.06),
+  jeringa: () => pitido(880, 0.07, "triangle", 0.04),
+  golpe: () => pitido(120, 0.3, "sawtooth", 0.06),
+  objeto: () => pitido(1040, 0.09, "triangle", 0.05),
+  curando: () => pitido(660, 0.05, "sine", 0.03),
+  curado: () => { pitido(700, 0.1, "sine", 0.05); setTimeout(() => pitido(980, 0.18, "sine", 0.05), 90); },
+  meta: () => { pitido(600, 0.1, "square", 0.05); setTimeout(() => pitido(800, 0.1, "square", 0.05), 110); setTimeout(() => pitido(1100, 0.22, "square", 0.05), 220); },
+};
+
+/* ───────────────────────────── Carga del nivel ───────────────────────────── */
+
+function cargarNivel(indice) {
+  const plano = NIVELES[indice];
+  const ancho = Math.max(...plano.filas.map((f) => f.length));
+  const filas = plano.filas.map((fila) => fila.padEnd(ancho, ".").split(""));
+
+  mundo = {
+    nombre: plano.nombre,
+    lema: plano.lema,
+    ancho: ancho,
+    filas: filas,
+    doctora: null,
+    orcos: [],
+    jefe: null,
+    pacientes: [],
+    objetos: [],
+    proyectiles: [],
+    particulas: [],
+    avisos: [],
+    ambulancia: null,
+    camara: 0,
+    banner: 2.4,
+    muerte: 0,
+    ganado: 0,
+  };
+
+  for (let y = 0; y < filas.length; y++) {
+    for (let x = 0; x < ancho; x++) {
+      const simbolo = filas[y][x];
+      const px = x * BALDOSA;
+      const py = y * BALDOSA;
+      switch (simbolo) {
+        case "P":
+          mundo.doctora = crearDoctora(px + 3, py);
+          break;
+        case "o":
+          mundo.orcos.push(crearOrco(px + 2, py + 2));
+          break;
+        case "C":
+          mundo.jefe = crearJefe(px, py - 18);
+          break;
+        case "Q":
+          mundo.pacientes.push(crearPaciente(px - 4, py + 4, "cirugia"));
+          break;
+        case "R":
+          mundo.pacientes.push(crearPaciente(px - 4, py + 4, "medicina"));
+          break;
+        case "m":
+          mundo.objetos.push({ x: px + 3, y: py + 4, w: 10, h: 10, tipo: "medicina", fase: Math.random() * 6 });
+          break;
+        case "j":
+          mundo.objetos.push({ x: px + 3, y: py + 4, w: 10, h: 10, tipo: "jeringa", fase: Math.random() * 6 });
+          break;
+        case "v":
+          mundo.objetos.push({ x: px + 3, y: py + 4, w: 10, h: 10, tipo: "vida", fase: Math.random() * 6 });
+          break;
+        case "A":
+          mundo.ambulancia = { x: px - 6, y: py - 10, w: 26, h: 26 };
+          break;
+        default:
+          continue;
+      }
+      filas[y][x] = ".";   // el símbolo ya se convirtió en entidad: deja de ser terreno
+    }
+  }
+
+  if (!mundo.doctora) mundo.doctora = crearDoctora(32, 120);
+  mundo.totalPacientes = mundo.pacientes.length;
+  mundo.regano = 0;
+  pintarTerreno();
+  centrarCamara(true);
+}
+
+function crearDoctora(x, y) {
+  return {
+    x: x, y: y, w: 10, h: 16,
+    vx: 0, vy: 0,
+    mirando: 1,
+    enSuelo: false,
+    coyote: 0,
+    colchon: 0,
+    saltoActivo: false,
+    invulnerable: 0,
+    curando: 0,
+    paso: 0,
+    viva: true,
+  };
+}
+
+function crearOrco(x, y) {
+  return { x: x, y: y, w: 10, h: 14, vx: -26, vy: 0, enSuelo: false, paso: Math.random() * 4, vivo: true };
+}
+
+function crearJefe(x, y) {
+  return {
+    x: x, y: y, w: 22, h: 34,
+    vx: -30, vy: 0, enSuelo: false,
+    vida: 6, vidaMaxima: 6,
+    invulnerable: 0, saltoEn: 1.6, vivo: true, paso: 0,
+  };
+}
+
+function crearPaciente(x, y, tipo) {
+  return { x: x, y: y, w: 24, h: 12, tipo: tipo, progreso: 0, curado: false, gracias: 0, fase: Math.random() * 6 };
+}
+
+/* ───────────────────────────── Terreno y física ───────────────────────────── */
+
+function simboloEn(tx, ty) {
+  if (tx < 0 || tx >= mundo.ancho || ty < 0 || ty >= FILAS) return ".";
+  return mundo.filas[ty][tx];
+}
+
+function esSolida(tx, ty) {
+  if (tx < 0 || tx >= mundo.ancho) return true;   // paredes invisibles a los lados
+  if (ty < 0 || ty >= FILAS) return false;
+  return SOLIDAS.has(mundo.filas[ty][tx]);
+}
+
+function chocaSolido(x, y, w, h) {
+  const x0 = Math.floor(x / BALDOSA);
+  const x1 = Math.floor((x + w - 1) / BALDOSA);
+  const y0 = Math.floor(y / BALDOSA);
+  const y1 = Math.floor((y + h - 1) / BALDOSA);
+  for (let ty = y0; ty <= y1; ty++) {
+    for (let tx = x0; tx <= x1; tx++) {
+      if (esSolida(tx, ty)) return true;
+    }
+  }
+  return false;
+}
+
+function pisaMortal(e) {
+  const x0 = Math.floor((e.x + 2) / BALDOSA);
+  const x1 = Math.floor((e.x + e.w - 3) / BALDOSA);
+  const y0 = Math.floor((e.y + e.h * 0.5) / BALDOSA);
+  const y1 = Math.floor((e.y + e.h - 1) / BALDOSA);
+  for (let ty = y0; ty <= y1; ty++) {
+    for (let tx = x0; tx <= x1; tx++) {
+      if (MORTALES.has(simboloEn(tx, ty))) return true;
+    }
+  }
+  return false;
+}
+
+// Movimiento a pasos de un píxel: nunca atraviesa una pared, por rápido que vaya.
+function moverEje(e, dx, dy) {
+  e.chocoPared = false;
+  if (dx) {
+    let resto = dx;
+    const signo = Math.sign(dx);
+    while (Math.abs(resto) > 0.0001) {
+      const paso = Math.abs(resto) > 1 ? signo : resto;
+      if (chocaSolido(e.x + paso, e.y, e.w, e.h)) { e.chocoPared = true; e.vx = 0; break; }
+      e.x += paso;
+      resto -= paso;
+    }
+  }
+  if (dy) {
+    let resto = dy;
+    const signo = Math.sign(dy);
+    while (Math.abs(resto) > 0.0001) {
+      const paso = Math.abs(resto) > 1 ? signo : resto;
+      if (chocaSolido(e.x, e.y + paso, e.w, e.h)) {
+        if (signo > 0) e.enSuelo = true;
+        e.vy = 0;
+        break;
+      }
+      e.y += paso;
+      resto -= paso;
+    }
+  }
+}
+
+function seTocan(a, b) {
+  return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+}
+
+/* ───────────────────────────── Entrada ───────────────────────────── */
+
+const teclas = { izquierda: false, derecha: false, saltar: false, jeringa: false, curar: false };
+const pulsos = { saltar: false, jeringa: false };
+
+/* ───────────────────────────── Efectos ───────────────────────────── */
+
+function chispas(x, y, color, cantidad, fuerza) {
+  for (let i = 0; i < cantidad; i++) {
+    mundo.particulas.push({
+      x: x, y: y,
+      vx: (Math.random() - 0.5) * (fuerza || 90),
+      vy: -Math.random() * (fuerza || 90) * 0.8,
+      vida: 0.4 + Math.random() * 0.5,
+      color: color,
+      tam: Math.random() < 0.4 ? 2 : 1,
+    });
+  }
+}
+
+function aviso(texto, x, y, color) {
+  mundo.avisos.push({ texto: texto, x: x, y: y, t: 1.3, color: color || "#f4efe6" });
+}
+
+/* ───────────────────────────── La doctora ───────────────────────────── */
+
+function actualizarDoctora(dt) {
+  const d = mundo.doctora;
+  if (!d.viva) return;
+
+  const paciente = pacienteAtendible();
+  const curando = teclas.curar && paciente && puedeAtender(paciente);
+
+  let direccion = 0;
+  if (!curando) {
+    if (teclas.izquierda) direccion -= 1;
+    if (teclas.derecha) direccion += 1;
+  }
+  if (direccion !== 0) d.mirando = direccion;
+
+  const objetivo = direccion * VEL_CAMINAR;
+  d.vx += (objetivo - d.vx) * Math.min(1, dt * (d.enSuelo ? 16 : 9));
+  if (Math.abs(d.vx) < 3 && direccion === 0) d.vx = 0;
+
+  if (pulsos.saltar) { d.colchon = 0.14; pulsos.saltar = false; }
+  d.colchon = Math.max(0, d.colchon - dt);
+  d.coyote = d.enSuelo ? 0.09 : Math.max(0, d.coyote - dt);
+
+  if (d.colchon > 0 && d.coyote > 0 && !curando) {
+    d.vy = -IMPULSO_SALTO;
+    d.enSuelo = false;
+    d.colchon = 0;
+    d.coyote = 0;
+    d.saltoActivo = true;
+    SONIDO.salto();
+  }
+  // Salto corto si sueltas pronto. Solo recorta el salto propio: los rebotes
+  // (pisotones, empujones) conservan toda su fuerza.
+  if (d.saltoActivo && !teclas.saltar && d.vy < -SALTO_MINIMO) {
+    d.vy = -SALTO_MINIMO;
+    d.saltoActivo = false;
+  }
+  if (d.vy >= 0) d.saltoActivo = false;
+
+  if (pulsos.jeringa) { lanzarJeringa(); pulsos.jeringa = false; }
+
+  d.vy = Math.min(d.vy + GRAVEDAD * dt, 480);
+  d.enSuelo = false;
+  moverEje(d, d.vx * dt, 0);
+  moverEje(d, 0, d.vy * dt);
+
+  d.paso += Math.abs(d.vx) * dt * 0.09;
+  d.invulnerable = Math.max(0, d.invulnerable - dt);
+  d.curando = Math.max(0, d.curando - dt);
+
+  // Atender al paciente que tenemos enfrente
+  if (curando) {
+    d.curando = 0.2;
+    const velocidad = paciente.tipo === "cirugia" ? 0.55 : 1.1;
+    paciente.progreso += dt * velocidad;
+    if (Math.random() < dt * 14) {
+      chispas(paciente.x + 12, paciente.y + 2, paciente.tipo === "cirugia" ? "#7fc8ff" : "#4fd0a6", 1, 40);
+    }
+    if (Math.random() < dt * 8) SONIDO.curando();
+    if (paciente.progreso >= 1) atender(paciente);
+  } else if (paciente) {
+    paciente.progreso = Math.max(0, paciente.progreso - dt * 0.7);
+  }
+
+  if (pisaMortal(d) || d.y > FILAS * BALDOSA + 24) {
+    juego.corazones -= 1;
+    morir();
+  }
+}
+
+function lanzarJeringa() {
+  const d = mundo.doctora;
+  if (juego.jeringas <= 0) {
+    aviso("Sin jeringas", d.x - 4, d.y - 10, "#ffb37a");
+    return;
+  }
+  juego.jeringas -= 1;
+  mundo.proyectiles.push({
+    x: d.x + (d.mirando > 0 ? d.w : -6),
+    y: d.y + 6,
+    w: 6, h: 3,
+    vx: d.mirando * VEL_JERINGA,
+    vida: 2.2,
+  });
+  SONIDO.jeringa();
+}
+
+function pacienteAtendible() {
+  const d = mundo.doctora;
+  let mejor = null;
+  let menor = Infinity;
+  for (const p of mundo.pacientes) {
+    if (p.curado) continue;
+    const dx = Math.abs((p.x + p.w / 2) - (d.x + d.w / 2));
+    const dy = Math.abs((p.y + p.h / 2) - (d.y + d.h / 2));
+    if (dx < ALCANCE_CURACION && dy < 22 && dx < menor) { menor = dx; mejor = p; }
+  }
+  return mejor;
+}
+
+function puedeAtender(paciente) {
+  if (!mundo.doctora.enSuelo) return false;
+  if (paciente.tipo === "medicina" && juego.medicinas <= 0) return false;
+  return true;
+}
+
+function atender(paciente) {
+  paciente.curado = true;
+  paciente.progreso = 1;
+  paciente.gracias = 2.2;
+  if (paciente.tipo === "medicina") juego.medicinas -= 1;
+  juego.puntos += paciente.tipo === "cirugia" ? 250 : 180;
+  chispas(paciente.x + 12, paciente.y, "#ffffff", 14, 110);
+  aviso(paciente.tipo === "cirugia" ? "¡Operación exitosa!" : "¡Medicada!", paciente.x, paciente.y - 12, "#4fd0a6");
+  SONIDO.curado();
+}
+
+function herir(desdeX) {
+  const d = mundo.doctora;
+  if (!d.viva || d.invulnerable > 0) return;
+  juego.corazones -= 1;
+  SONIDO.golpe();
+  chispas(d.x + 5, d.y + 6, "#e0454f", 8, 90);
+  if (juego.corazones <= 0) { morir(); return; }
+  d.invulnerable = TIEMPO_INVULNERABLE;
+  d.vy = -150;
+  d.saltoActivo = false;
+  d.vx = (d.x + d.w / 2 < desdeX ? -1 : 1) * 110;
+}
+
+function morir() {
+  const d = mundo.doctora;
+  if (!d.viva) return;
+  d.viva = false;
+  d.vy = -190;
+  mundo.muerte = 1.3;
+  chispas(d.x + 5, d.y + 8, "#e0454f", 16, 130);
+  SONIDO.golpe();
+}
+
+/* ───────────────────────────── Orcos y Capitán ───────────────────────────── */
+
+function actualizarOrcos(dt) {
+  const d = mundo.doctora;
+  for (const orco of mundo.orcos) {
+    if (!orco.vivo) continue;
+
+    orco.vy = Math.min(orco.vy + GRAVEDAD * dt, 480);
+    orco.enSuelo = false;
+    moverEje(orco, orco.vx * dt, 0);
+    if (orco.chocoPared) orco.vx = -orco.vx || 26;
+    moverEje(orco, 0, orco.vy * dt);
+    orco.paso += Math.abs(orco.vx) * dt * 0.1;
+
+    // No se tiran al vacío: si no hay piso adelante, dan media vuelta.
+    if (orco.enSuelo) {
+      const adelante = orco.vx > 0 ? orco.x + orco.w + 2 : orco.x - 2;
+      const tx = Math.floor(adelante / BALDOSA);
+      const ty = Math.floor((orco.y + orco.h + 2) / BALDOSA);
+      if (!esSolida(tx, ty)) orco.vx = -orco.vx;
+    }
+
+    if (pisaMortal(orco) || orco.y > FILAS * BALDOSA + 20) { orco.vivo = false; continue; }
+    if (!d.viva) continue;
+
+    if (seTocan(d, orco)) {
+      const pisando = d.vy > 40 && (d.y + d.h) - orco.y < 10;
+      if (pisando) {
+        orco.vivo = false;
+        d.vy = -195;
+        d.saltoActivo = false;
+        juego.puntos += 120;
+        chispas(orco.x + 5, orco.y + 4, "#6f9146", 10, 100);
+        aviso("+120", orco.x, orco.y - 6, "#c9e39a");
+        SONIDO.pisotón();
+      } else {
+        herir(orco.x + orco.w / 2);
+      }
+    }
+  }
+}
+
+function actualizarJefe(dt) {
+  const jefe = mundo.jefe;
+  if (!jefe || !jefe.vivo) return;
+  const d = mundo.doctora;
+
+  jefe.invulnerable = Math.max(0, jefe.invulnerable - dt);
+  jefe.saltoEn -= dt;
+
+  const rabia = 1 + (jefe.vidaMaxima - jefe.vida) * 0.12;
+  const haciaDoctora = Math.sign((d.x + d.w / 2) - (jefe.x + jefe.w / 2)) || 1;
+  const cerca = Math.abs((d.x + d.w / 2) - (jefe.x + jefe.w / 2)) < 170;
+  jefe.vx = (cerca && d.viva ? haciaDoctora : Math.sign(jefe.vx) || 1) * 34 * rabia;
+
+  if (jefe.enSuelo && jefe.saltoEn <= 0 && cerca) {
+    jefe.vy = -290;
+    jefe.saltoEn = 1.8 + Math.random();
+  }
+
+  jefe.vy = Math.min(jefe.vy + GRAVEDAD * dt, 480);
+  jefe.enSuelo = false;
+  moverEje(jefe, jefe.vx * dt, 0);
+  moverEje(jefe, 0, jefe.vy * dt);
+  jefe.paso += Math.abs(jefe.vx) * dt * 0.08;
+
+  if (!d.viva) return;
+  if (seTocan(d, jefe)) {
+    const pisando = d.vy > 40 && (d.y + d.h) - jefe.y < 14;
+    if (pisando) {
+      d.vy = -210;
+      d.saltoActivo = false;
+      golpearJefe(2);
+    } else {
+      herir(jefe.x + jefe.w / 2);
+    }
+  }
+}
+
+function golpearJefe(dano) {
+  const jefe = mundo.jefe;
+  if (!jefe.vivo || jefe.invulnerable > 0) return;
+  jefe.vida -= dano;
+  jefe.invulnerable = 0.7;
+  chispas(jefe.x + jefe.w / 2, jefe.y + 10, "#8e1f2a", 12, 110);
+  SONIDO.pisotón();
+  if (jefe.vida <= 0) {
+    jefe.vivo = false;
+    juego.puntos += 1200;
+    chispas(jefe.x + jefe.w / 2, jefe.y + 14, "#ff7a33", 34, 170);
+    aviso("¡Capitán anestesiado!", jefe.x - 14, jefe.y - 8, "#ffb37a");
+    SONIDO.meta();
+  }
+}
+
+/* ───────────────────────────── Jeringas, objetos, partículas ───────────────────────────── */
+
+function actualizarJeringas(dt) {
+  for (const jeringa of mundo.proyectiles) {
+    jeringa.vida -= dt;
+    jeringa.x += jeringa.vx * dt;
+
+    if (chocaSolido(jeringa.x, jeringa.y, jeringa.w, jeringa.h)) {
+      jeringa.vida = 0;
+      chispas(jeringa.x + 3, jeringa.y + 1, "#7fc8ff", 4, 50);
+      continue;
+    }
+    for (const orco of mundo.orcos) {
+      if (orco.vivo && seTocan(jeringa, orco)) {
+        orco.vivo = false;
+        jeringa.vida = 0;
+        juego.puntos += 90;
+        chispas(orco.x + 5, orco.y + 6, "#6f9146", 10, 100);
+        SONIDO.pisotón();
+        break;
+      }
+    }
+    if (jeringa.vida > 0 && mundo.jefe && mundo.jefe.vivo && seTocan(jeringa, mundo.jefe)) {
+      jeringa.vida = 0;
+      golpearJefe(1);
+    }
+  }
+  mundo.proyectiles = mundo.proyectiles.filter((j) => j.vida > 0);
+}
+
+function actualizarObjetos(dt) {
+  const d = mundo.doctora;
+  for (const objeto of mundo.objetos) {
+    objeto.fase += dt * 4;
+    if (objeto.tomado || !d.viva) continue;
+    if (!seTocan(d, objeto)) continue;
+
+    objeto.tomado = true;
+    SONIDO.objeto();
+    if (objeto.tipo === "jeringa") {
+      juego.jeringas += 3;
+      aviso("+3 jeringas", objeto.x - 8, objeto.y - 8, "#7fc8ff");
+    } else if (objeto.tipo === "medicina") {
+      juego.medicinas += 1;
+      aviso("+1 medicina", objeto.x - 8, objeto.y - 8, "#4fd0a6");
+    } else {
+      juego.corazones = Math.min(5, juego.corazones + 1);
+      aviso("+1 corazón", objeto.x - 8, objeto.y - 8, "#e0454f");
+    }
+    juego.puntos += 25;
+  }
+  mundo.objetos = mundo.objetos.filter((o) => !o.tomado);
+}
+
+function actualizarParticulas(dt) {
+  for (const p of mundo.particulas) {
+    p.vida -= dt;
+    p.x += p.vx * dt;
+    p.y += p.vy * dt;
+    p.vy += 200 * dt;
+  }
+  mundo.particulas = mundo.particulas.filter((p) => p.vida > 0);
+
+  for (const a of mundo.avisos) {
+    a.t -= dt;
+    a.y -= dt * 14;
+  }
+  mundo.avisos = mundo.avisos.filter((a) => a.t > 0);
+
+  for (const p of mundo.pacientes) {
+    p.fase += dt * 2;
+    if (p.gracias > 0) p.gracias -= dt;
+  }
+}
+
+/* ───────────────────────────── Cámara y fin de nivel ───────────────────────────── */
+
+function centrarCamara(inmediata) {
+  const d = mundo.doctora;
+  const limite = Math.max(0, mundo.ancho * BALDOSA - ANCHO_VISTA);
+  const deseada = Math.max(0, Math.min(limite, d.x + d.w / 2 - ANCHO_VISTA / 2));
+  mundo.camara = inmediata ? deseada : mundo.camara + (deseada - mundo.camara) * 0.14;
+}
+
+function salvados() {
+  return mundo.pacientes.filter((p) => p.curado).length;
+}
+
+function revisarMeta() {
+  const d = mundo.doctora;
+  if (!d.viva || !mundo.ambulancia || mundo.ganado > 0) return;
+  if (!seTocan(d, mundo.ambulancia)) return;
+
+  const faltan = mundo.totalPacientes - salvados();
+  if (faltan > 0) {
+    if (!mundo.regano || mundo.regano <= 0) {
+      mundo.regano = 2;
+      aviso(faltan === 1 ? "Falta 1 paciente" : "Faltan " + faltan + " pacientes", d.x - 18, d.y - 12, "#ffb37a");
+    }
+    return;
+  }
+  if (mundo.jefe && mundo.jefe.vivo) {
+    if (!mundo.regano || mundo.regano <= 0) {
+      mundo.regano = 2;
+      aviso("El Capitán sigue de pie", d.x - 26, d.y - 12, "#ffb37a");
+    }
+    return;
+  }
+  mundo.ganado = 1.1;
+  SONIDO.meta();
+}
+
+/* ───────────────────────────── Dibujo del escenario ───────────────────────────── */
+
+// El terreno no cambia durante el nivel: se pinta una sola vez a un lienzo
+// del tamaño del mapa y cada cuadro solo se copia el trozo que se ve.
+function pintarTerreno() {
+  const fondo = document.createElement("canvas");
+  fondo.width = mundo.ancho * BALDOSA;
+  fondo.height = FILAS * BALDOSA;
+  const p = fondo.getContext("2d");
+
+  for (let y = 0; y < FILAS; y++) {
+    for (let x = 0; x < mundo.ancho; x++) {
+      const simbolo = mundo.filas[y][x];
+      const px = x * BALDOSA;
+      const py = y * BALDOSA;
+      const semilla = (x * 73 + y * 151) % 17;
+
+      if (simbolo === "#") {
+        p.fillStyle = "#231d30";
+        p.fillRect(px, py, BALDOSA, BALDOSA);
+        p.fillStyle = "#1a1526";
+        p.fillRect(px + (semilla % 5), py + 4 + (semilla % 3), 3, 2);
+        p.fillRect(px + 9 - (semilla % 4), py + 10, 4, 2);
+        if (!esSolida(x, y - 1)) {
+          p.fillStyle = "#3d3352";
+          p.fillRect(px, py, BALDOSA, 3);
+          p.fillStyle = "#574670";
+          p.fillRect(px + (semilla % 6), py, 4, 1);
+        }
+      } else if (simbolo === "=") {
+        p.fillStyle = "#4a3d5c";
+        p.fillRect(px, py, BALDOSA, BALDOSA);
+        p.fillStyle = "#6d5b87";
+        p.fillRect(px, py, BALDOSA, 3);
+        p.fillStyle = "#2d2540";
+        p.fillRect(px, py + BALDOSA - 3, BALDOSA, 3);
+        p.fillStyle = "#3a3050";
+        p.fillRect(px + 5 + (semilla % 3), py + 6, 3, 3);
+      } else if (simbolo === "^") {
+        p.fillStyle = "#1a1526";
+        p.fillRect(px, py + BALDOSA - 3, BALDOSA, 3);
+        p.fillStyle = "#8f8aa3";
+        for (let i = 0; i < 4; i++) {
+          const bx = px + i * 4;
+          p.fillRect(bx + 1, py + 10, 2, 3);
+          p.fillRect(bx + 1, py + 7, 2, 3);
+          p.fillRect(bx + 1, py + 5, 1, 2);
+        }
+      }
+    }
+  }
+  mundo.terreno = fondo;
+}
+
+const BRASAS = Array.from({ length: 26 }, () => ({
+  x: Math.random() * ANCHO_VISTA,
+  y: Math.random() * ALTO_VISTA,
+  v: 6 + Math.random() * 16,
+  t: Math.random() * 6,
+}));
+
+function dibujarFondo(dt) {
+  const cielo = ctx.createLinearGradient(0, 0, 0, ALTO_VISTA);
+  cielo.addColorStop(0, "#120b1c");
+  cielo.addColorStop(0.55, "#2a1224");
+  cielo.addColorStop(1, "#5c1b1c");
+  ctx.fillStyle = cielo;
+  ctx.fillRect(0, 0, ANCHO_VISTA, ALTO_VISTA);
+
+  // Cordillera lejana, montaña de fuego y torre: tres capas con parallax.
+  const lejos = -(mundo.camara * 0.12) % 480;
+  ctx.save();
+  ctx.translate(lejos, 0);
+  for (let repeticion = 0; repeticion < 3; repeticion++) {
+    const base = repeticion * 480;
+
+    // Cordillera del fondo
+    ctx.fillStyle = "#170f22";
+    ctx.beginPath();
+    ctx.moveTo(base - 10, 162);
+    const picos = [22, 30, 14, 36, 20, 28, 16, 34, 18, 26];
+    for (let i = 0; i < picos.length; i++) {
+      ctx.lineTo(base + i * 50 + 15, 162 - picos[i]);
+      ctx.lineTo(base + i * 50 + 50, 162);
+    }
+    ctx.lineTo(base + 500, 162);
+    ctx.lineTo(base + 500, 192);
+    ctx.lineTo(base - 10, 192);
+    ctx.closePath();
+    ctx.fill();
+
+    // La montaña de fuego
+    ctx.fillStyle = "#1d1329";
+    ctx.beginPath();
+    ctx.moveTo(base + 92, 162);
+    ctx.lineTo(base + 150, 74);
+    ctx.lineTo(base + 208, 162);
+    ctx.closePath();
+    ctx.fill();
+
+    // Colada de lava bajando por la ladera
+    ctx.fillStyle = "#7d2614";
+    ctx.beginPath();
+    ctx.moveTo(base + 150, 76);
+    ctx.lineTo(base + 157, 76);
+    ctx.lineTo(base + 205, 162);
+    ctx.lineTo(base + 193, 162);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = "#c2360f";
+    ctx.globalAlpha = 0.55 + Math.sin(reloj * 2.1 + repeticion * 1.7) * 0.2;
+    ctx.beginPath();
+    ctx.moveTo(base + 151, 78);
+    ctx.lineTo(base + 155, 78);
+    ctx.lineTo(base + 199, 162);
+    ctx.lineTo(base + 195, 162);
+    ctx.closePath();
+    ctx.fill();
+    ctx.globalAlpha = 1;
+
+    // Cráter encendido
+    const latido = 0.55 + Math.sin(reloj * 1.6 + repeticion) * 0.2;
+    ctx.globalAlpha = latido;
+    ctx.fillStyle = "#ff5a1e";
+    ctx.beginPath();
+    ctx.moveTo(base + 142, 81);
+    ctx.lineTo(base + 150, 72);
+    ctx.lineTo(base + 158, 81);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = "#ffc24a";
+    ctx.fillRect(base + 147, 74, 5, 2);
+    ctx.globalAlpha = 1;
+
+    // La torre
+    ctx.fillStyle = "#100a1a";
+    ctx.fillRect(base + 336, 70, 16, 92);
+    ctx.fillRect(base + 331, 96, 26, 66);
+    ctx.beginPath();
+    ctx.moveTo(base + 336, 70);
+    ctx.lineTo(base + 344, 44);
+    ctx.lineTo(base + 352, 70);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = "#ffc24a";
+    ctx.globalAlpha = 0.55 + Math.sin(reloj * 2.4 + repeticion * 2) * 0.3;
+    ctx.fillRect(base + 341, 56, 5, 3);
+    ctx.globalAlpha = 1;
+  }
+  ctx.restore();
+
+  // Brasas que suben
+  ctx.fillStyle = "#ff8c3a";
+  for (const brasa of BRASAS) {
+    brasa.y -= brasa.v * (dt || 0);
+    brasa.t += (dt || 0) * 3;
+    if (brasa.y < -4) { brasa.y = ALTO_VISTA + 4; brasa.x = Math.random() * ANCHO_VISTA; }
+    ctx.globalAlpha = 0.25 + Math.abs(Math.sin(brasa.t)) * 0.5;
+    ctx.fillRect(Math.round(brasa.x + Math.sin(brasa.t) * 3), Math.round(brasa.y), 1, 2);
+  }
+  ctx.globalAlpha = 1;
+
+  // Neblina baja
+  ctx.fillStyle = "rgba(90, 24, 30, 0.35)";
+  ctx.fillRect(0, 150, ANCHO_VISTA, ALTO_VISTA - 150);
+}
+
+function dibujarLava() {
+  const c0 = Math.floor(mundo.camara / BALDOSA) - 1;
+  const c1 = c0 + Math.ceil(ANCHO_VISTA / BALDOSA) + 2;
+  for (let x = Math.max(0, c0); x < Math.min(mundo.ancho, c1); x++) {
+    for (let y = 0; y < FILAS; y++) {
+      if (mundo.filas[y][x] !== "~") continue;
+      const px = x * BALDOSA;
+      const py = y * BALDOSA;
+      ctx.fillStyle = "#c22a10";
+      ctx.fillRect(px, py, BALDOSA, BALDOSA);
+      ctx.fillStyle = "#ff6a1e";
+      const ola = Math.sin(reloj * 3 + x * 0.9) * 1.5;
+      ctx.fillRect(px, py + 2 + ola, BALDOSA, 4);
+      ctx.fillStyle = "#ffc24a";
+      ctx.fillRect(px + 3, py + 3 + ola, 4, 1);
+      ctx.fillRect(px + 10, py + 4 + ola, 3, 1);
+    }
+  }
+}
+
+/* ───────────────────────────── Dibujo de personajes ───────────────────────────── */
+
+function dibujarSprite(sprite, x, y, volteado, escala) {
+  const e = escala || 1;
+  ctx.save();
+  ctx.translate(Math.round(x), Math.round(y));
+  if (volteado) {
+    ctx.translate(sprite.width * e, 0);
+    ctx.scale(-1, 1);
+  }
+  ctx.drawImage(sprite, 0, 0, sprite.width * e, sprite.height * e);
+  ctx.restore();
+}
+
+function dibujarDoctora() {
+  const d = mundo.doctora;
+  if (d.invulnerable > 0 && Math.floor(reloj * 14) % 2 === 0) return;
+
+  let sprite = SPR.quieta;
+  if (!d.viva) sprite = SPR.salto;
+  else if (d.curando > 0) sprite = SPR.cura;
+  else if (!d.enSuelo) sprite = SPR.salto;
+  else if (Math.abs(d.vx) > 10) sprite = Math.floor(d.paso) % 2 === 0 ? SPR.quieta : SPR.paso;
+
+  dibujarSprite(sprite, d.x - 1, d.y, d.mirando < 0);
+}
+
+function dibujarOrcos() {
+  for (const orco of mundo.orcos) {
+    if (!orco.vivo) continue;
+    const sprite = Math.floor(orco.paso) % 2 === 0 ? SPR.orcoA : SPR.orcoB;
+    dibujarSprite(sprite, orco.x - 1, orco.y, orco.vx > 0);
+  }
+}
+
+function dibujarJefe() {
+  const jefe = mundo.jefe;
+  if (!jefe || !jefe.vivo) return;
+  if (jefe.invulnerable > 0 && Math.floor(reloj * 16) % 2 === 0) return;
+  dibujarSprite(SPR.capitan, jefe.x - 3, jefe.y - 2, jefe.vx > 0, 2);
+
+  // Barra de vida flotante
+  const ancho = 30;
+  const bx = jefe.x + jefe.w / 2 - ancho / 2;
+  const by = jefe.y - 10;
+  ctx.fillStyle = "#1a1526";
+  ctx.fillRect(bx - 1, by - 1, ancho + 2, 5);
+  ctx.fillStyle = "#e0454f";
+  ctx.fillRect(bx, by, Math.max(0, (jefe.vida / jefe.vidaMaxima) * ancho), 3);
+}
+
+function dibujarPacientes() {
+  for (const p of mundo.pacientes) {
+    const bx = Math.round(p.x);
+    const by = Math.round(p.y);
+
+    // Camilla
+    ctx.fillStyle = "#3f3a4d";
+    ctx.fillRect(bx + 2, by + 8, 2, 8);
+    ctx.fillRect(bx + 20, by + 8, 2, 8);
+    ctx.fillStyle = "#cfcbdd";
+    ctx.fillRect(bx, by + 6, 24, 3);
+
+    // Paciente acostado
+    ctx.fillStyle = "#f3d2a9";
+    ctx.fillRect(bx + 2, by + 1, 5, 5);           // cabeza
+    ctx.fillStyle = "#3a2f44";
+    ctx.fillRect(bx + 2, by, 5, 2);               // pelo
+    ctx.fillStyle = p.curado ? "#e8e6f0" : (p.tipo === "cirugia" ? "#7fc8ff" : "#4fd0a6");
+    ctx.fillRect(bx + 7, by + 2, 15, 4);          // sábana
+    ctx.fillStyle = "#f3d2a9";
+    ctx.fillRect(bx + 20, by + 3, 3, 3);          // pies
+
+    if (p.curado) {
+      ctx.fillStyle = "#4fd0a6";
+      const salto = Math.sin(p.fase * 1.6) * 1.5;
+      ctx.fillRect(bx + 9, by - 8 + salto, 6, 2);
+      ctx.fillRect(bx + 11, by - 10 + salto, 2, 6);
+      if (p.gracias > 0) {
+        texto("¡Gracias, doctora!", bx + 12, by - 14, "#f4efe6", 7, "center");
+      }
+      continue;
+    }
+
+    // Icono de lo que necesita
+    const flota = Math.sin(p.fase) * 1.5;
+    const ix = bx + 10;
+    const iy = by - 12 + flota;
+    if (p.tipo === "cirugia") {
+      ctx.fillStyle = "#7fc8ff";
+      ctx.fillRect(ix, iy + 2, 7, 2);
+      ctx.fillRect(ix + 2, iy, 2, 6);
+    } else {
+      ctx.fillStyle = "#4fd0a6";
+      ctx.fillRect(ix, iy + 1, 4, 4);
+      ctx.fillStyle = "#f4efe6";
+      ctx.fillRect(ix + 4, iy + 1, 4, 4);
+    }
+
+    if (p.progreso > 0) {
+      ctx.fillStyle = "#1a1526";
+      ctx.fillRect(bx + 1, by - 5, 22, 4);
+      ctx.fillStyle = p.tipo === "cirugia" ? "#7fc8ff" : "#4fd0a6";
+      ctx.fillRect(bx + 2, by - 4, Math.min(1, p.progreso) * 20, 2);
+    }
+  }
+}
+
+function dibujarObjetos() {
+  for (const objeto of mundo.objetos) {
+    const flota = Math.sin(objeto.fase) * 1.5;
+    const x = Math.round(objeto.x);
+    const y = Math.round(objeto.y + flota);
+    if (objeto.tipo === "jeringa") {
+      ctx.fillStyle = "#e8f4ff";
+      ctx.fillRect(x, y + 3, 8, 3);
+      ctx.fillStyle = "#7fc8ff";
+      ctx.fillRect(x + 1, y + 4, 4, 1);
+      ctx.fillStyle = "#b9c0c9";
+      ctx.fillRect(x + 8, y + 4, 3, 1);
+    } else if (objeto.tipo === "medicina") {
+      ctx.fillStyle = "#e8e6f0";
+      ctx.fillRect(x, y + 1, 10, 8);
+      ctx.fillStyle = "#4fd0a6";
+      ctx.fillRect(x + 4, y + 2, 2, 6);
+      ctx.fillRect(x + 2, y + 4, 6, 2);
+    } else {
+      ctx.fillStyle = "#e0454f";
+      ctx.fillRect(x + 1, y + 2, 3, 2);
+      ctx.fillRect(x + 6, y + 2, 3, 2);
+      ctx.fillRect(x, y + 4, 10, 2);
+      ctx.fillRect(x + 1, y + 6, 8, 1);
+      ctx.fillRect(x + 3, y + 7, 4, 1);
+      ctx.fillRect(x + 4, y + 8, 2, 1);
+    }
+  }
+}
+
+function dibujarJeringasVolando() {
+  for (const jeringa of mundo.proyectiles) {
+    const x = Math.round(jeringa.x);
+    const y = Math.round(jeringa.y);
+    ctx.fillStyle = "#e8f4ff";
+    ctx.fillRect(x, y, 6, 3);
+    ctx.fillStyle = "#7fc8ff";
+    ctx.fillRect(x + 1, y + 1, 3, 1);
+    ctx.fillStyle = "#b9c0c9";
+    ctx.fillRect(jeringa.vx > 0 ? x + 6 : x - 2, y + 1, 2, 1);
+  }
+}
+
+function dibujarAmbulancia() {
+  const a = mundo.ambulancia;
+  if (!a) return;
+  const x = Math.round(a.x);
+  const y = Math.round(a.y);
+  ctx.fillStyle = "#f4efe6";
+  ctx.fillRect(x, y + 6, 26, 14);
+  ctx.fillStyle = "#d9dfef";
+  ctx.fillRect(x + 16, y + 2, 10, 8);
+  ctx.fillStyle = "#2a2333";
+  ctx.fillRect(x + 18, y + 4, 6, 4);
+  ctx.fillStyle = "#e0454f";
+  ctx.fillRect(x, y + 12, 26, 2);
+  ctx.fillRect(x + 6, y + 9, 6, 2);
+  ctx.fillRect(x + 8, y + 7, 2, 6);
+  ctx.fillStyle = "#2a2333";
+  ctx.fillRect(x + 3, y + 19, 5, 4);
+  ctx.fillRect(x + 17, y + 19, 5, 4);
+  const faro = Math.floor(reloj * 4) % 2 === 0 ? "#7fc8ff" : "#e0454f";
+  ctx.fillStyle = faro;
+  ctx.fillRect(x + 8, y + 3, 6, 3);
+}
+
+function dibujarParticulas() {
+  for (const p of mundo.particulas) {
+    ctx.globalAlpha = Math.max(0, Math.min(1, p.vida * 2));
+    ctx.fillStyle = p.color;
+    ctx.fillRect(Math.round(p.x), Math.round(p.y), p.tam, p.tam);
+  }
+  ctx.globalAlpha = 1;
+}
+
+function dibujarAvisos() {
+  for (const a of mundo.avisos) {
+    ctx.globalAlpha = Math.max(0, Math.min(1, a.t));
+    texto(a.texto, a.x, a.y, a.color, 7, "left");
+    ctx.globalAlpha = 1;
+  }
+}
+
+function texto(cadena, x, y, color, tamano, alineado) {
+  ctx.font = "bold " + (tamano || 8) + "px ui-monospace, 'Courier New', monospace";
+  ctx.textAlign = alineado || "left";
+  ctx.textBaseline = "top";
+  ctx.fillStyle = "rgba(0,0,0,0.75)";
+  ctx.fillText(cadena, x + 1, y + 1);
+  ctx.fillStyle = color;
+  ctx.fillText(cadena, x, y);
+}
+
+/* ───────────────────────────── Marcador en pantalla ───────────────────────────── */
+
+function dibujarCorazon(x, y, lleno) {
+  ctx.fillStyle = lleno ? "#e0454f" : "#4a3a52";
+  ctx.fillRect(x + 1, y, 2, 1);
+  ctx.fillRect(x + 4, y, 2, 1);
+  ctx.fillRect(x, y + 1, 7, 2);
+  ctx.fillRect(x + 1, y + 3, 5, 1);
+  ctx.fillRect(x + 2, y + 4, 3, 1);
+  ctx.fillRect(x + 3, y + 5, 1, 1);
+}
+
+function dibujarMarcador() {
+  ctx.fillStyle = "rgba(10, 7, 18, 0.62)";
+  ctx.fillRect(0, 0, ANCHO_VISTA, 15);
+
+  for (let i = 0; i < Math.max(3, juego.corazones); i++) {
+    dibujarCorazon(4 + i * 9, 4, i < juego.corazones);
+  }
+
+  const inicioDatos = 4 + Math.max(3, juego.corazones) * 9 + 6;
+
+  // Pacientes salvados
+  ctx.fillStyle = "#4fd0a6";
+  ctx.fillRect(inicioDatos, 5, 5, 2);
+  ctx.fillRect(inicioDatos + 2, 3, 2, 6);
+  texto(salvados() + "/" + mundo.totalPacientes, inicioDatos + 9, 3, "#f4efe6", 8);
+
+  // Jeringas
+  const xJeringa = inicioDatos + 34;
+  ctx.fillStyle = "#e8f4ff";
+  ctx.fillRect(xJeringa, 5, 7, 3);
+  ctx.fillStyle = "#7fc8ff";
+  ctx.fillRect(xJeringa + 1, 6, 3, 1);
+  texto("x" + juego.jeringas, xJeringa + 10, 3, "#f4efe6", 8);
+
+  // Medicinas
+  const xMedicina = xJeringa + 32;
+  ctx.fillStyle = "#e8e6f0";
+  ctx.fillRect(xMedicina, 3, 8, 7);
+  ctx.fillStyle = "#4fd0a6";
+  ctx.fillRect(xMedicina + 3, 4, 2, 5);
+  ctx.fillRect(xMedicina + 1, 5, 6, 2);
+  texto("x" + juego.medicinas, xMedicina + 11, 3, "#f4efe6", 8);
+
+  texto(String(juego.puntos).padStart(5, "0"), ANCHO_VISTA - 5, 3, "#ffc24a", 8, "right");
+
+  if (mundo.banner > 0) {
+    ctx.globalAlpha = Math.min(1, mundo.banner);
+    ctx.fillStyle = "rgba(10, 7, 18, 0.7)";
+    ctx.fillRect(0, 72, ANCHO_VISTA, 40);
+    texto(mundo.nombre.toUpperCase(), ANCHO_VISTA / 2, 80, "#f4efe6", 12, "center");
+    texto(mundo.lema, ANCHO_VISTA / 2, 96, "#a79bc0", 8, "center");
+    ctx.globalAlpha = 1;
+  }
+
+  const paciente = pacienteAtendible();
+  if (paciente && mundo.doctora.viva && !paciente.curado) {
+    const falta = paciente.tipo === "medicina" && juego.medicinas <= 0;
+    const mensaje = falta ? "Necesitas medicina" : (paciente.tipo === "cirugia" ? "Mantén CURAR para operar" : "Mantén CURAR para medicar");
+    texto(mensaje, ANCHO_VISTA / 2, ALTO_VISTA - 14, falta ? "#ffb37a" : "#f4efe6", 8, "center");
+  }
+}
+
+/* ───────────────────────────── Bucle ───────────────────────────── */
+
+function actualizarMundo(dt) {
+  mundo.banner = Math.max(0, mundo.banner - dt);
+  mundo.regano = Math.max(0, (mundo.regano || 0) - dt);
+
+  const d = mundo.doctora;
+  if (d.viva) {
+    actualizarDoctora(dt);
+  } else {
+    d.vy = Math.min(d.vy + GRAVEDAD * dt, 480);
+    d.y += d.vy * dt;
+  }
+
+  actualizarOrcos(dt);
+  actualizarJefe(dt);
+  actualizarJeringas(dt);
+  actualizarObjetos(dt);
+  actualizarParticulas(dt);
+  centrarCamara(false);
+  revisarMeta();
+
+  if (mundo.muerte > 0) {
+    mundo.muerte -= dt;
+    if (mundo.muerte <= 0) trasMuerte();
+  }
+  if (mundo.ganado > 0) {
+    mundo.ganado -= dt;
+    if (mundo.ganado <= 0) terminarNivel();
+  }
+}
+
+function dibujar(dt) {
+  dibujarFondo(dt);
+  ctx.save();
+  ctx.translate(-Math.round(mundo.camara), 0);
+  if (mundo.terreno) ctx.drawImage(mundo.terreno, 0, 0);
+  dibujarLava();
+  dibujarAmbulancia();
+  dibujarObjetos();
+  dibujarPacientes();
+  dibujarOrcos();
+  dibujarJefe();
+  dibujarJeringasVolando();
+  dibujarDoctora();
+  dibujarParticulas();
+  dibujarAvisos();
+  ctx.restore();
+  dibujarMarcador();
+}
+
+let anterior = 0;
+
+function bucle(ahora) {
+  if (!anterior) anterior = ahora;
+  const dt = Math.min(0.033, (ahora - anterior) / 1000);
+  anterior = ahora;
+  reloj += dt;
+  if (juego.pantalla === "jugando") actualizarMundo(dt);
+  if (mundo) dibujar(dt);
+  requestAnimationFrame(bucle);
+}
+
+/* ───────────────────────────── Hilo de la partida ───────────────────────────── */
+
+const capaInicio = document.getElementById("capa-inicio");
+const capaMensaje = document.getElementById("capa-mensaje");
+const mensajeTitulo = document.getElementById("mensaje-titulo");
+const mensajeTexto = document.getElementById("mensaje-texto");
+const mensajeMarcador = document.getElementById("mensaje-marcador");
+const botonContinuar = document.getElementById("btn-continuar");
+const pieNivel = document.getElementById("pie-nivel");
+
+let accionContinuar = null;
+
+function ocultarCapas() {
+  capaInicio.hidden = true;
+  capaMensaje.hidden = true;
+}
+
+function mostrarMensaje(opciones) {
+  juego.pantalla = "mensaje";
+  mensajeTitulo.textContent = opciones.titulo;
+  mensajeTexto.textContent = opciones.texto || "";
+  mensajeMarcador.textContent = opciones.marcador || "";
+  botonContinuar.textContent = opciones.boton || "Continuar";
+  accionContinuar = opciones.accion;
+  capaInicio.hidden = true;
+  capaMensaje.hidden = false;
+  botonContinuar.focus({ preventScroll: true });
+}
+
+function leerMejor() {
+  try {
+    return Number(localStorage.getItem("doctora-mordor-mejor")) || 0;
+  } catch (error) {
+    return 0;
+  }
+}
+
+function guardarMejor() {
+  juego.mejor = Math.max(juego.mejor, juego.puntos);
+  try {
+    localStorage.setItem("doctora-mordor-mejor", String(juego.mejor));
+  } catch (error) {
+    /* modo privado: seguimos sin guardar */
+  }
+}
+
+function actualizarPie() {
+  pieNivel.textContent = "Nivel " + (juego.nivel + 1) + " · " + NIVELES[juego.nivel].nombre;
+}
+
+function empezarPartida() {
+  juego.nivel = 0;
+  juego.puntos = 0;
+  juego.corazones = 3;
+  juego.jeringas = 4;
+  juego.medicinas = 0;
+  cargarNivel(0);
+  juego.pantalla = "jugando";
+  ocultarCapas();
+  actualizarPie();
+}
+
+function siguienteNivel() {
+  juego.nivel += 1;
+  juego.corazones = Math.min(5, juego.corazones + 1);
+  juego.jeringas += 2;
+  cargarNivel(juego.nivel);
+  juego.pantalla = "jugando";
+  ocultarCapas();
+  actualizarPie();
+}
+
+function trasMuerte() {
+  if (juego.corazones <= 0) {
+    guardarMejor();
+    mostrarMensaje({
+      titulo: "Se acabó el turno",
+      texto: "Los orcos se quedaron con el pasillo. Vuelve a entrar: los pacientes siguen ahí.",
+      marcador: "Puntos: " + juego.puntos + " · Mejor: " + juego.mejor,
+      boton: "Volver a empezar",
+      accion: empezarPartida,
+    });
+    return;
+  }
+  cargarNivel(juego.nivel);
+  mundo.banner = 1.2;
+}
+
+function terminarNivel() {
+  const bono = 300 + juego.corazones * 150 + juego.jeringas * 10;
+  juego.puntos += bono;
+  guardarMejor();
+  const esUltimo = juego.nivel >= NIVELES.length - 1;
+
+  if (esUltimo) {
+    mostrarMensaje({
+      titulo: "¡Mordor puede esperar!",
+      texto: "Todos los pacientes salieron caminando y el Capitán despertó con suero y vendas. Cierras la bata y te vas a dormir.",
+      marcador: "Puntos: " + juego.puntos + " · Mejor: " + juego.mejor,
+      boton: "Jugar otra vez",
+      accion: empezarPartida,
+    });
+  } else {
+    mostrarMensaje({
+      titulo: "Nivel superado",
+      texto: "Todos a la ambulancia. Te espera " + NIVELES[juego.nivel + 1].nombre + ".",
+      marcador: "Bono +" + bono + " · Puntos: " + juego.puntos,
+      boton: "Siguiente nivel",
+      accion: siguienteNivel,
+    });
+  }
+}
+
+function alternarPausa() {
+  if (juego.pantalla === "jugando") {
+    mostrarMensaje({
+      titulo: "Pausa",
+      texto: "Respira. Los orcos también.",
+      marcador: "Puntos: " + juego.puntos,
+      boton: "Seguir",
+      accion: function () {
+        juego.pantalla = "jugando";
+        ocultarCapas();
+      },
+    });
+  } else if (juego.pantalla === "mensaje" && mensajeTitulo.textContent === "Pausa") {
+    juego.pantalla = "jugando";
+    ocultarCapas();
+  }
+}
+
+/* ───────────────────────────── Mandos ───────────────────────────── */
+
+const MAPA_TECLAS = {
+  ArrowLeft: "izquierda", a: "izquierda", A: "izquierda",
+  ArrowRight: "derecha", d: "derecha", D: "derecha",
+  ArrowUp: "saltar", w: "saltar", W: "saltar", " ": "saltar",
+  x: "jeringa", X: "jeringa", j: "jeringa", J: "jeringa",
+  z: "curar", Z: "curar", k: "curar", K: "curar",
+  ArrowDown: "curar", s: "curar", S: "curar",
+};
+
+function pulsar(accion) {
+  if (!(accion in teclas)) return;
+  if (!teclas[accion] && (accion === "saltar" || accion === "jeringa")) pulsos[accion] = true;
+  teclas[accion] = true;
+}
+
+function soltar(accion) {
+  if (!(accion in teclas)) return;
+  teclas[accion] = false;
+}
+
+window.addEventListener("keydown", (evento) => {
+  if (evento.repeat) return;
+  if (evento.key === "p" || evento.key === "P" || evento.key === "Escape") {
+    alternarPausa();
+    return;
+  }
+  if ((evento.key === "Enter" || evento.key === " ") && juego.pantalla !== "jugando") {
+    if (!capaInicio.hidden) { evento.preventDefault(); empezarPartida(); return; }
+    if (!capaMensaje.hidden && accionContinuar) { evento.preventDefault(); accionContinuar(); return; }
+  }
+  const accion = MAPA_TECLAS[evento.key];
+  if (!accion) return;
+  evento.preventDefault();
+  pulsar(accion);
+});
+
+window.addEventListener("keyup", (evento) => {
+  const accion = MAPA_TECLAS[evento.key];
+  if (accion) soltar(accion);
+});
+
+window.addEventListener("blur", () => {
+  for (const clave of Object.keys(teclas)) teclas[clave] = false;
+});
+
+document.querySelectorAll(".tecla").forEach((boton) => {
+  const accion = boton.dataset.accion;
+  const activar = (evento) => {
+    evento.preventDefault();
+    boton.classList.add("activa");
+    pulsar(accion);
+    if (juego.pantalla === "inicio") empezarPartida();
+  };
+  const desactivar = (evento) => {
+    evento.preventDefault();
+    boton.classList.remove("activa");
+    soltar(accion);
+  };
+  boton.addEventListener("pointerdown", activar);
+  boton.addEventListener("pointerup", desactivar);
+  boton.addEventListener("pointercancel", desactivar);
+  boton.addEventListener("pointerleave", desactivar);
+  boton.addEventListener("contextmenu", (evento) => evento.preventDefault());
+});
+
+document.getElementById("btn-jugar").addEventListener("click", empezarPartida);
+document.getElementById("btn-continuar").addEventListener("click", () => {
+  if (accionContinuar) accionContinuar();
+});
+document.getElementById("btn-pausa").addEventListener("click", alternarPausa);
+
+const botonSonido = document.getElementById("btn-sonido");
+botonSonido.addEventListener("click", () => {
+  juego.sonido = !juego.sonido;
+  botonSonido.textContent = "Sonido: " + (juego.sonido ? "sí" : "no");
+  botonSonido.setAttribute("aria-pressed", String(juego.sonido));
+});
+
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden && juego.pantalla === "jugando") alternarPausa();
+});
+
+/* ───────────────────────────── Arranque ───────────────────────────── */
+
+juego.mejor = leerMejor();
+cargarNivel(0);
+actualizarPie();
+requestAnimationFrame(bucle);
+</script>
+</body>
+</html>
