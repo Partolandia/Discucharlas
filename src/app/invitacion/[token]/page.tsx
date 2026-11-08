@@ -1,4 +1,4 @@
-import "@/estilos/prototipo-v2.css";
+import "@/estilos/prototipo.css";
 import { crearClienteAdministrador } from "@/lib/supabase/administrador";
 import { hashear } from "@/lib/tokens";
 import { FormularioInvitacion } from "@/components/FormularioInvitacion";

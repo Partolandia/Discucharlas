@@ -1,4 +1,4 @@
-import "@/estilos/prototipo-v2.css";
+import "@/estilos/prototipo.css";
 import { redirect } from "next/navigation";
 import { crearClienteAdministrador } from "@/lib/supabase/administrador";
 import { accesoDeInvitada } from "@/lib/invitada";

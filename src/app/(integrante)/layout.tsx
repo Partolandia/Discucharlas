@@ -1,4 +1,4 @@
-import "@/estilos/prototipo-v2.css";
+import "@/estilos/prototipo.css";
 import { Cascaron } from "@/components/prototipo/Cascaron";
 import { exigirIntegrante, esAdministradora } from "@/lib/sesion";
 

@@ -11,36 +11,48 @@ export type SeccionNav = "inicio" | "calendario" | "propuestas" | "comunidad" | 
 export type Pantalla = {
   /** id del <section class="page"> en el prototipo */
   id: string;
-  /** pestaña encendida y tema de la barra inferior */
-  seccion: SeccionNav;
+  /**
+   * Tema de color del teléfono (`.phone[data-section]`). Cadena vacía cuando el
+   * prototipo lo deja sin tema, como en la ficha de sesión o Administración.
+   */
+  seccion: SeccionNav | "";
+  /**
+   * Pestaña encendida en la barra inferior, o null cuando ninguna lo está.
+   * No siempre coincide con el tema: un hilo de Comunidad va en morado claro
+   * pero deja la barra apagada.
+   */
+  pestana: SeccionNav | null;
   /** texto de la barra superior; null = saludo con el nombre */
   titulo: string | null;
 };
 
-/** Tal como los define el objeto `names` del prototipo, ya con los parches v2. */
+/**
+ * Tal como los definen `names`, `navMap` y `sectionMap` del prototipo, ya con
+ * los parches v2 (que mandan club-proposals, club-history y voto a propuestas).
+ */
 const RUTAS: Array<[string, Pantalla]> = [
-  ["/inicio", { id: "inicio", seccion: "inicio", titulo: null }],
-  ["/nuestras-discucharlas", { id: "archivo", seccion: "inicio", titulo: "Historial de Discucharlas" }],
-  ["/guia", { id: "guia", seccion: "inicio", titulo: "Guía del club" }],
-  ["/avisos", { id: "notificaciones", seccion: "inicio", titulo: "Notificaciones" }],
-  ["/calendario", { id: "calendario", seccion: "calendario", titulo: "Calendario" }],
-  ["/discucharla", { id: "sesion", seccion: "calendario", titulo: "Discucharla" }],
-  ["/propuestas/votar", { id: "voto", seccion: "propuestas", titulo: "Resultados de votación" }],
-  ["/propuestas/nueva", { id: "proponer", seccion: "propuestas", titulo: "Nueva propuesta" }],
-  ["/propuestas/lista", { id: "club-proposals", seccion: "propuestas", titulo: "Propuestas" }],
-  ["/propuestas/historial", { id: "club-history", seccion: "propuestas", titulo: "Historial de votaciones" }],
-  ["/propuestas", { id: "votacion", seccion: "propuestas", titulo: "Propuestas y votaciones" }],
-  ["/comunidad/nueva", { id: "nueva-conversacion", seccion: "comunidad", titulo: "Nueva conversación" }],
-  ["/comunidad", { id: "comunidad", seccion: "comunidad", titulo: "Comunidad" }],
-  ["/perfil", { id: "perfil", seccion: "club", titulo: "Perfil" }],
-  ["/club/proponer", { id: "solicitar-invitacion", seccion: "club", titulo: "Solicitar integrante" }],
-  ["/club", { id: "club", seccion: "club", titulo: "Club" }],
-  ["/admin/accesos", { id: "accesos", seccion: "club", titulo: "Accesos" }],
-  ["/admin/integrantes", { id: "miembros-admin", seccion: "club", titulo: "Integrantes" }],
-  ["/admin/discucharlas", { id: "crear", seccion: "calendario", titulo: "Crear Discucharla" }],
-  ["/admin/votacion", { id: "voto", seccion: "propuestas", titulo: "Votación" }],
-  ["/admin/historial", { id: "exportar-historial", seccion: "inicio", titulo: "Historial" }],
-  ["/admin", { id: "administracion", seccion: "inicio", titulo: "Administración" }],
+  ["/inicio", { id: "inicio", seccion: "inicio", pestana: "inicio", titulo: null }],
+  ["/nuestras-discucharlas", { id: "archivo", seccion: "inicio", pestana: "inicio", titulo: "Historial de Discucharlas" }],
+  ["/guia", { id: "guia", seccion: "inicio", pestana: "inicio", titulo: "Guía del club" }],
+  ["/avisos", { id: "notificaciones", seccion: "", pestana: null, titulo: "Notificaciones" }],
+  ["/calendario", { id: "calendario", seccion: "calendario", pestana: "calendario", titulo: "Calendario" }],
+  ["/discucharla", { id: "sesion", seccion: "", pestana: null, titulo: "Discucharla" }],
+  ["/propuestas/votar", { id: "voto", seccion: "propuestas", pestana: "propuestas", titulo: "Resultados de votación" }],
+  ["/propuestas/nueva", { id: "proponer", seccion: "propuestas", pestana: "propuestas", titulo: "Nueva propuesta" }],
+  ["/propuestas/lista", { id: "club-proposals", seccion: "propuestas", pestana: "propuestas", titulo: "Propuestas" }],
+  ["/propuestas/historial", { id: "club-history", seccion: "propuestas", pestana: "propuestas", titulo: "Historial de votaciones" }],
+  ["/propuestas", { id: "votacion", seccion: "propuestas", pestana: "propuestas", titulo: "Propuestas y votaciones" }],
+  ["/comunidad/nueva", { id: "nueva-conversacion", seccion: "comunidad", pestana: null, titulo: "Nueva conversación" }],
+  ["/comunidad", { id: "comunidad", seccion: "comunidad", pestana: "comunidad", titulo: "Comunidad" }],
+  ["/perfil", { id: "perfil", seccion: "club", pestana: "club", titulo: "Perfil" }],
+  ["/club/proponer", { id: "solicitar-invitacion", seccion: "club", pestana: "club", titulo: "Solicitar integrante" }],
+  ["/club", { id: "club", seccion: "club", pestana: "club", titulo: "Club" }],
+  ["/admin/accesos", { id: "accesos", seccion: "", pestana: null, titulo: "Accesos" }],
+  ["/admin/integrantes", { id: "miembros-admin", seccion: "", pestana: null, titulo: "Integrantes" }],
+  ["/admin/discucharlas", { id: "crear", seccion: "", pestana: null, titulo: "Crear Discucharla" }],
+  ["/admin/votacion", { id: "voto", seccion: "propuestas", pestana: "propuestas", titulo: "Resultados de votación" }],
+  ["/admin/historial", { id: "exportar-historial", seccion: "", pestana: null, titulo: "Historial" }],
+  ["/admin", { id: "administracion", seccion: "", pestana: null, titulo: "Administración" }],
 ];
 
 export function pantallaDe(ruta: string): Pantalla {
@@ -48,7 +60,7 @@ export function pantallaDe(ruta: string): Pantalla {
   for (const [prefijo, pantalla] of RUTAS) {
     if (ruta === prefijo || ruta.startsWith(`${prefijo}/`)) return pantalla;
   }
-  return { id: "inicio", seccion: "inicio", titulo: null };
+  return { id: "inicio", seccion: "inicio", pestana: "inicio", titulo: null };
 }
 
 /** Las cinco pestañas de la barra inferior, en el orden del prototipo. */

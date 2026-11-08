@@ -1,4 +1,4 @@
-import "@/estilos/prototipo-v2.css";
+import "@/estilos/prototipo.css";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { crearClienteAdministrador } from "@/lib/supabase/administrador";

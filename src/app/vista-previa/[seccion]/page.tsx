@@ -1,4 +1,4 @@
-import "@/estilos/prototipo-v2.css";
+import "@/estilos/prototipo.css";
 import { notFound } from "next/navigation";
 import { Cascaron } from "@/components/prototipo/Cascaron";
 import { PantallaInicio } from "@/components/prototipo/PantallaInicio";

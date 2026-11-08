@@ -71,7 +71,7 @@ export function Cascaron({
           {PESTANAS.map((p) => (
             <button
               key={p.pagina}
-              className={pantalla.seccion === p.seccion ? "active" : undefined}
+              className={pantalla.pestana === p.seccion ? "active" : undefined}
               data-page={p.pagina}
               onClick={() => router.push(p.ruta)}
             >

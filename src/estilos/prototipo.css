@@ -1,0 +1,18 @@
+/*
+ * Punto de entrada del CSS del prototipo v2.
+ *
+ * `prototipo-v2.css` lo genera `scripts/portar-estilos.mjs` volcando el CSSOM
+ * del prototipo, así que se regenera entero y no se edita a mano. Los ajustes
+ * que hacen falta para convivir con Tailwind van aquí abajo.
+ */
+@import "./prototipo-v2.css";
+
+/*
+ * El preflight de Tailwind pone `svg { display: block }`. El prototipo escribe
+ * sus iconos dentro del texto y cuenta con que sigan en línea: sin esto, la
+ * marca del botón "Escuchar episodio" se va a su propio renglón y se ve como un
+ * círculo suelto encima de la etiqueta.
+ */
+.spotify-mark {
+  display: inline;
+}

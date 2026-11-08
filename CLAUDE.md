@@ -38,6 +38,16 @@ particular valores HEX, tipografías, métricas e integraciones.
 npm run lint && npm run build && npm run db:test
 ```
 
+`db:test` levanta un Postgres local y corre `supabase/tests/10_rls_test.sql`:
+necesita bash y Postgres, así que solo funciona en Linux o en el contenedor.
+En Windows el equivalente portable es `npm run db:rls`, que comprueba las
+mismas garantías de aislamiento contra el proyecto real entrando con cada
+cuenta por la API. No sustituye al de SQL —ese también prueba disparadores,
+índices y el arranque del club— pero cubre lo que vive la app.
+
+Para revisar las pantallas contra el prototipo: `npm run capturar` entra como
+`ana@discucharlas.local` y deja las capturas en `.prototipo/app/`.
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 # This is NOT the Next.js you know

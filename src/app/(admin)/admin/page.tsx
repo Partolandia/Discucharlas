@@ -20,34 +20,33 @@ export default async function PanelAdmin() {
   const resumen = (
     <section className="content-card">
       <span className="mini-kicker">CÓMO VA EL CLUB</span>
-      <div className="club-member-row">
-        <b>Próxima discucharla</b>
-        <small>
+      <div className="admin-history-compact-meta">
+        <Dato etiqueta="Próxima discucharla">
           {proxima.data
             ? `${proxima.data.episode_title}${proxima.data.date ? ` · ${fechaLarga(proxima.data.date)}` : ""}`
             : "Sin agendar"}
-        </small>
-      </div>
-      <div className="club-member-row">
-        <b>Votación</b>
-        <small>
-          {ronda.data
-            ? ronda.data.status === "open"
-              ? "Abierta"
-              : "En preparación"
-            : "Ninguna"}
-        </small>
-      </div>
-      <div className="club-member-row">
-        <b>Solicitudes de integrante</b>
-        <small>{solicitudes.count ? `${solicitudes.count} por revisar` : "Ninguna pendiente"}</small>
-      </div>
-      <div className="club-member-row">
-        <b>Borradores</b>
-        <small>{borradores.count ? `${borradores.count} sin publicar` : "Ninguno"}</small>
+        </Dato>
+        <Dato etiqueta="Votación">
+          {ronda.data ? (ronda.data.status === "open" ? "Abierta" : "En preparación") : "Ninguna"}
+        </Dato>
+        <Dato etiqueta="Solicitudes de integrante">
+          {solicitudes.count ? `${solicitudes.count} por revisar` : "Ninguna pendiente"}
+        </Dato>
+        <Dato etiqueta="Borradores">
+          {borradores.count ? `${borradores.count} sin publicar` : "Ninguno"}
+        </Dato>
       </div>
     </section>
   );
 
   return <PantallaAdmin resumen={resumen} />;
+}
+
+function Dato({ etiqueta, children }: { etiqueta: string; children: React.ReactNode }) {
+  return (
+    <div className="admin-history-meta-item">
+      <b>{etiqueta}</b>
+      <span>{children}</span>
+    </div>
+  );
 }

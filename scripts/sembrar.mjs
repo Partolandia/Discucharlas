@@ -32,6 +32,7 @@ if (!/localhost|127\.0\.0\.1/.test(url) && process.env.SEMBRAR_EN_SERIO !== "si"
   process.exit(1);
 }
 
+const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const db = createClient(url, llave, { auth: { persistSession: false } });
 const CLAVE = process.env.SEMILLA_PASSWORD ?? "discucharlas123";
 
@@ -72,8 +73,27 @@ for (const c of CUENTAS) {
 }
 const [ana, bea, cris, dani] = ids;
 
+/**
+ * Las funciones de negocio (`set_member_role`, `open_voting_round`) comprueban
+ * que quien llama sea una administradora activa, y la llave de servicio no
+ * tiene `auth.uid()`: devolvería "No autorizado". Así que para esa parte de la
+ * semilla entramos de verdad como Ana, que es la propietaria.
+ */
+const comoAna = createClient(url, anon, { auth: { persistSession: false } });
+const { error: errorSesion } = await comoAna.auth.signInWithPassword({
+  email: CUENTAS[0].email,
+  password: CLAVE,
+});
+if (errorSesion) throw new Error(`No pude entrar como ${CUENTAS[0].email}: ${errorSesion.message}`);
+
+async function comoAdmin(funcion, args) {
+  const { error } = await comoAna.rpc(funcion, args);
+  if (error) console.warn(`  aviso: ${funcion} → ${error.message}`);
+  return !error;
+}
+
 // Bea también administra, para poder probar la gestión con dos admins.
-await db.rpc("set_member_role", { target_id: bea, new_role: "admin" }).then(() => {}, () => {});
+await comoAdmin("set_member_role", { target_id: bea, new_role: "admin" });
 
 const { data: pasada } = await db
   .from("sessions")
@@ -175,30 +195,47 @@ for (const p of PROPUESTAS) {
   if (data) propuestas.push(data.id);
 }
 
-const { data: rondaExistente } = await db
+// Puede haber quedado una ronda a medias de una corrida anterior: si está en
+// borrador la reutilizamos en vez de crear otra, porque el índice único solo
+// deja una votación abierta a la vez.
+const { data: rondaAbierta } = await db
   .from("voting_rounds")
   .select("id")
   .eq("status", "open")
   .maybeSingle();
 
-if (!rondaExistente && propuestas.length >= 2) {
-  const { data: ronda } = await db
+if (!rondaAbierta && propuestas.length >= 2) {
+  const { data: borrador } = await db
     .from("voting_rounds")
-    .insert({ title: "Para la discucharla de octubre", status: "draft" })
     .select("id")
-    .single();
+    .eq("status", "draft")
+    .maybeSingle();
+
+  const ronda =
+    borrador ??
+    (
+      await db
+        .from("voting_rounds")
+        .insert({ title: "Para la discucharla de octubre", status: "draft" })
+        .select("id")
+        .single()
+    ).data;
 
   if (ronda) {
-    await db.from("voting_candidates").insert(
-      propuestas.slice(0, 3).map((proposal_id) => ({ voting_round_id: ronda.id, proposal_id, added_by: ana }))
+    await db.from("voting_candidates").upsert(
+      propuestas.slice(0, 3).map((proposal_id) => ({ voting_round_id: ronda.id, proposal_id, added_by: ana })),
+      { onConflict: "voting_round_id,proposal_id" }
     );
     // Abrimos con la función de negocio para respetar sus validaciones.
-    await db.rpc("open_voting_round", { p_round_id: ronda.id });
-    await db.from("votes").insert([
-      { voting_round_id: ronda.id, proposal_id: propuestas[0], user_id: ana },
-      { voting_round_id: ronda.id, proposal_id: propuestas[0], user_id: cris },
-      { voting_round_id: ronda.id, proposal_id: propuestas[1], user_id: bea },
-    ]);
+    await comoAdmin("open_voting_round", { p_round_id: ronda.id });
+    await db.from("votes").upsert(
+      [
+        { voting_round_id: ronda.id, proposal_id: propuestas[0], user_id: ana },
+        { voting_round_id: ronda.id, proposal_id: propuestas[0], user_id: cris },
+        { voting_round_id: ronda.id, proposal_id: propuestas[1], user_id: bea },
+      ],
+      { onConflict: "voting_round_id,proposal_id,user_id" }
+    );
   }
 }
 
