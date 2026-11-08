@@ -2,105 +2,127 @@
 
 import { useActionState } from "react";
 import { guardarPerfil, type Resultado } from "@/app/(integrante)/club/acciones";
-import { Campo } from "@/components/ui/Campo";
-import { BotonEnviar } from "@/components/ui/BotonEnviar";
-import { Aviso } from "@/components/ui/Aviso";
 import type { Perfil } from "@/lib/sesion";
 
 export function FormularioPerfil({ perfil }: { perfil: Perfil }) {
-  const [estado, accion] = useActionState<Resultado, FormData>(guardarPerfil, {});
+  const [estado, accion, pendiente] = useActionState<Resultado, FormData>(guardarPerfil, {});
 
   return (
-    <form action={accion} className="space-y-5">
-      <Campo etiqueta="Nombre" name="nombre" defaultValue={perfil.first_name} required maxLength={80} />
-      <Campo etiqueta="Apellido" name="apellido" defaultValue={perfil.last_name ?? ""} maxLength={80} />
-      <Campo
-        etiqueta="Teléfono"
-        name="telefono"
-        type="tel"
-        defaultValue={perfil.phone ?? ""}
-        maxLength={40}
-        ayuda="Solo lo ven las administradoras del club."
-      />
-
-      <div className="space-y-1.5">
-        <label htmlFor="bio" className="block text-[15px] font-medium">
-          Sobre ti
-        </label>
-        <textarea
-          id="bio"
-          name="bio"
-          rows={3}
-          maxLength={1000}
-          defaultValue={perfil.bio ?? ""}
-          className="w-full rounded-[var(--radius-suave)] border border-[var(--color-linea)] bg-white px-4 py-3 text-[16px] leading-relaxed"
-        />
+    <form action={accion} className="content-card profile-edit-card">
+      <div className="profile-edit-head">
+        <div>
+          <span className="mini-kicker">MI CUENTA</span>
+          <h2>Editar perfil</h2>
+          <p>
+            Estos son los datos que forman parte de tu cuenta. Correo y teléfono no se muestran en
+            tu perfil público.
+          </p>
+        </div>
       </div>
 
-      <div className="space-y-1.5">
-        <label htmlFor="intereses" className="block text-[15px] font-medium">
-          Le interesa
-        </label>
-        <textarea
-          id="intereses"
-          name="intereses"
-          rows={2}
-          maxLength={1000}
-          defaultValue={perfil.interests ?? ""}
-          placeholder="La historia oral, el cine iraní, cocinar sin receta…"
-          className="w-full rounded-[var(--radius-suave)] border border-[var(--color-linea)] bg-white px-4 py-3 text-[16px] leading-relaxed"
-        />
-        <p className="text-[14px] text-[var(--color-tinta-suave)]">
-          Escríbelo seguido, como lo dirías en voz alta.
-        </p>
-      </div>
-
-      <fieldset className="space-y-1.5">
-        <legend className="text-[15px] font-medium">Cumpleaños</legend>
-        <p className="text-[14px] text-[var(--color-tinta-suave)]">
-          Se comparte el día y el mes; el año no.
-        </p>
-        <div className="flex gap-3 pt-1">
+      <div className="profile-edit-grid">
+        <label>
+          Nombre
           <input
+            className="form-input"
+            name="nombre"
+            type="text"
+            autoComplete="given-name"
+            defaultValue={perfil.first_name}
+            required
+            maxLength={80}
+          />
+        </label>
+        <label>
+          Apellido
+          <input
+            className="form-input"
+            name="apellido"
+            type="text"
+            autoComplete="family-name"
+            defaultValue={perfil.last_name ?? ""}
+            maxLength={80}
+          />
+        </label>
+        <label>
+          Teléfono
+          <input
+            className="form-input"
+            name="telefono"
+            type="tel"
+            autoComplete="tel"
+            defaultValue={perfil.phone ?? ""}
+            maxLength={40}
+          />
+        </label>
+        <label>
+          Cumpleaños · día
+          <input
+            className="form-input"
             name="dia"
             type="number"
             min={1}
             max={31}
             defaultValue={perfil.birthday_day ?? ""}
-            aria-label="Día"
-            placeholder="Día"
-            className="w-24 rounded-[var(--radius-suave)] border border-[var(--color-linea)] bg-white px-4 py-3 text-[16px]"
           />
+        </label>
+        <label>
+          Cumpleaños · mes
           <input
+            className="form-input"
             name="mes"
             type="number"
             min={1}
             max={12}
             defaultValue={perfil.birthday_month ?? ""}
-            aria-label="Mes"
-            placeholder="Mes"
-            className="w-24 rounded-[var(--radius-suave)] border border-[var(--color-linea)] bg-white px-4 py-3 text-[16px]"
           />
-        </div>
-      </fieldset>
+        </label>
+        <label className="profile-edit-wide">
+          Sobre ti
+          <textarea
+            className="form-input"
+            name="bio"
+            rows={3}
+            maxLength={1000}
+            defaultValue={perfil.bio ?? ""}
+          />
+        </label>
+        <label className="profile-edit-wide">
+          Intereses / gustos
+          <textarea
+            className="form-input"
+            name="intereses"
+            rows={3}
+            maxLength={1000}
+            defaultValue={perfil.interests ?? ""}
+            placeholder="La historia oral, el cine iraní, cocinar sin receta…"
+          />
+        </label>
+      </div>
 
-      <label className="flex items-start gap-3">
+      <label className="setting-row">
         <input
           type="checkbox"
           name="avisos"
           value="si"
           defaultChecked={perfil.email_notifications}
-          className="mt-1 h-5 w-5 shrink-0"
         />
-        <span className="text-[15px] leading-relaxed">
+        <span>
           Quiero avisos por correo cuando se agende una discucharla o se abra una votación.
         </span>
       </label>
 
-      {estado.error && <Aviso>{estado.error}</Aviso>}
-      {estado.exito && <Aviso tono="exito">{estado.exito}</Aviso>}
+      {(estado.error ?? estado.exito) && (
+        <p className="club-message" role="status" aria-live="polite">
+          {estado.error ?? estado.exito}
+        </p>
+      )}
 
-      <BotonEnviar ocupado="Guardando…">Guardar perfil</BotonEnviar>
+      <div className="profile-edit-actions">
+        <button className="new" type="submit" disabled={pendiente}>
+          {pendiente ? "Guardando…" : "Guardar cambios"}
+        </button>
+      </div>
     </form>
   );
 }

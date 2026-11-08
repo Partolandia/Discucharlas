@@ -1,8 +1,10 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { crearClienteServidor } from "@/lib/supabase/servidor";
 import { exigirIntegrante } from "@/lib/sesion";
 import { directorioDelClub, nombreDe } from "@/lib/club";
+import { iniciales } from "@/lib/nombres";
+import { hace } from "@/lib/fechas";
+import { Backline } from "@/components/prototipo/Backline";
 import { Responder } from "@/components/comunidad/Responder";
 import { BotonCorazon } from "@/components/comunidad/BotonCorazon";
 
@@ -35,67 +37,56 @@ export default async function Hilo({ params }: { params: Promise<{ id: string }>
   const esMio = (clave: "thread_id" | "reply_id", valor: string) =>
     (corazones.data ?? []).some((c) => c[clave] === valor && c.user_id === perfil.id);
 
+  const autor = nombreDe(directorio, hilo.user_id);
+
   return (
-    <main className="px-5 pb-8">
-      <Link
-        href="/comunidad"
-        className="text-[15px] text-[var(--color-tinta-suave)] underline underline-offset-4"
-      >
-        Volver a comunidad
-      </Link>
+    <section className="page active" id="hilo">
+      <Backline a="/comunidad" texto="Volver a Comunidad" />
 
-      <article className="mt-5">
-        <h1 className="editorial text-[1.8rem] leading-[1.12]">
-          {hilo.title ?? "Conversación"}
-        </h1>
-        <p className="mt-1.5 text-[14px]" style={{ color: "var(--color-comunidad-fuerte)" }}>
-          Abierta por {nombreDe(directorio, hilo.user_id)}
-        </p>
-        <p className="mt-4 text-[16px] leading-relaxed whitespace-pre-line">{hilo.body}</p>
-        <div className="mt-4">
-          <BotonCorazon
-            hilo={hilo.id}
-            cuenta={cuenta("thread_id", hilo.id)}
-            mio={esMio("thread_id", hilo.id)}
-          />
-        </div>
-      </article>
+      <header className="thread-community-head">
+        <div className="eyebrow">CONVERSACIÓN</div>
+        <h1 className="thread-title">{hilo.title ?? "Conversación"}</h1>
+        <small className="community-thread-author">Abierta por {autor}</small>
+      </header>
 
-      <section className="mt-9">
-        <h2 className="editorial text-[1.4rem]">
-          {respuestas.data?.length
-            ? `${respuestas.data.length} ${respuestas.data.length === 1 ? "respuesta" : "respuestas"}`
-            : "Sin respuestas todavía"}
-        </h2>
+      <div>
+        <article className="community-thread-message">
+          <span className="community-avatar">{iniciales(autor)}</span>
+          <div>
+            <strong>
+              {autor} · {hace(hilo.created_at)}
+            </strong>
+            <p style={{ whiteSpace: "pre-line" }}>{hilo.body}</p>
+            <BotonCorazon
+              hilo={hilo.id}
+              cuenta={cuenta("thread_id", hilo.id)}
+              mio={esMio("thread_id", hilo.id)}
+            />
+          </div>
+        </article>
 
-        {respuestas.data && respuestas.data.length > 0 && (
-          <ul className="mt-4 space-y-3">
-            {respuestas.data.map((r) => (
-              <li
-                key={r.id}
-                className="rounded-[var(--radius-tarjeta)] bg-[var(--color-blanco)] px-5 py-4"
-                style={{ borderLeft: "3px solid var(--color-comunidad-suave)" }}
-              >
-                <p className="text-[13px]" style={{ color: "var(--color-comunidad-fuerte)" }}>
-                  {nombreDe(directorio, r.user_id)}
-                </p>
-                <p className="mt-1.5 text-[16px] leading-relaxed whitespace-pre-line">{r.body}</p>
-                <div className="mt-3">
-                  <BotonCorazon
-                    respuesta={r.id}
-                    cuenta={cuenta("reply_id", r.id)}
-                    mio={esMio("reply_id", r.id)}
-                  />
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
+        {(respuestas.data ?? []).map((r) => {
+          const quien = nombreDe(directorio, r.user_id);
+          return (
+            <article key={r.id} className="community-thread-message">
+              <span className="community-avatar">{iniciales(quien)}</span>
+              <div>
+                <strong>
+                  {quien} · {hace(r.created_at)}
+                </strong>
+                <p style={{ whiteSpace: "pre-line" }}>{r.body}</p>
+                <BotonCorazon
+                  respuesta={r.id}
+                  cuenta={cuenta("reply_id", r.id)}
+                  mio={esMio("reply_id", r.id)}
+                />
+              </div>
+            </article>
+          );
+        })}
+      </div>
 
-        <div className="mt-5">
-          <Responder hilo={id} />
-        </div>
-      </section>
-    </main>
+      <Responder hilo={id} />
+    </section>
   );
 }
