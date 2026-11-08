@@ -59,6 +59,7 @@ export default async function Inicio() {
                 s.place,
               ].filter((linea): linea is string => Boolean(linea)),
               enlace: s.episode_url,
+              portada: s.image_path,
             }
           : null
       }

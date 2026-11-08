@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import type { CSSProperties } from "react";
 import { IMAGENES } from "@/lib/prototipo";
 
 export type HiloResumen = {
@@ -12,7 +13,13 @@ export type HiloResumen = {
 };
 
 export type DatosInicio = {
-  sesion: { id: string; titulo: string; meta: string[]; enlace: string | null } | null;
+  sesion: {
+    id: string;
+    titulo: string;
+    meta: string[];
+    enlace: string | null;
+    portada: string | null;
+  } | null;
   realizadas: number;
   propuestas: number | null;
   votacionAbierta: boolean;
@@ -38,7 +45,14 @@ export function PantallaInicio({ sesion, realizadas, propuestas, votacionAbierta
 
   return (
     <section className="page active" id="inicio">
-      <article className="hero">
+      <article
+        className={sesion?.portada ? "hero custom-cover" : "hero"}
+        style={
+          sesion?.portada
+            ? ({ "--hero-cover": `url("${sesion.portada}")` } as CSSProperties)
+            : undefined
+        }
+      >
         <div className="hero-content">
           <span className="label">{sesion ? "PRÓXIMA DISCUCHARLA" : "SIN PRÓXIMA DEFINIDA"}</span>
           <h1>{sesion ? sesion.titulo : "Por el momento no hay una próxima Discucharla definida"}</h1>

@@ -48,6 +48,7 @@ export default async function VistaPrevia({
             titulo: "Democratizar el privilegio intelectual",
             meta: ["Viernes 21 de agosto · 6:00 PM", "Casa de Tessie · Tlacoquemécatl"],
             enlace: "https://example.com",
+            portada: null,
           }}
           realizadas={11}
           propuestas={7}

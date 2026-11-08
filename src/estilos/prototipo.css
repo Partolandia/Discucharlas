@@ -16,3 +16,35 @@
 .spotify-mark {
   display: inline;
 }
+
+/*
+ * Hero de Inicio. La foto de respaldo es un collage vertical completo
+ * (520x1440) que ya trae su propio círculo rojo sobre la cabeza. El prototipo
+ * la recorta a una franja estrecha y encima le superpone `.hero::before` con
+ * `mix-blend-mode: multiply`, que cae justo sobre el rostro y lo apaga hasta
+ * dejar un borrón granate. Mostramos el collage entero y dejamos que el acento
+ * lo haga el círculo del propio arte.
+ *
+ * Es una divergencia deliberada del prototipo v2: ahí el hero se ve igual de
+ * apagado. Revertir es borrar este bloque.
+ */
+#inicio .hero::before {
+  display: none;
+}
+
+#inicio .hero::after {
+  inset: 0 !important;
+  background-size: auto 100% !important;
+  background-position: right center !important;
+}
+
+/*
+ * Una portada real de episodio sí se recorta: es cuadrada, no una composición
+ * pensada para esta franja. Mantiene el punto focal del prototipo.
+ */
+#inicio .hero.custom-cover::after {
+  inset: 0 0 0 62% !important;
+  background-image: var(--hero-cover) !important;
+  background-size: cover !important;
+  background-position: var(--home-focus-x, 50%) var(--home-focus-y, 50%) !important;
+}
