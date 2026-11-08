@@ -1,6 +1,7 @@
-import Link from "next/link";
 import { crearClienteServidor } from "@/lib/supabase/servidor";
 import { exigirAdministradora, nombreCompleto } from "@/lib/sesion";
+import { IMAGENES } from "@/lib/prototipo";
+import { Backline } from "@/components/prototipo/Backline";
 import { BotonAccion } from "@/components/admin/BotonAccion";
 import {
   cambiarRol,
@@ -16,71 +17,53 @@ export default async function AdminIntegrantes() {
 
   // Administración sí lee el perfil completo: necesita los datos de contacto
   // para operar el club.
-  const { data: integrantes } = await supabase
-    .from("profiles")
-    .select("*")
-    .order("first_name");
-
-  const admins = (integrantes ?? []).filter((p) => p.role === "admin" && p.status === "active");
+  const { data: integrantes } = await supabase.from("profiles").select("*").order("first_name");
 
   return (
-    <main className="px-5 pb-8">
-      <Link
-        href="/admin"
-        className="text-[15px] text-[var(--color-tinta-suave)] underline underline-offset-4"
-      >
-        Volver a administración
-      </Link>
+    <section className="page active" id="miembros-admin" data-admin-page="true">
+      <Backline a="/admin" texto="Volver a Administración" />
 
-      <h1 className="editorial mt-5 text-[1.9rem] leading-tight">Integrantes</h1>
-      <p className="mt-2 text-[15px] leading-relaxed text-[var(--color-tinta-suave)]">
-        El club conserva siempre al menos una administradora activa. Para suspender una
-        cuenta hay que quitarle antes ese rol.
+      <header className="editorial-head club-head admin-editorial-head header-with-admin-art">
+        <div className="editorial-head-copy">
+          <div className="eyebrow">ADMINISTRACIÓN</div>
+          <h1 className="page-title">Gestionar integrantes</h1>
+        </div>
+        <div className="editorial-head-admin-art">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={IMAGENES.adminIntegrantes} alt="Integrantes" />
+        </div>
+      </header>
+
+      <p className="proposal-intro">
+        Gestiona el estado y los permisos del Club. Puedes asignar o revocar el rol de
+        administrador; el Club debe conservar siempre al menos un administrador activo.
       </p>
 
-      <ul className="mt-6 space-y-3">
+      <div>
         {(integrantes ?? []).map((p) => {
           const nombre = nombreCompleto(p);
           const suspendida = p.status === "suspended";
-          const soyYo = p.id === yo.id;
 
           return (
-            <li
-              key={p.id}
-              className="rounded-[var(--radius-tarjeta)] border border-[var(--color-linea)] bg-[var(--color-blanco)] p-5"
-              style={suspendida ? { opacity: 0.72 } : undefined}
-            >
-              <div className="flex flex-wrap items-baseline gap-x-2">
-                <h2 className="editorial text-[1.25rem] leading-tight">{nombre}</h2>
-                {p.is_owner && (
-                  <span
-                    className="rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-wide uppercase"
-                    style={{ background: "var(--color-admin-oro)", color: "var(--color-tinta)" }}
-                  >
-                    Propietaria
-                  </span>
+            <div key={p.id} className="member-admin-row">
+              <div>
+                <b>{nombre}</b>
+                {p.is_owner ? (
+                  <span className="member-role-pill">PROPIETARIA</span>
+                ) : (
+                  p.role === "admin" && <span className="member-role-pill">ADMINISTRADOR</span>
                 )}
-                {p.role === "admin" && !p.is_owner && (
-                  <span className="text-[12px] font-semibold tracking-wide text-[var(--color-tinta-suave)] uppercase">
-                    Admin
+                <small>
+                  Estado:{" "}
+                  <span className={`status-pill member-status ${suspendida ? "suspended" : "active"}`}>
+                    {suspendida ? "Suspendido" : "Activo"}
                   </span>
-                )}
-                {suspendida && (
-                  <span
-                    className="text-[12px] font-semibold tracking-wide uppercase"
-                    style={{ color: "var(--color-error)" }}
-                  >
-                    Suspendida
-                  </span>
-                )}
+                  {p.id === yo.id && " · Eres tú"}
+                </small>
+                <small>{p.email}</small>
               </div>
 
-              <p className="mt-1 text-[14px] text-[var(--color-tinta-suave)]">{p.email}</p>
-              {p.phone && (
-                <p className="text-[14px] text-[var(--color-tinta-suave)]">{p.phone}</p>
-              )}
-
-              <div className="mt-4 flex flex-wrap gap-2">
+              <div className="member-admin-actions">
                 {!suspendida && !p.is_owner && (
                   <BotonAccion
                     accion={cambiarRol}
@@ -92,17 +75,14 @@ export default async function AdminIntegrantes() {
                     }
                     tono={p.role === "admin" ? "normal" : "principal"}
                   >
-                    {p.role === "admin" ? "Quitar admin" : "Hacer admin"}
+                    {p.role === "admin" ? "Quitar rol admin" : "Hacer administrador"}
                   </BotonAccion>
                 )}
 
                 {!p.is_owner && (
                   <BotonAccion
                     accion={cambiarEstadoCuenta}
-                    campos={{
-                      integrante: p.id,
-                      estado: suspendida ? "active" : "suspended",
-                    }}
+                    campos={{ integrante: p.id, estado: suspendida ? "active" : "suspended" }}
                     tono={suspendida ? "normal" : "delicado"}
                     confirmacion={
                       suspendida
@@ -124,23 +104,11 @@ export default async function AdminIntegrantes() {
                     Transferir propiedad
                   </BotonAccion>
                 )}
-
-                {soyYo && (
-                  <span className="self-center text-[13px] text-[var(--color-tinta-suave)]">
-                    Eres tú
-                  </span>
-                )}
               </div>
-            </li>
+            </div>
           );
         })}
-      </ul>
-
-      <p className="mt-6 text-[14px] text-[var(--color-tinta-suave)]">
-        {admins.length === 1
-          ? "Ahora mismo hay una sola administradora activa, así que no se le puede quitar el rol."
-          : `Hay ${admins.length} administradoras activas.`}
-      </p>
-    </main>
+      </div>
+    </section>
   );
 }

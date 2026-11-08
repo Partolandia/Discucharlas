@@ -1,10 +1,10 @@
-import Link from "next/link";
 import { crearClienteServidor } from "@/lib/supabase/servidor";
 import { directorioDelClub, nombreDe } from "@/lib/club";
 import { fechaLarga } from "@/lib/fechas";
+import { IMAGENES } from "@/lib/prototipo";
+import { Backline } from "@/components/prototipo/Backline";
 import { FormularioAccion } from "@/components/admin/FormularioAccion";
 import { BotonAccion } from "@/components/admin/BotonAccion";
-import { Campo } from "@/components/ui/Campo";
 import {
   emitirInvitacion,
   revocarInvitacion,
@@ -15,11 +15,12 @@ import {
 
 export const metadata = { title: "Accesos" };
 
-const ESTADO_INVITACION: Record<string, { texto: string; color: string }> = {
-  unused: { texto: "Vigente", color: "var(--color-propuestas-fuerte)" },
-  used: { texto: "Usada", color: "var(--color-tinta-suave)" },
-  revoked: { texto: "Revocada", color: "var(--color-error)" },
-  expired: { texto: "Caducada", color: "var(--color-aviso)" },
+/** Las clases de `.access-status` que trae el prototipo. */
+const ESTADO_INVITACION: Record<string, { texto: string; clase: string }> = {
+  unused: { texto: "SIN USAR", clase: "unused" },
+  used: { texto: "USADA", clase: "used" },
+  revoked: { texto: "REVOCADA", clase: "revoked" },
+  expired: { texto: "CADUCADA", clase: "revoked" },
 };
 
 export default async function AdminAccesos() {
@@ -37,59 +38,68 @@ export default async function AdminAccesos() {
   ]);
 
   return (
-    <main className="px-5 pb-8">
-      <Link
-        href="/admin"
-        className="text-[15px] text-[var(--color-tinta-suave)] underline underline-offset-4"
-      >
-        Volver a administración
-      </Link>
+    <section className="page active" id="accesos" data-admin-page="true">
+      <Backline a="/admin" texto="Volver a Administración" />
 
-      <h1 className="editorial mt-5 text-[1.9rem] leading-tight">Accesos</h1>
+      <header className="editorial-head proposal-head admin-editorial-head header-with-admin-art">
+        <div className="editorial-head-copy">
+          <div className="eyebrow">ADMINISTRACIÓN</div>
+          <h1 className="page-title">Integrantes e invitados</h1>
+        </div>
+        <div className="editorial-head-admin-art">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={IMAGENES.adminAccesos} alt="Accesos" />
+        </div>
+      </header>
 
-      {/* ------------------------------------------------------------------ */}
-      {/* Propuestas del club                                                 */}
-      {/* ------------------------------------------------------------------ */}
-      {solicitudes.data && solicitudes.data.length > 0 && (
-        <section className="mt-7">
-          <h2 className="editorial text-[1.4rem]">Propuestas del club</h2>
-          <ul className="mt-4 space-y-3">
-            {solicitudes.data.map((s) => (
-              <li
-                key={s.id}
-                className="rounded-[var(--radius-tarjeta)] border border-[var(--color-linea)] bg-[var(--color-blanco)] p-5"
-              >
-                <h3 className="text-[16px] font-medium">{s.invitee_name}</h3>
-                <p className="mt-0.5 text-[14px] text-[var(--color-tinta-suave)]">
-                  Propuesta por {nombreDe(directorio, s.proposed_by)}
-                  {s.invitee_email && ` · ${s.invitee_email}`}
-                </p>
-                {s.note && (
-                  <p className="mt-2 text-[15px] leading-relaxed text-[var(--color-tinta-suave)]">
-                    {s.note}
-                  </p>
-                )}
+      <div className="access-section-label">NUEVOS INTEGRANTES</div>
 
-                <details className="mt-4">
-                  <summary className="cursor-pointer text-[15px] font-medium underline underline-offset-4">
-                    Invitarla
-                  </summary>
-                  <div className="mt-4">
-                    <FormularioAccion accion={emitirInvitacion} etiquetaEnvio="Crear invitación">
-                      <input type="hidden" name="solicitud" value={s.id} />
-                      <Campo etiqueta="Nombre" name="nombre" defaultValue={s.invitee_name} required />
-                      <Campo
-                        etiqueta="Correo"
-                        name="email"
-                        type="email"
-                        defaultValue={s.invitee_email ?? ""}
-                        required
-                      />
-                    </FormularioAccion>
+      <section className="content-card">
+        <h2>Solicitudes de ingreso</h2>
+        <p className="proposal-intro" style={{ margin: "4px 0 10px" }}>
+          Aquí aparecen las solicitudes enviadas por Integrantes para sumar a una nueva persona al
+          Club. Al activar una solicitud, se genera un enlace único para que esa persona pueda crear
+          su cuenta como Integrante.
+        </p>
+        <div>
+          {solicitudes.data && solicitudes.data.length > 0 ? (
+            solicitudes.data.map((s) => (
+              <div key={s.id} className="invite-row">
+                <div>
+                  <b>{s.invitee_name}</b>
+                  <div className="invite-request-meta">
+                    Solicitó: {nombreDe(directorio, s.proposed_by)}
+                    {s.invitee_email && ` · ${s.invitee_email}`}
+                    {s.note && (
+                      <>
+                        <br />
+                        {s.note}
+                      </>
+                    )}
                   </div>
-                </details>
-
-                <div className="mt-3">
+                  <div className="access-status-row">
+                    <span className="access-status pending">PENDIENTE</span>
+                  </div>
+                  <FormularioAccion accion={emitirInvitacion} etiquetaEnvio="Activar invitación">
+                    <input type="hidden" name="solicitud" value={s.id} />
+                    <label htmlFor={`nombre-${s.id}`}>NOMBRE</label>
+                    <input
+                      id={`nombre-${s.id}`}
+                      name="nombre"
+                      defaultValue={s.invitee_name}
+                      required
+                    />
+                    <label htmlFor={`email-${s.id}`}>CORREO</label>
+                    <input
+                      id={`email-${s.id}`}
+                      name="email"
+                      type="email"
+                      defaultValue={s.invitee_email ?? ""}
+                      required
+                    />
+                  </FormularioAccion>
+                </div>
+                <div className="request-actions">
                   <BotonAccion
                     accion={rechazarSolicitud}
                     campos={{ solicitud: s.id }}
@@ -99,133 +109,106 @@ export default async function AdminAccesos() {
                     Rechazar
                   </BotonAccion>
                 </div>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      {/* ------------------------------------------------------------------ */}
-      {/* Invitaciones                                                        */}
-      {/* ------------------------------------------------------------------ */}
-      <section className="mt-8 rounded-[var(--radius-tarjeta)] border border-[var(--color-linea)] bg-[var(--color-blanco)] p-5">
-        <h2 className="editorial text-[1.3rem]">Invitar a una integrante</h2>
-        <p className="mt-1 mb-4 text-[14px] leading-relaxed text-[var(--color-tinta-suave)]">
-          El enlace se muestra una sola vez. Caduca el día antes de la próxima discucharla.
-        </p>
-        <FormularioAccion accion={emitirInvitacion} etiquetaEnvio="Crear invitación">
-          <Campo etiqueta="Nombre" name="nombre" required maxLength={120} />
-          <Campo etiqueta="Correo" name="email" type="email" required />
-        </FormularioAccion>
+              </div>
+            ))
+          ) : (
+            <p className="club-muted">No hay solicitudes pendientes.</p>
+          )}
+        </div>
       </section>
 
-      {invitaciones.data && invitaciones.data.length > 0 && (
-        <section className="mt-7">
-          <h2 className="editorial text-[1.4rem]">Invitaciones emitidas</h2>
-          <ul className="mt-4 space-y-3">
-            {invitaciones.data.map((i) => {
+      <FormularioAccion accion={emitirInvitacion} etiquetaEnvio="＋ Crear invitación">
+        <label htmlFor="nombre">CREAR INVITACIÓN DE INTEGRANTE</label>
+        <p className="access-helper">
+          Genera directamente un enlace único para una persona, sin necesidad de una solicitud
+          previa. El enlace se muestra una sola vez.
+        </p>
+        <input id="nombre" name="nombre" required maxLength={120} placeholder="Nombre de la persona" />
+        <input name="email" type="email" required placeholder="Correo de la persona" />
+      </FormularioAccion>
+
+      <section className="content-card admin-generated-invites">
+        <h2>INVITACIONES CREADAS POR ADMINISTRACIÓN</h2>
+        <div>
+          {invitaciones.data && invitaciones.data.length > 0 ? (
+            invitaciones.data.map((i) => {
               const estado = ESTADO_INVITACION[i.effective_status ?? "unused"];
               return (
-                <li
-                  key={i.id}
-                  className="rounded-[var(--radius-tarjeta)] border border-[var(--color-linea)] bg-[var(--color-blanco)] p-4"
-                >
-                  <div className="flex items-baseline justify-between gap-3">
-                    <span className="min-w-0">
-                      <span className="block text-[15px] font-medium">{i.invitee_name}</span>
-                      <span className="text-[14px] text-[var(--color-tinta-suave)]">
-                        {i.invitee_email}
-                      </span>
-                    </span>
-                    <span
-                      className="shrink-0 text-[11px] font-semibold tracking-wide uppercase"
-                      style={{ color: estado.color }}
-                    >
-                      {estado.texto}
-                    </span>
+                <div key={i.id} className="invite-row">
+                  <div>
+                    <b>Invitación para {i.invitee_name}</b>
+                    <small>{i.invitee_email}</small>
+                    {i.expires_at && i.effective_status === "unused" && (
+                      <small>Caduca el {fechaLarga(i.expires_at)}</small>
+                    )}
+                    <div className="access-status-row">
+                      <span className={`access-status ${estado.clase}`}>{estado.texto}</span>
+                    </div>
                   </div>
-
-                  {i.expires_at && i.effective_status === "unused" && (
-                    <p className="mt-1.5 text-[13px] text-[var(--color-tinta-suave)]">
-                      Caduca el {fechaLarga(i.expires_at)}
-                    </p>
-                  )}
-
-                  {i.effective_status === "unused" && i.id && (
-                    <div className="mt-3">
+                  <div className="invite-actions">
+                    {i.effective_status === "unused" && i.id && (
                       <BotonAccion
                         accion={revocarInvitacion}
                         campos={{ invitacion: i.id }}
                         tono="delicado"
                         confirmacion="El enlace deja de servir en este momento."
                       >
-                        Revocar
+                        Desactivar
                       </BotonAccion>
-                    </div>
-                  )}
-                </li>
+                    )}
+                  </div>
+                </div>
               );
-            })}
-          </ul>
-        </section>
-      )}
+            })
+          ) : (
+            <p className="club-muted">Todavía no has creado invitaciones.</p>
+          )}
+        </div>
+      </section>
 
-      {/* ------------------------------------------------------------------ */}
-      {/* Clave de invitadas                                                  */}
-      {/* ------------------------------------------------------------------ */}
-      <section className="mt-8 rounded-[var(--radius-tarjeta)] border border-[var(--color-linea)] bg-[var(--color-blanco)] p-5">
-        <h2 className="editorial text-[1.3rem]">Clave de invitadas</h2>
-        <p className="mt-1 text-[14px] leading-relaxed text-[var(--color-tinta-suave)]">
-          Con ella, alguien de fuera ve la próxima discucharla y la guía del club. Nada más:
-          ni comunidad, ni perfiles, ni historial.
+      <div className="access-section-label access-section-label-guests">INVITADOS</div>
+
+      <section className="content-card guest-code-card">
+        <h2>Acceso para invitados</h2>
+        <p className="proposal-intro" style={{ margin: "4px 0 10px" }}>
+          Con esta clave, alguien de fuera ve la próxima Discucharla y la guía del club sin crear
+          una cuenta. Nada más: ni comunidad, ni perfiles, ni historial.
         </p>
 
         {clave.data ? (
-          <div className="mt-4">
-            <p className="text-[15px]">
-              Hay una clave activa
-              {clave.data.label && ` (${clave.data.label})`}, creada el{" "}
-              {fechaLarga(clave.data.created_at)}.
+          <>
+            <div className="guest-code-current">
+              <span>Clave vigente</span>
+              <b>
+                {clave.data.label ?? "Sin etiqueta"} · creada el {fechaLarga(clave.data.created_at)}
+              </b>
+            </div>
+            <p className="club-muted">
+              La clave no se puede volver a mostrar. Si se perdió, genera una nueva.
             </p>
-            <p className="mt-1 text-[14px] text-[var(--color-tinta-suave)]">
-              No se puede volver a mostrar. Si se perdió, genera una nueva.
-            </p>
-            <div className="mt-3 flex flex-wrap gap-2">
+            <div className="guest-code-actions">
               <BotonAccion
                 accion={revocarClaveDeInvitadas}
                 campos={{ clave: clave.data.id }}
                 tono="delicado"
                 confirmacion="Quien tenga esa clave dejará de entrar en este momento."
               >
-                Revocar
+                Desactivar clave
               </BotonAccion>
             </div>
-          </div>
+          </>
         ) : (
-          <p className="mt-4 text-[15px] text-[var(--color-tinta-suave)]">
-            No hay ninguna clave activa.
-          </p>
+          <p className="club-muted">No hay ninguna clave activa.</p>
         )}
 
-        <details className="mt-5">
-          <summary className="cursor-pointer text-[15px] font-medium underline underline-offset-4">
-            Generar una clave nueva
-          </summary>
-          <div className="mt-4">
-            <p className="mb-3 text-[14px] leading-relaxed" style={{ color: "var(--color-aviso)" }}>
-              Al generar una nueva, la anterior deja de servir de inmediato.
-            </p>
-            <FormularioAccion accion={generarClaveDeInvitadas} etiquetaEnvio="Generar clave">
-              <Campo
-                etiqueta="Para qué es (opcional)"
-                name="etiqueta"
-                maxLength={120}
-                placeholder="Sesión de octubre"
-              />
-            </FormularioAccion>
-          </div>
-        </details>
+        <FormularioAccion accion={generarClaveDeInvitadas} etiquetaEnvio="Generar clave nueva">
+          <label htmlFor="etiqueta">GENERAR UNA CLAVE NUEVA</label>
+          <p className="access-helper">
+            Al generar una nueva, la anterior deja de servir de inmediato.
+          </p>
+          <input id="etiqueta" name="etiqueta" maxLength={120} placeholder="Sesión de octubre" />
+        </FormularioAccion>
       </section>
-    </main>
+    </section>
   );
 }

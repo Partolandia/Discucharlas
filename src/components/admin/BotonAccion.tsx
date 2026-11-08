@@ -28,68 +28,43 @@ export function BotonAccion({
   const [estado, ejecutar, pendiente] = useActionState<Resultado, FormData>(accion, {});
   const [confirmando, setConfirmando] = useState(false);
 
-  const estilos = {
-    normal: "border border-[var(--color-linea)] bg-[var(--color-blanco)]",
-    principal: "text-white",
-    delicado: "border",
+  const clase = {
+    normal: "mini-btn",
+    principal: "mini-btn role-action",
+    delicado: "mini-btn danger",
   }[tono];
 
-  const color =
-    tono === "principal"
-      ? { background: "var(--color-tinta)" }
-      : tono === "delicado"
-        ? { borderColor: "var(--color-error)", color: "var(--color-error)" }
-        : undefined;
-
   return (
-    <form action={ejecutar} className="inline-block">
+    <form action={ejecutar}>
       {Object.entries(campos).map(([nombre, valor]) => (
         <input key={nombre} type="hidden" name={nombre} value={valor} />
       ))}
 
       {confirmacion && confirmando ? (
-        <span className="flex flex-col gap-2 rounded-[var(--radius-suave)] border border-[var(--color-linea)] bg-[var(--color-papel-hondo)] px-4 py-3">
-          <span className="text-[14px] leading-relaxed">{confirmacion}</span>
-          <span className="flex gap-2">
-            <button
-              type="submit"
-              disabled={pendiente}
-              className="rounded-full px-4 py-1.5 text-[13px] font-medium text-white disabled:opacity-60"
-              style={{ background: "var(--color-error)" }}
-            >
+        <span className="club-panel">
+          <small>{confirmacion}</small>
+          <span className="admin-actions">
+            <button className="mini-btn danger" type="submit" disabled={pendiente}>
               Sí, hazlo
             </button>
-            <button
-              type="button"
-              onClick={() => setConfirmando(false)}
-              className="rounded-full border border-[var(--color-linea)] px-4 py-1.5 text-[13px]"
-            >
+            <button className="mini-btn" type="button" onClick={() => setConfirmando(false)}>
               Mejor no
             </button>
           </span>
         </span>
       ) : (
         <button
+          className={clase}
           type={confirmacion ? "button" : "submit"}
           onClick={confirmacion ? () => setConfirmando(true) : undefined}
           disabled={pendiente}
-          className={`rounded-full px-4 py-1.5 text-[13px] font-medium disabled:opacity-60 ${estilos}`}
-          style={color}
         >
           {pendiente ? "Un momento…" : children}
         </button>
       )}
 
-      {estado.error && (
-        <div className="mt-2">
-          <Aviso>{estado.error}</Aviso>
-        </div>
-      )}
-      {estado.exito && (
-        <div className="mt-2">
-          <Aviso tono="exito">{estado.exito}</Aviso>
-        </div>
-      )}
+      {estado.error && <Aviso>{estado.error}</Aviso>}
+      {estado.exito && <Aviso tono="exito">{estado.exito}</Aviso>}
       {estado.secreto && <Secreto valor={estado.secreto} />}
     </form>
   );
@@ -100,9 +75,10 @@ function Secreto({ valor }: { valor: string }) {
   const [copiado, setCopiado] = useState(false);
 
   return (
-    <div className="mt-2 rounded-[var(--radius-suave)] border border-[var(--color-linea)] bg-[var(--color-papel-hondo)] px-4 py-3">
-      <p className="font-mono text-[14px] leading-relaxed break-all">{valor}</p>
+    <div className="club-panel">
+      <p className="code-box">{valor}</p>
       <button
+        className="mini-btn"
         type="button"
         onClick={() => {
           navigator.clipboard.writeText(valor).then(
@@ -110,7 +86,6 @@ function Secreto({ valor }: { valor: string }) {
             () => setCopiado(false)
           );
         }}
-        className="mt-2 text-[13px] underline underline-offset-4"
       >
         {copiado ? "Copiado" : "Copiar"}
       </button>

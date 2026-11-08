@@ -9,6 +9,7 @@ import {
   type EstadoExportable,
 } from "@/lib/exportar-libro";
 import { ESTADOS_SESION } from "@/lib/dominio";
+import { Backline } from "@/components/prototipo/Backline";
 
 export const metadata = { title: "Historial" };
 
@@ -32,93 +33,91 @@ export default async function Historial({
   const renglones = await renglonesDelHistorial(estados);
 
   return (
-    <main className="px-5 pb-8">
-      <Link
-        href="/admin"
-        className="text-[15px] text-[var(--color-tinta-suave)] underline underline-offset-4"
-      >
-        Volver a administración
-      </Link>
+    <section className="page admin-history-page active" id="exportar-historial" data-admin-page="true">
+      <Backline a="/admin" texto="Volver a Administración" />
 
-      <h1 className="editorial mt-5 text-[1.9rem] leading-tight">Historial</h1>
-      <p className="mt-2 text-[15px] leading-relaxed text-[var(--color-tinta-suave)]">
-        Lo que ves aquí abajo es exactamente lo que se descarga. Las notas privadas no
-        se exportan, y un dato que nunca se registró va en blanco.
-      </p>
+      <header className="editorial-head admin-history-head">
+        <div className="eyebrow">ADMINISTRACIÓN</div>
+        <h1 className="page-title">Historial de Discucharlas</h1>
+        <p>
+          Filtra por estatus, revisa la vista previa compacta y descarga exactamente ese registro en
+          Excel.
+        </p>
+      </header>
 
-      <div className="mt-6 flex flex-wrap gap-2">
-        {ESTADOS_EXPORTABLES.map((e) => {
-          const activo = estados.includes(e);
-          return (
-            <Link
-              key={e}
-              href={rutaCon(estados, e)}
-              aria-pressed={activo}
-              className={`rounded-full border px-4 py-2 text-[14px] ${
-                activo
-                  ? "border-transparent text-white"
-                  : "border-[var(--color-linea)] bg-[var(--color-blanco)]"
-              }`}
-              style={activo ? { background: ESTADOS_SESION[e].color } : undefined}
-            >
-              {ESTADOS_SESION[e].texto}
-            </Link>
-          );
-        })}
-      </div>
+      <section className="content-card admin-history-summary">
+        <div>
+          <span className="mini-kicker">REGISTRO DEL CLUB</span>
+          <h2>
+            {renglones.length}{" "}
+            {renglones.length === 1 ? "Discucharla seleccionada" : "Discucharlas seleccionadas"}
+          </h2>
+          <p>
+            Lo que ves aquí abajo es exactamente lo que se descarga. Un dato que nunca se registró
+            va en blanco.
+          </p>
+        </div>
 
-      <p className="mt-4 text-[15px]">
-        {renglones.length === 0
-          ? "Ninguna discucharla con esos estados."
-          : `${renglones.length} ${renglones.length === 1 ? "discucharla" : "discucharlas"}`}
-      </p>
-
-      {renglones.length > 0 && (
-        <>
-          <a
-            href={`/admin/historial/descargar?estados=${estados.join(",")}`}
-            className="mt-4 inline-block rounded-full px-6 py-3 text-[15px] font-medium text-white"
-            style={{ background: "var(--color-tinta)" }}
-          >
-            Descargar Excel
-          </a>
-
-          {/* La tabla es ancha a propósito: se desplaza dentro de su caja para
-              que la página nunca ruede en horizontal. */}
-          <div className="mt-6 overflow-x-auto rounded-[var(--radius-suave)] border border-[var(--color-linea)]">
-            <table className="w-max min-w-full border-collapse text-[13px]">
-              <thead>
-                <tr style={{ background: "var(--color-tinta)" }}>
-                  {TITULOS.map((t) => (
-                    <th
-                      key={t}
-                      scope="col"
-                      className="px-3 py-2.5 text-left font-medium whitespace-nowrap text-white"
-                    >
-                      {t}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {renglones.map((r) => (
-                  <tr key={r.id} className="border-t border-[var(--color-linea)]">
-                    {CLAVES.map((clave) => (
-                      <td
-                        key={clave}
-                        className="max-w-[22rem] truncate px-3 py-2.5 align-top"
-                        title={String(r[clave] ?? "")}
-                      >
-                        {String(r[clave] ?? "")}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        <div className="admin-history-filter-group">
+          <span className="admin-history-filter-label">Incluir en el Excel</span>
+          <div className="admin-history-filter-chips">
+            {ESTADOS_EXPORTABLES.map((e) => {
+              const activo = estados.includes(e);
+              return (
+                <Link
+                  key={e}
+                  className="admin-history-chip"
+                  href={rutaCon(estados, e)}
+                  aria-pressed={activo}
+                  data-activo={activo ? "si" : undefined}
+                >
+                  <input type="checkbox" checked={activo} readOnly tabIndex={-1} />
+                  <span>{ESTADOS_SESION[e].texto}</span>
+                </Link>
+              );
+            })}
           </div>
-        </>
-      )}
-    </main>
+        </div>
+
+        {renglones.length > 0 && (
+          <a
+            className="new admin-history-download"
+            href={`/admin/historial/descargar?estados=${estados.join(",")}`}
+          >
+            ↓ Descargar Excel
+          </a>
+        )}
+
+        <small className="admin-history-privacy">
+          Las notas privadas de integrantes no forman parte de esta exportación.
+        </small>
+      </section>
+
+      <div className="admin-history-list">
+        {renglones.length === 0 ? (
+          <div className="admin-history-empty">Ninguna discucharla con esos estados.</div>
+        ) : (
+          renglones.map((r) => (
+            <article key={r.id} className="admin-history-card admin-history-compact-card">
+              <div className="admin-history-card-head admin-history-compact-head">
+                <h3>{r.episodio || "Sin título"}</h3>
+                <span className="admin-history-status">{r.estado}</span>
+              </div>
+              <p className="admin-history-podcast">{r.podcast}</p>
+              <div className="admin-history-compact-meta">
+                {CLAVES.map((clave, i) =>
+                  clave === "episodio" || clave === "estado" || clave === "podcast" ? null : (
+                    <div key={clave} className="admin-history-meta-item">
+                      <b>{TITULOS[i]}</b>
+                      <span>{String(r[clave] ?? "") || "—"}</span>
+                    </div>
+                  )
+                )}
+              </div>
+            </article>
+          ))
+        )}
+      </div>
+    </section>
   );
 }
