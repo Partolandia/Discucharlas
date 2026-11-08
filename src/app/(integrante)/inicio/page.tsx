@@ -5,14 +5,16 @@ import { directorioDelClub, nombreDe } from "@/lib/club";
 import { colajeDe } from "@/lib/colaje";
 import { fechaLarga, hora } from "@/lib/fechas";
 import { IconoCorazon } from "@/components/Iconos";
+import { TarjetasResumenHistorial } from "@/components/inicio/TarjetasResumenHistorial";
 
 export const metadata = { title: "Inicio" };
 
 export default async function Inicio() {
   const supabase = await crearClienteServidor();
 
-  const [proxima, hilos, directorio] = await Promise.all([
+  const [proxima, realizadas, hilos, directorio] = await Promise.all([
     supabase.from("sessions").select("*").eq("status", "upcoming").maybeSingle(),
+    supabase.from("sessions").select("id", { count: "exact", head: true }).eq("status", "past"),
     supabase
       .from("community_threads")
       .select("id, title, body, user_id, created_at")
@@ -104,7 +106,14 @@ export default async function Inicio() {
             </div>
           </div>
         </section>
-      ) : (
+      ) : null}
+
+      <TarjetasResumenHistorial
+        realizadas={realizadas.count ?? 0}
+        proximaTitulo={sesion?.episode_title ?? null}
+      />
+
+      {!sesion ? (
         <section className="mt-4 rounded-[var(--radius-tarjeta)] border border-[var(--color-linea)] bg-white/60 p-7">
           <p className="text-[11px] font-semibold tracking-[0.2em] text-[var(--color-tinta-suave)] uppercase">
             Próxima discucharla
@@ -120,7 +129,7 @@ export default async function Inicio() {
             Ver las propuestas
           </Link>
         </section>
-      )}
+      ) : null}
 
       {/* ------------------------------------------------------------------ */}
       {/* Accesos editoriales                                                 */}
@@ -128,7 +137,7 @@ export default async function Inicio() {
       <div className="mt-3 space-y-3">
         <AccesoEditorial
           href="/nuestras-discucharlas"
-          titulo="Nuestras discucharlas"
+          titulo="Historial de discucharlas"
           texto="Explorar sesiones anteriores →"
           imagen={colajeDe("memorias")}
           color="var(--color-archivo)"

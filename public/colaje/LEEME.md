@@ -9,7 +9,7 @@ sección: no se ve rota, se ve sobria.
     comunidad.jpg       dos mujeres leyendo
     club.jpg            collage de personas y objetos
     inicio-hero.jpg     retrato del hero de la próxima discucharla
-    memorias.jpg        acceso a "Nuestras discucharlas"
+    memorias.jpg        acceso a "Historial de discucharlas"
     guia.jpg            acceso a "Guía del club"
     emblema.png         el círculo del club, arriba a la izquierda
 

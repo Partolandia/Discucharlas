@@ -37,6 +37,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# prototipos HTML pesados (mantener copias locales con fecha)
+prototipo-sesiones-backup-*.html
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

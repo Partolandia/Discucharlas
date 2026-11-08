@@ -23,12 +23,12 @@ export const CATEGORIAS_APORTE = [
 
 export type CategoriaAporte = (typeof CATEGORIAS_APORTE)[number]["valor"];
 
-// Colores de estado tomados de la leyenda del calendario del prototipo.
+// Colores de la leyenda del calendario (prototipo sesiones v2).
 export const ESTADOS_SESION = {
-  draft: { texto: "Borrador", color: "#61758D" },
-  upcoming: { texto: "Próxima", color: "#C56F79" },
-  past: { texto: "Realizada", color: "#8D6670" },
-  cancelled: { texto: "Cancelada", color: "#C68A3A" },
+  draft: { texto: "Borrador", color: "#426fa6" },
+  upcoming: { texto: "Próxima", color: "#79518a" },
+  past: { texto: "Realizada", color: "#646b3d" },
+  cancelled: { texto: "Cancelada", color: "#ae607a" },
 } as const;
 
 export type EstadoSesion = keyof typeof ESTADOS_SESION;

@@ -79,6 +79,7 @@ export function seccionDe(ruta: string): ClaveSeccion {
   if (ruta.startsWith("/propuestas")) return "propuestas";
   if (ruta.startsWith("/comunidad")) return "comunidad";
   if (ruta.startsWith("/club") || ruta.startsWith("/perfil")) return "club";
+  if (ruta.startsWith("/nuestras-discucharlas") || ruta.startsWith("/guia")) return "inicio";
   return "inicio";
 }
 
