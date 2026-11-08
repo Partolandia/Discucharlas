@@ -15,7 +15,8 @@
     "test:excel": "node --experimental-strip-types pruebas/exportar-libro.test.mts",
     "diagnostico": "node scripts/diagnostico.mjs",
     "configurar": "node scripts/configurar.mjs",
-    "verificar": "node scripts/verificar.mjs"
+    "verificar": "node scripts/verificar.mjs",
+    "panel-supabase": "node scripts/panel-supabase.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.5",
