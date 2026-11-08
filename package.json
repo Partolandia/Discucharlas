@@ -16,7 +16,8 @@
     "diagnostico": "node scripts/diagnostico.mjs",
     "configurar": "node scripts/configurar.mjs",
     "verificar": "node scripts/verificar.mjs",
-    "panel-supabase": "node scripts/panel-supabase.mjs"
+    "panel-supabase": "node scripts/panel-supabase.mjs",
+    "assets-drive": "node scripts/preparar-assets-drive.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.5",

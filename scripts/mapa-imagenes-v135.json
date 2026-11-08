@@ -1,0 +1,263 @@
+[
+  {
+    "numero": "01",
+    "archivo": "discucharlas_01.jpg",
+    "carpetaDrive": "01-inicio-sesion-invitado",
+    "colajeApp": "inicio-hero",
+    "pantalla": "Inicio / Sesión / Invitado",
+    "pixeles": "520×1440"
+  },
+  {
+    "numero": "02",
+    "archivo": "discucharlas_02.jpg",
+    "carpetaDrive": "02-global-emblema",
+    "colajeApp": "emblema",
+    "pantalla": "Global / Invitado (logo circular)",
+    "pixeles": "160×160"
+  },
+  {
+    "numero": "03",
+    "archivo": "discucharlas_03.jpg",
+    "carpetaDrive": "03-inicio-memorias",
+    "colajeApp": "memorias",
+    "pantalla": "Inicio — tarjeta Nuestras discucharlas",
+    "pixeles": "660×320"
+  },
+  {
+    "numero": "04",
+    "archivo": "discucharlas_04.jpg",
+    "carpetaDrive": "04-inicio-guia",
+    "colajeApp": "guia",
+    "pantalla": "Inicio — tarjeta Guía del club",
+    "pixeles": "660×320"
+  },
+  {
+    "numero": "05",
+    "archivo": "discucharlas_05.jpg",
+    "carpetaDrive": "05-calendario",
+    "colajeApp": "calendario",
+    "pantalla": "Calendario — encabezado",
+    "pixeles": "2172×724"
+  },
+  {
+    "numero": "06",
+    "archivo": "discucharlas_06.jpg",
+    "carpetaDrive": "06-propuestas-votacion",
+    "colajeApp": "propuestas",
+    "pantalla": "Propuestas — ¿Qué escuchamos después?",
+    "pixeles": "1672×941"
+  },
+  {
+    "numero": "07",
+    "archivo": "discucharlas_07.jpg",
+    "carpetaDrive": "07-propuestas-lista",
+    "colajeApp": null,
+    "pantalla": "Propuestas — portada ejemplo 1",
+    "pixeles": "456×528"
+  },
+  {
+    "numero": "08",
+    "archivo": "discucharlas_08.jpg",
+    "carpetaDrive": "07-propuestas-lista",
+    "colajeApp": null,
+    "pantalla": "Propuestas — portada ejemplo 2",
+    "pixeles": "456×528"
+  },
+  {
+    "numero": "09",
+    "archivo": "discucharlas_09.jpg",
+    "carpetaDrive": "07-propuestas-lista",
+    "colajeApp": null,
+    "pantalla": "Propuestas — portada ejemplo 3",
+    "pixeles": "456×528"
+  },
+  {
+    "numero": "10",
+    "archivo": "discucharlas_10.jpg",
+    "carpetaDrive": "07-propuestas-lista",
+    "colajeApp": null,
+    "pantalla": "Propuestas — portada ejemplo 4",
+    "pixeles": "456×528"
+  },
+  {
+    "numero": "11",
+    "archivo": "discucharlas_11.jpg",
+    "carpetaDrive": "08-comunidad",
+    "colajeApp": "comunidad",
+    "pantalla": "Comunidad — encabezado",
+    "pixeles": "1765×891"
+  },
+  {
+    "numero": "12",
+    "archivo": "discucharlas_12.jpg",
+    "carpetaDrive": "09-club",
+    "colajeApp": "club",
+    "pantalla": "Club — encabezado",
+    "pixeles": "1794×876"
+  },
+  {
+    "numero": "13",
+    "archivo": "discucharlas_13.jpg",
+    "carpetaDrive": "10-memorias-miniaturas",
+    "colajeApp": null,
+    "pantalla": "Nuestras discucharlas — miniatura",
+    "pixeles": "1254×1254"
+  },
+  {
+    "numero": "14",
+    "archivo": "discucharlas_14.jpg",
+    "carpetaDrive": "10-memorias-miniaturas",
+    "colajeApp": null,
+    "pantalla": "Memorias / invitada — miniatura",
+    "pixeles": "1254×1254"
+  },
+  {
+    "numero": "15",
+    "archivo": "discucharlas_15.jpg",
+    "carpetaDrive": "10-memorias-miniaturas",
+    "colajeApp": null,
+    "pantalla": "Memorias / invitada — miniatura",
+    "pixeles": "1254×1254"
+  },
+  {
+    "numero": "16",
+    "archivo": "discucharlas_16.jpg",
+    "carpetaDrive": "10-memorias-miniaturas",
+    "colajeApp": null,
+    "pantalla": "Memorias — miniatura",
+    "pixeles": "1254×1254"
+  },
+  {
+    "numero": "17",
+    "archivo": "discucharlas_17.jpg",
+    "carpetaDrive": "11-votacion-candidatas",
+    "colajeApp": null,
+    "pantalla": "Votación activa — candidata 1",
+    "pixeles": "1024×1536"
+  },
+  {
+    "numero": "18",
+    "archivo": "discucharlas_18.jpg",
+    "carpetaDrive": "11-votacion-candidatas",
+    "colajeApp": null,
+    "pantalla": "Votación activa — candidata 2",
+    "pixeles": "1024×1536"
+  },
+  {
+    "numero": "19",
+    "archivo": "discucharlas_19.jpg",
+    "carpetaDrive": "11-votacion-candidatas",
+    "colajeApp": null,
+    "pantalla": "Votación activa — candidata 3",
+    "pixeles": "1024×1536"
+  },
+  {
+    "numero": "20",
+    "archivo": "discucharlas_20.jpg",
+    "carpetaDrive": "11-votacion-candidatas",
+    "colajeApp": null,
+    "pantalla": "Votación activa — candidata 4",
+    "pixeles": "720×720"
+  },
+  {
+    "numero": "21",
+    "archivo": "discucharlas_21.jpg",
+    "carpetaDrive": "12-avisos",
+    "colajeApp": null,
+    "pantalla": "Avisos — encabezado",
+    "pixeles": "2098×750"
+  },
+  {
+    "numero": "22",
+    "archivo": "discucharlas_22.jpg",
+    "carpetaDrive": "12-avisos",
+    "colajeApp": null,
+    "pantalla": "Avisos — icono aviso 1",
+    "pixeles": "1254×1254"
+  },
+  {
+    "numero": "23",
+    "archivo": "discucharlas_23.jpg",
+    "carpetaDrive": "12-avisos",
+    "colajeApp": null,
+    "pantalla": "Avisos — icono aviso 2",
+    "pixeles": "1254×1254"
+  },
+  {
+    "numero": "24",
+    "archivo": "discucharlas_24.jpg",
+    "carpetaDrive": "12-avisos",
+    "colajeApp": null,
+    "pantalla": "Avisos — icono aviso 3",
+    "pixeles": "1254×1254"
+  },
+  {
+    "numero": "25",
+    "archivo": "discucharlas_25.jpg",
+    "carpetaDrive": "13-ajustes-perfil",
+    "colajeApp": null,
+    "pantalla": "Ajustes — encabezado",
+    "pixeles": "2172×724"
+  },
+  {
+    "numero": "26",
+    "archivo": "discucharlas_26.jpg",
+    "carpetaDrive": "14-administracion",
+    "colajeApp": null,
+    "pantalla": "Administración — hero",
+    "pixeles": "1322×724"
+  },
+  {
+    "numero": "27",
+    "archivo": "discucharlas_27.png",
+    "alternativoJpg": "discucharlas_27.jpg",
+    "carpetaDrive": "14-administracion",
+    "colajeApp": null,
+    "pantalla": "Admin — Accesos (transparencia PNG)",
+    "pixeles": "250×225"
+  },
+  {
+    "numero": "28",
+    "archivo": "discucharlas_28.png",
+    "alternativoJpg": "discucharlas_28.jpg",
+    "carpetaDrive": "14-administracion",
+    "colajeApp": null,
+    "pantalla": "Admin — Integrantes (PNG)",
+    "pixeles": "310×225"
+  },
+  {
+    "numero": "29",
+    "archivo": "discucharlas_29.png",
+    "alternativoJpg": "discucharlas_29.jpg",
+    "carpetaDrive": "14-administracion",
+    "colajeApp": null,
+    "pantalla": "Admin — Votación (PNG)",
+    "pixeles": "250×230"
+  },
+  {
+    "numero": "30",
+    "archivo": "discucharlas_30.png",
+    "alternativoJpg": "discucharlas_30.jpg",
+    "carpetaDrive": "14-administracion",
+    "colajeApp": null,
+    "pantalla": "Admin — Crear (PNG)",
+    "pixeles": "310×230"
+  },
+  {
+    "numero": "31",
+    "archivo": "discucharlas_31.png",
+    "alternativoJpg": "discucharlas_31.jpg",
+    "carpetaDrive": "14-administracion",
+    "colajeApp": null,
+    "pantalla": "Admin — Historial Excel (PNG)",
+    "pixeles": "108×108"
+  },
+  {
+    "numero": "32",
+    "archivo": "discucharlas_32.jpg",
+    "carpetaDrive": "13-ajustes-perfil",
+    "colajeApp": null,
+    "pantalla": "Perfil — fondo encabezado",
+    "pixeles": "1536×1024"
+  }
+]

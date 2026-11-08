@@ -13,5 +13,13 @@ sección: no se ve rota, se ve sobria.
     guia.jpg            acceso a "Guía del club"
     emblema.png         el círculo del club, arriba a la izquierda
 
+Correspondencia con el paquete V135 (discucharlas_01…32): ver
+`scripts/mapa-imagenes-v135.json`. Para armar la carpeta de Google Drive y copiar
+colajes de golpe:
+
+    npm run assets-drive -- RUTA_CARPETA_ASSETS
+
 Sirven .jpg, .png y .webp. Respeta el punto focal: los encabezados recortan por
 la derecha.
+
+Drive del club: https://drive.google.com/drive/folders/19bgPa4wN_kXs9ei1LXKpiAe1sFX--0Iq
