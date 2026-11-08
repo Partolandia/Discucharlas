@@ -1,8 +1,11 @@
+import "@/estilos/prototipo-v2.css";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { crearClienteAdministrador } from "@/lib/supabase/administrador";
 import { accesoDeInvitada } from "@/lib/invitada";
 import { salirComoInvitada } from "@/app/invitada/acciones";
 import { fechaLarga, rangoHorario } from "@/lib/fechas";
+import { IMAGENES } from "@/lib/prototipo";
 
 export const metadata = { title: "Próxima discucharla" };
 
@@ -22,103 +25,139 @@ export default async function InicioDeInvitada() {
     .maybeSingle();
   if (!acceso) redirect("/invitada?motivo=revocada");
 
-  // Solo lo que le toca ver: la próxima sesión y la guía. Nada de comunidad,
-  // perfiles ni historial, y solo estos campos.
-  const [sesion, guia] = await Promise.all([
+  // Solo lo que le toca ver: la próxima sesión, la guía y las realizadas.
+  // Nada de comunidad, perfiles ni notas, y solo estos campos.
+  const [sesion, anteriores] = await Promise.all([
     admin
       .from("sessions")
       .select("episode_title, podcast_name, episode_url, date, start_time, end_time, place, summary")
       .eq("status", "upcoming")
       .maybeSingle(),
-    admin.from("guide_sections").select("id, title, body").order("sort_order"),
+    admin
+      .from("sessions")
+      .select("id, episode_title, date, image_path")
+      .eq("status", "past")
+      .order("date", { ascending: false })
+      .limit(5),
   ]);
 
+  const cuando = sesion.data
+    ? [
+        sesion.data.date ? capitalizar(fechaLarga(sesion.data.date)) : null,
+        rangoHorario(sesion.data.start_time, sesion.data.end_time),
+        sesion.data.place,
+      ]
+        .filter(Boolean)
+        .join(" · ")
+    : null;
+
   return (
-    <main className="mx-auto min-h-dvh max-w-md px-6 py-10">
-      <p className="text-[11px] font-semibold tracking-[0.2em] text-[var(--color-tinta-suave)] uppercase">
-        Discucharlas · invitada
-      </p>
-
-      {sesion.data ? (
-        <section
-          className="grano relative mt-5 overflow-hidden rounded-[var(--radius-tarjeta)] px-6 py-7 text-white"
-          style={{ background: "var(--color-tinta)" }}
-        >
-          <span className="inline-block rounded-full border border-white/45 px-3 py-1 text-[10px] font-semibold tracking-[0.16em] uppercase">
-            Próxima discucharla
-          </span>
-          <h1 className="editorial mt-4 text-[1.9rem] leading-[1.1]">
-            {sesion.data.episode_title}
-          </h1>
-          <p className="mt-1.5 text-[15px] text-white/75">{sesion.data.podcast_name}</p>
-
-          <div
-            className="mt-4 h-[3px] w-14 rounded-full"
-            style={{ background: "var(--color-inicio)" }}
-          />
-
-          <p className="mt-4 text-[15px] leading-snug text-white/85">
-            {sesion.data.date && (
-              <span className="first-letter:uppercase">{fechaLarga(sesion.data.date)}</span>
-            )}
-            {rangoHorario(sesion.data.start_time, sesion.data.end_time) &&
-              ` · ${rangoHorario(sesion.data.start_time, sesion.data.end_time)}`}
-          </p>
-          {sesion.data.place && (
-            <p className="text-[15px] text-white/70">{sesion.data.place}</p>
-          )}
-
-          {sesion.data.summary && (
-            <p className="mt-4 text-[15px] leading-relaxed text-white/75">
-              {sesion.data.summary}
+    <main className="stage">
+      <section className="phone" data-section="inicio">
+        <section className="page guest-view active" id="invitado">
+          <section className="guest-welcome-intro" aria-label="Bienvenida a Discucharlas">
+            <div className="guest-welcome-row">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img className="guest-welcome-logo" alt="Discucharlas" src={IMAGENES.logo} />
+              <h1>¡Hola!</h1>
+            </div>
+            <p className="guest-welcome-lead">Te damos la bienvenida a Discucharlas.</p>
+            <p className="guest-welcome-sub">
+              {sesion.data
+                ? "Esto es lo que estamos por conversar."
+                : "Por el momento no hay una próxima sesión definida."}
             </p>
-          )}
+          </section>
 
-          {sesion.data.episode_url && (
-            <a
-              href={sesion.data.episode_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-6 block rounded-full px-5 py-3 text-center text-[15px] font-medium text-white"
-              style={{ background: "var(--color-inicio)" }}
-            >
-              Escuchar episodio →
-            </a>
-          )}
-        </section>
-      ) : (
-        <section className="mt-5 rounded-[var(--radius-tarjeta)] border border-[var(--color-linea)] bg-white/60 px-6 py-7">
-          <h1 className="editorial text-[1.6rem] leading-tight">Todavía no hay fecha</h1>
-          <p className="mt-3 text-[15px] leading-relaxed text-[var(--color-tinta-suave)]">
-            En cuanto el club agende la próxima, la verás aquí.
-          </p>
-        </section>
-      )}
-
-      {guia.data && guia.data.length > 0 && (
-        <section className="mt-9">
-          <h2 className="editorial text-[1.5rem]">Cómo funciona esto</h2>
-          <div className="mt-4 space-y-6">
-            {guia.data.map((s) => (
-              <div key={s.id}>
-                <h3 className="text-[16px] font-medium">{s.title}</h3>
-                <p className="mt-1.5 text-[15px] leading-relaxed text-[var(--color-tinta-suave)] whitespace-pre-line">
-                  {s.body}
+          <article className="guest-card">
+            <div className="eyebrow" style={{ color: "var(--coral)" }}>
+              PRÓXIMA DISCUCHARLA
+            </div>
+            {sesion.data ? (
+              <>
+                <h1>{sesion.data.episode_title}</h1>
+                <p>
+                  {cuando}
+                  {sesion.data.podcast_name && (
+                    <>
+                      <br />
+                      {sesion.data.podcast_name}
+                    </>
+                  )}
                 </p>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
+                {sesion.data.summary && <p>{sesion.data.summary}</p>}
+                {sesion.data.episode_url && (
+                  <a href={sesion.data.episode_url} target="_blank" rel="noopener noreferrer">
+                    Escuchar episodio　→
+                  </a>
+                )}
+              </>
+            ) : (
+              <>
+                <h1>Por el momento no hay una próxima Discucharla definida</h1>
+                <p>Cuando se confirme una nueva sesión, aparecerá aquí.</p>
+              </>
+            )}
+          </article>
 
-      <form action={salirComoInvitada} className="mt-10 border-t border-[var(--color-linea)] pt-6">
-        <button
-          type="submit"
-          className="text-[15px] text-[var(--color-tinta-suave)] underline underline-offset-4"
-        >
-          Salir
-        </button>
-      </form>
+          <Link className="guest-guide-access" href="/invitada/guia" aria-label="Abrir Guía del club">
+            <span className="guest-guide-mark" aria-hidden="true">
+              ↗
+            </span>
+            <span className="guest-guide-copy">
+              <small>CONOCE EL CÍRCULO</small>
+              <strong>Guía del club</strong>
+              <em>Cómo funciona Discucharlas y cuáles son nuestras reglas.</em>
+            </span>
+            <span className="guest-guide-arrow" aria-hidden="true">
+              ›
+            </span>
+          </Link>
+
+          <section className="guest-history-preview" aria-labelledby="guestHistoryTitle">
+            <div className="guest-history-head">
+              <div className="eyebrow">PARA CONOCER EL CLUB</div>
+              <h2 id="guestHistoryTitle">Discucharlas anteriores</h2>
+              <p>Una mirada a algunos de los temas que ya hemos conversado.</p>
+            </div>
+            <div className="guest-history-list">
+              {anteriores.data && anteriores.data.length > 0 ? (
+                anteriores.data.map((s) => (
+                  <div key={s.id} className="archive-item-editorial guest-history-item">
+                    {s.image_path ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img className="archive-cover archive-cover-art" src={s.image_path} alt="" />
+                    ) : (
+                      <span className="archive-cover archive-cover-initial">
+                        {s.episode_title.charAt(0).toLowerCase()}
+                      </span>
+                    )}
+                    <div className="archive-item-copy">
+                      <span className="status archive-status-past">REALIZADA</span>
+                      <h3>{s.episode_title}</h3>
+                      {s.date && <p>{capitalizar(fechaLarga(s.date))}</p>}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="guest-history-empty">
+                  Todavía no hay Discucharlas realizadas para mostrar.
+                </div>
+              )}
+            </div>
+          </section>
+
+          <form action={salirComoInvitada}>
+            <button className="link" type="submit" style={{ marginTop: "14px" }}>
+              Salir de vista de invitado
+            </button>
+          </form>
+        </section>
+      </section>
     </main>
   );
+}
+
+function capitalizar(texto: string) {
+  return texto.charAt(0).toUpperCase() + texto.slice(1);
 }

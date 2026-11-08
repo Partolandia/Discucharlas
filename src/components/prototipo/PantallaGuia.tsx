@@ -8,10 +8,16 @@ import { Backline } from "@/components/prototipo/Backline";
  * numerados y principios. Si se quiere que administración los edite, hay que
  * decidir antes cómo se modela; queda señalado.
  */
-export function PantallaGuia() {
+export function PantallaGuia({
+  volverA = "/inicio",
+  volverTexto = "Volver a Inicio",
+}: {
+  volverA?: string;
+  volverTexto?: string;
+} = {}) {
   return (
     <section className="page active" id="guia">
-      <Backline a="/inicio" texto="Volver a Inicio" etiqueta="Volver" clase="backline-home" />
+      <Backline a={volverA} texto={volverTexto} etiqueta="Volver" clase="backline-home" />
 
       <header className="guide-page-head">
         <div className="eyebrow">GUÍA DEL CLUB</div>

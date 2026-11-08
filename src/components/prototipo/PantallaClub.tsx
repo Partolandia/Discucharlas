@@ -21,8 +21,6 @@ export function PantallaClub({
 }: {
   integrantes: IntegranteFila[];
   realizadas: number;
-  /** La pantalla "Solicitar integrante" del prototipo todavía no está portada;
-   *  mientras no exista la ruta, el botón no se pinta en vez de ir a un 404. */
   rutaProponer?: string;
 }) {
   const router = useRouter();

@@ -55,5 +55,11 @@ export default async function Club() {
     };
   });
 
-  return <PantallaClub integrantes={integrantes} realizadas={realizadas.count ?? 0} />;
+  return (
+    <PantallaClub
+      integrantes={integrantes}
+      realizadas={realizadas.count ?? 0}
+      rutaProponer="/club/proponer"
+    />
+  );
 }

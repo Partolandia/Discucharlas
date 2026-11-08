@@ -33,6 +33,7 @@ const RUTAS: Array<[string, Pantalla]> = [
   ["/comunidad/nueva", { id: "nueva-conversacion", seccion: "comunidad", titulo: "Nueva conversación" }],
   ["/comunidad", { id: "comunidad", seccion: "comunidad", titulo: "Comunidad" }],
   ["/perfil", { id: "perfil", seccion: "club", titulo: "Perfil" }],
+  ["/club/proponer", { id: "solicitar-invitacion", seccion: "club", titulo: "Solicitar integrante" }],
   ["/club", { id: "club", seccion: "club", titulo: "Club" }],
   ["/admin/accesos", { id: "accesos", seccion: "club", titulo: "Accesos" }],
   ["/admin/integrantes", { id: "miembros-admin", seccion: "club", titulo: "Integrantes" }],
