@@ -7,34 +7,39 @@ import {
   type Resultado,
 } from "@/app/(integrante)/discucharla/acciones";
 import { CATEGORIAS_APORTE } from "@/lib/dominio";
-import { Aviso } from "@/components/ui/Aviso";
-import { BotonEnviar } from "@/components/ui/BotonEnviar";
+
+/** Categorías con cuadrícula propia; "otro" vive en el campo de detalle. */
+const CUADRICULA = CATEGORIAS_APORTE.filter((c) => c.valor !== "otro");
 
 export function Aportes({
   sesion,
   misCategorias,
   detalleOtro,
+  quienes,
+  otros,
 }: {
   sesion: string;
   misCategorias: string[];
   detalleOtro: string | null;
+  quienes: Record<string, string[]>;
+  otros: Array<{ nombre: string; detalle: string }>;
 }) {
   const [estado, alternar, pendiente] = useActionState<Resultado, FormData>(alternarAporte, {});
   const [estadoOtro, guardarOtro] = useActionState<Resultado, FormData>(guardarDetalleOtro, {});
 
   return (
-    <div className="space-y-3">
-      <h2 className="editorial text-[1.5rem]">¿Qué llevas?</h2>
-      <p className="text-[15px] text-[var(--color-tinta-suave)]">
-        Puedes elegir varias. Toca de nuevo para quitarla.
-      </p>
+    <section className="content-card planning-section session-card session-card-bring">
+      <div className="club-kicker">LA MESA</div>
+      <h3>¿Qué llevas?</h3>
+      <p className="club-muted">Puedes elegir varias categorías.</p>
 
       <form action={alternar}>
         <input type="hidden" name="sesion" value={sesion} />
-        <fieldset disabled={pendiente} className="flex flex-wrap gap-2 pt-1">
-          <legend className="sr-only">Categorías de aporte</legend>
-          {CATEGORIAS_APORTE.map((c) => {
+        <fieldset className="club-bring-grid" disabled={pendiente}>
+          <legend className="sr-only">Categorías</legend>
+          {CUADRICULA.map((c) => {
             const elegida = misCategorias.includes(c.valor);
+            const lista = quienes[c.valor] ?? [];
             return (
               <button
                 key={c.valor}
@@ -42,39 +47,55 @@ export function Aportes({
                 name="categoria"
                 value={c.valor}
                 aria-pressed={elegida}
-                className={`rounded-full border px-4 py-2 text-[15px] transition ${
-                  elegida
-                    ? "border-transparent bg-[var(--color-calendario)] text-white"
-                    : "border-[var(--color-linea)] bg-white/70 text-[var(--color-tinta)]"
-                }`}
+                className={`poll-choice${elegida ? " on" : ""}`}
               >
-                {c.texto}
+                <strong>{c.texto}</strong>
+                <b className="poll-count">
+                  {lista.length} {lista.length === 1 ? "voto" : "votos"}
+                </b>
+                <small className="voters">{lista.length ? lista.join(", ") : "Nadie todavía"}</small>
               </button>
             );
           })}
         </fieldset>
-        {estado.error && <div className="pt-2"><Aviso>{estado.error}</Aviso></div>}
+        {estado.error && (
+          <p className="club-message" role="status">
+            {estado.error}
+          </p>
+        )}
       </form>
 
-      {misCategorias.includes("otro") && (
-        <form action={guardarOtro} className="space-y-2 pt-1">
-          <input type="hidden" name="sesion" value={sesion} />
-          <label htmlFor="detalle" className="block text-[15px] font-medium">
-            ¿Qué otra cosa?
-          </label>
-          <input
-            id="detalle"
-            name="detalle"
-            defaultValue={detalleOtro ?? ""}
-            maxLength={120}
-            placeholder="Un pastel de zanahoria"
-            className="w-full rounded-[var(--radius-suave)] border border-[var(--color-linea)] bg-white px-4 py-3 text-[16px]"
-          />
-          <BotonEnviar ocupado="Guardando…">Guardar</BotonEnviar>
-          {estadoOtro.error && <Aviso>{estadoOtro.error}</Aviso>}
-          {estadoOtro.exito && <Aviso tono="exito">{estadoOtro.exito}</Aviso>}
-        </form>
-      )}
-    </div>
+      <form action={guardarOtro}>
+        <input type="hidden" name="sesion" value={sesion} />
+        <label className="club-label" htmlFor="detalle">
+          OTRO / DETALLE OPCIONAL
+        </label>
+        <input
+          className="form-input"
+          id="detalle"
+          name="detalle"
+          defaultValue={detalleOtro ?? ""}
+          maxLength={500}
+          placeholder="Por ejemplo: hielo y vasos"
+        />
+        <div aria-live="polite">
+          {otros.length === 0 ? (
+            <p className="club-muted">Todavía no hay otras aportaciones.</p>
+          ) : (
+            otros.map((o) => (
+              <p key={`${o.nombre}-${o.detalle}`} className="club-muted">
+                {o.nombre}: {o.detalle}
+              </p>
+            ))
+          )}
+        </div>
+        <button className="club-button" type="submit">
+          Guardar detalle
+        </button>
+        <p className="club-message" role="status" aria-live="polite">
+          {estadoOtro.error ?? estadoOtro.exito}
+        </p>
+      </form>
+    </section>
   );
 }

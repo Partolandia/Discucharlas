@@ -2,16 +2,28 @@
 
 import { useActionState } from "react";
 import { alternarVoto, type Resultado } from "@/app/(integrante)/propuestas/acciones";
-import { Aviso } from "@/components/ui/Aviso";
 
+/** Opción de votación del prototipo v2: portada, título, conteo y reseña. */
 export function BotonVoto({
   ronda,
   propuesta,
   votada,
+  titulo,
+  podcast,
+  resena,
+  portada,
+  votos,
+  cerrada,
 }: {
   ronda: string;
   propuesta: string;
   votada: boolean;
+  titulo: string;
+  podcast: string | null;
+  resena: string | null;
+  portada: string | null;
+  votos: number;
+  cerrada?: boolean;
 }) {
   const [estado, accion, pendiente] = useActionState<Resultado, FormData>(alternarVoto, {});
 
@@ -21,19 +33,26 @@ export function BotonVoto({
       <input type="hidden" name="propuesta" value={propuesta} />
       <button
         type="submit"
-        disabled={pendiente}
+        disabled={pendiente || cerrada}
         aria-pressed={votada}
-        className={`w-full rounded-full px-5 py-3 text-[15px] font-medium transition disabled:opacity-60 ${
-          votada ? "text-white" : "border border-[var(--color-linea)] bg-white/70"
-        }`}
-        style={votada ? { background: "var(--color-votacion-boton)" } : undefined}
+        className={`club-vote-option${votada ? " on" : ""}`}
       >
-        {votada ? "La elegiste ✓" : "Votar por esta"}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        {portada && <img src={portada} alt="" />}
+        <span>
+          <strong>{titulo}</strong>
+          <small>
+            {podcast ? `${podcast} · ` : ""}
+            {votos} {votos === 1 ? "voto" : "votos"}
+          </small>
+          <span>{resena}</span>
+        </span>
+        <b>{votada ? "✓" : "○"}</b>
       </button>
       {estado.error && (
-        <div className="mt-2">
-          <Aviso>{estado.error}</Aviso>
-        </div>
+        <p className="club-message" role="status">
+          {estado.error}
+        </p>
       )}
     </form>
   );
