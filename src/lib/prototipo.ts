@@ -34,6 +34,12 @@ const RUTAS: Array<[string, Pantalla]> = [
   ["/comunidad", { id: "comunidad", seccion: "comunidad", titulo: "Comunidad" }],
   ["/perfil", { id: "perfil", seccion: "club", titulo: "Perfil" }],
   ["/club", { id: "club", seccion: "club", titulo: "Club" }],
+  ["/admin/accesos", { id: "accesos", seccion: "club", titulo: "Accesos" }],
+  ["/admin/integrantes", { id: "miembros-admin", seccion: "club", titulo: "Integrantes" }],
+  ["/admin/discucharlas", { id: "crear", seccion: "calendario", titulo: "Crear Discucharla" }],
+  ["/admin/votacion", { id: "voto", seccion: "propuestas", titulo: "Votación" }],
+  ["/admin/historial", { id: "exportar-historial", seccion: "inicio", titulo: "Historial" }],
+  ["/admin", { id: "administracion", seccion: "inicio", titulo: "Administración" }],
 ];
 
 export function pantallaDe(ruta: string): Pantalla {
@@ -62,4 +68,12 @@ export const IMAGENES = {
   votacion: "/prototipo/06-adc41fa6.webp",
   comunidad: "/prototipo/11-20524c0e.webp",
   club: "/prototipo/12-41dd732e.webp",
+  avisos: "/prototipo/21-16c16a30.webp",
+  ajustes: "/prototipo/25-d6db3e8e.webp",
+  admin: "/prototipo/26-f22c8f8a.webp",
+  adminAccesos: "/prototipo/27-344bcbab.webp",
+  adminIntegrantes: "/prototipo/28-6742f809.webp",
+  adminVotaciones: "/prototipo/29-9af6f8ca.webp",
+  adminCrear: "/prototipo/30-977c00ed.webp",
+  adminHistorial: "/prototipo/31-22bd7784.webp",
 } as const;
