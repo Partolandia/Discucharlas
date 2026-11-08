@@ -1,7 +1,9 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const RUTAS_PUBLICAS = ["/", "/entrar", "/invitada", "/invitacion", "/offline.html"];
+// /vista-previa solo existe fuera de producción: la propia página responde 404
+// cuando NODE_ENV es production, así que dejarla pasar aquí no abre nada.
+const RUTAS_PUBLICAS = ["/", "/entrar", "/invitada", "/invitacion", "/offline.html", "/vista-previa"];
 
 function esPublica(ruta: string) {
   return RUTAS_PUBLICAS.some((p) => ruta === p || ruta.startsWith(`${p}/`));

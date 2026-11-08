@@ -35,11 +35,32 @@ export function hora(horaSQL: string | null) {
   return `${Number(h)}:${m}`;
 }
 
+/** "6:00 PM": el formato que usa el prototipo en el hero y el calendario. */
+export function hora12(horaSQL: string | null) {
+  if (!horaSQL) return null;
+  const [h, m] = horaSQL.split(":");
+  const n = Number(h);
+  return `${n % 12 || 12}:${m} ${n >= 12 ? "PM" : "AM"}`;
+}
+
 export function rangoHorario(inicio: string | null, fin: string | null) {
   const a = hora(inicio);
   const b = hora(fin);
   if (a && b) return `${a} a ${b}`;
   return a ?? null;
+}
+
+/** "Hace 1 hora", como lo escribe el prototipo en la vista previa de Comunidad. */
+export function hace(cuando: string) {
+  const minutos = Math.max(0, Math.round((Date.now() - Date.parse(cuando)) / 60000));
+  if (minutos < 1) return "Ahora";
+  if (minutos < 60) return `Hace ${minutos} ${minutos === 1 ? "minuto" : "minutos"}`;
+  const horas = Math.round(minutos / 60);
+  if (horas < 24) return `Hace ${horas} ${horas === 1 ? "hora" : "horas"}`;
+  const dias = Math.round(horas / 24);
+  if (dias < 7) return `Hace ${dias} ${dias === 1 ? "día" : "días"}`;
+  const semanas = Math.round(dias / 7);
+  return `Hace ${semanas} ${semanas === 1 ? "semana" : "semanas"}`;
 }
 
 /** Días completos que faltan para una fecha, en la zona del club. */

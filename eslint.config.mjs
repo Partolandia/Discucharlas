@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Material derivado del prototipo: se regenera, no se edita.
+    ".prototipo/**",
+    "src/estilos/prototipo-v2.css",
   ]),
 ]);
 

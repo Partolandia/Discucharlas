@@ -40,6 +40,9 @@ yarn-error.log*
 # prototipos HTML pesados (mantener copias locales con fecha)
 prototipo-sesiones-backup-*.html
 
+# material derivado del prototipo (se regenera con los scripts)
+.prototipo/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
