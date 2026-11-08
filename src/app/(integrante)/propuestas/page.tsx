@@ -37,31 +37,15 @@ export default async function Propuestas() {
       {/* ------------------------------------------------------------------ */}
       {votacion ? (
         <section
-          className="grano relative mt-2 overflow-hidden rounded-[var(--radius-tarjeta)]"
-          style={{ background: "var(--color-votacion)" }}
+          className="grano mt-2 grid min-h-[12rem] overflow-hidden rounded-[var(--radius-tarjeta)]"
+          style={{
+            gridTemplateColumns: "minmax(0, 1fr) 38%",
+            background: "var(--color-votacion)",
+          }}
         >
-          {imagenVotacion ? (
-            <Image
-              src={imagenVotacion}
-              alt=""
-              fill
-              sizes="430px"
-              className="!left-auto !w-[42%] object-cover"
-            />
-          ) : (
-            <div
-              aria-hidden
-              className="absolute inset-y-0 right-0 w-[42%]"
-              style={{
-                background:
-                  "radial-gradient(120% 90% at 65% 40%, var(--color-votacion-acento) 0%, transparent 72%)",
-              }}
-            />
-          )}
-
-          <div className="relative z-10 max-w-[64%] px-6 py-7 text-white">
+          <div className="relative z-10 flex flex-col justify-center px-5 py-5 text-white">
             <span
-              className="inline-block rounded-full px-3 py-1 text-[10px] font-semibold tracking-[0.14em] uppercase"
+              className="inline-block w-fit rounded-full px-3 py-1 text-[10px] font-semibold tracking-[0.14em] uppercase"
               style={{ background: "var(--color-votacion-sello)", color: "var(--color-tinta)" }}
             >
               Votación activa
@@ -74,11 +58,40 @@ export default async function Propuestas() {
             </p>
             <Link
               href="/propuestas/votar"
-              className="mt-5 inline-block rounded-full px-6 py-3 text-[15px] font-medium text-white"
+              className="mt-5 inline-block w-fit rounded-full px-6 py-3 text-[15px] font-medium text-white"
               style={{ background: "var(--color-votacion-boton)" }}
             >
               Ir a votar →
             </Link>
+          </div>
+          <div className="relative min-h-[12rem] overflow-hidden bg-[#2a1338]">
+            {imagenVotacion ? (
+              <>
+                <Image
+                  src={imagenVotacion}
+                  alt=""
+                  fill
+                  sizes="165px"
+                  className="object-cover object-center saturate-[0.92] contrast-[1.04]"
+                />
+                <div
+                  aria-hidden
+                  className="pointer-events-none absolute inset-0 z-[2]"
+                  style={{
+                    background: "linear-gradient(90deg, #3b195d 0%, transparent 38%)",
+                  }}
+                />
+              </>
+            ) : (
+              <div
+                aria-hidden
+                className="absolute inset-0"
+                style={{
+                  background:
+                    "radial-gradient(120% 90% at 65% 40%, var(--color-votacion-acento) 0%, transparent 72%)",
+                }}
+              />
+            )}
           </div>
         </section>
       ) : (

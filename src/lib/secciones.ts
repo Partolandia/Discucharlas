@@ -6,6 +6,9 @@
  * suficiente fuerza. Su pestaña sí usa la berenjena de marca, y el coral queda
  * para las acciones.
  */
+/** Cómo encuadra el collage en el encabezado (V135). */
+export type ModoEncabezado = "fondo" | "rejilla" | "banda" | "texto";
+
 export const SECCIONES = {
   inicio: {
     ruta: "/inicio",
@@ -25,6 +28,7 @@ export const SECCIONES = {
     encabezado: "Calendario del club",
     entrada: "Consulta las fechas del club y entra al detalle de cada discucharla.",
     fondo: "var(--color-calendario-suave)",
+    modoEncabezado: "fondo" as ModoEncabezado,
   },
   propuestas: {
     ruta: "/propuestas",
@@ -37,6 +41,7 @@ export const SECCIONES = {
     encabezado: "Votación",
     entrada: "Ideas nuevas, recomendaciones y la votación activa.",
     fondo: "transparent",
+    modoEncabezado: "texto" as ModoEncabezado,
   },
   comunidad: {
     ruta: "/comunidad",
@@ -49,6 +54,7 @@ export const SECCIONES = {
     encabezado: "Comunidad",
     entrada: "Ideas, preguntas y hallazgos que seguimos compartiendo.",
     fondo: "var(--color-comunidad-crema)",
+    modoEncabezado: "rejilla" as ModoEncabezado,
   },
   club: {
     ruta: "/club",
@@ -61,6 +67,7 @@ export const SECCIONES = {
     encabezado: "Integrantes",
     entrada: null,
     fondo: "var(--color-club-medio)",
+    modoEncabezado: "banda" as ModoEncabezado,
   },
 } as const;
 

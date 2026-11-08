@@ -36,14 +36,24 @@ export default async function Inicio() {
           style={{ background: "var(--color-tinta)" }}
         >
           {retrato ? (
-            <Image
-              src={retrato}
-              alt=""
-              fill
-              priority
-              sizes="430px"
-              className="!left-auto !w-[44%] object-cover"
-            />
+            <>
+              <Image
+                src={retrato}
+                alt=""
+                fill
+                priority
+                sizes="430px"
+                className="!left-auto !w-[48%] object-cover object-[48%_center]"
+              />
+              <div
+                aria-hidden
+                className="pointer-events-none absolute inset-0 z-[1]"
+                style={{
+                  background:
+                    "linear-gradient(90deg, var(--color-tinta) 0%, var(--color-tinta) 41%, rgba(36,21,46,.82) 50%, rgba(36,21,46,.15) 69%, transparent 82%)",
+                }}
+              />
+            </>
           ) : (
             <div
               aria-hidden
@@ -214,7 +224,7 @@ function AccesoEditorial({
       </div>
       <div className="relative w-[34%] shrink-0">
         {imagen ? (
-          <Image src={imagen} alt="" fill sizes="150px" className="object-cover" />
+          <Image src={imagen} alt="" fill sizes="150px" className="object-cover object-center" />
         ) : (
           <div
             aria-hidden
