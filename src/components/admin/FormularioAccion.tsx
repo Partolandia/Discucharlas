@@ -11,10 +11,15 @@ export function FormularioAccion({
   accion,
   etiquetaEnvio,
   children,
+  clase = "new",
+  id,
 }: {
   accion: Accion;
   etiquetaEnvio: string;
   children: React.ReactNode;
+  /** Para las zonas que usan los botones del prototipo (`club-button`). */
+  clase?: string;
+  id?: string;
 }) {
   const [estado, ejecutar, pendiente] = useActionState<Resultado, FormData>(accion, {});
 
@@ -24,7 +29,7 @@ export function FormularioAccion({
       {estado.error && <Aviso>{estado.error}</Aviso>}
       {estado.exito && <Aviso tono="exito">{estado.exito}</Aviso>}
       {estado.secreto && <p className="code-box">{estado.secreto}</p>}
-      <button className="new" type="submit" disabled={pendiente}>
+      <button className={clase} id={id} data-admin-only="control" type="submit" disabled={pendiente}>
         {pendiente ? "Guardando…" : etiquetaEnvio}
       </button>
     </form>

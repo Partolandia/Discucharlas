@@ -18,21 +18,28 @@ export function BotonAccion({
   children,
   confirmacion,
   tono = "normal",
+  clase: claseDada,
+  id,
 }: {
   accion: Accion;
   campos: Record<string, string>;
   children: React.ReactNode;
   confirmacion?: string;
   tono?: "normal" | "principal" | "delicado";
+  /** Para las zonas que usan los botones del prototipo (`club-button`). */
+  clase?: string;
+  id?: string;
 }) {
   const [estado, ejecutar, pendiente] = useActionState<Resultado, FormData>(accion, {});
   const [confirmando, setConfirmando] = useState(false);
 
-  const clase = {
-    normal: "mini-btn",
-    principal: "mini-btn role-action",
-    delicado: "mini-btn danger",
-  }[tono];
+  const clase =
+    claseDada ??
+    {
+      normal: "mini-btn",
+      principal: "mini-btn role-action",
+      delicado: "mini-btn danger",
+    }[tono];
 
   return (
     <form action={ejecutar}>
@@ -55,6 +62,8 @@ export function BotonAccion({
       ) : (
         <button
           className={clase}
+          id={id}
+          data-admin-only="control"
           type={confirmacion ? "button" : "submit"}
           onClick={confirmacion ? () => setConfirmando(true) : undefined}
           disabled={pendiente}

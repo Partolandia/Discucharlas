@@ -42,6 +42,29 @@ export function Cascaron({
   }, [esAdmin]);
 
   /*
+   * La clase no basta: el prototipo también escribe estos estilos en línea
+   * sobre cada `[data-admin-only]`, porque varias reglas por id del volcado le
+   * ganarían por especificidad a cualquier selector de clase.
+   */
+  useEffect(() => {
+    if (!esAdmin) return;
+    for (const el of document.querySelectorAll<HTMLElement>("[data-admin-only]")) {
+      const boton = el.matches('button, input[type="submit"]');
+      if (el.dataset.adminOnly === "panel" || boton) {
+        el.style.setProperty("background", "var(--admin-tint)", "important");
+        el.style.setProperty("border", "1.5px solid var(--admin-accent)", "important");
+      }
+      if (el.dataset.adminOnly === "control" && boton) {
+        el.style.setProperty("color", "var(--admin-accent-dark)", "important");
+        if (el.matches(".top .admin")) {
+          el.style.setProperty("background", "var(--admin-accent)", "important");
+          el.style.setProperty("color", "white", "important");
+        }
+      }
+    }
+  }, [esAdmin, ruta]);
+
+  /*
    * El prototipo resalta el icono de la herramienta abierta con fondo morado y
    * `aria-current`. Su pantalla `ajustes` es aquí `/perfil`.
    */
@@ -83,12 +106,31 @@ export function Cascaron({
               </svg>
             </button>
             {esAdmin && (
-              <button className="admin" onClick={() => router.push("/admin")}>
+              <button
+                className="admin"
+                data-admin-only="control"
+                onClick={() => router.push("/admin")}
+              >
                 {inicial}
               </button>
             )}
           </div>
         </header>
+
+        {esAdmin && (
+          <div
+            className="disc-admin-banner"
+            id="discAdminViewBanner"
+            aria-label="Vista de administración"
+          >
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="15" cy="8" r="4" />
+              <path d="m12 11-8 8v2h3v-3h3l2-2" />
+            </svg>
+            <strong>Vista de administración</strong>
+            <span>Tu cuenta tiene permisos de administración</span>
+          </div>
+        )}
 
         {children}
 

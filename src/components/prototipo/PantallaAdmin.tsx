@@ -59,6 +59,7 @@ export function PantallaAdmin({ resumen }: { resumen: React.ReactNode }) {
           <button
             key={m.ruta}
             className="admin-tile admin-tile-refined"
+            data-admin-only="control"
             onClick={() => router.push(m.ruta)}
           >
             <span className="admin-cutout" aria-hidden="true">
@@ -74,6 +75,7 @@ export function PantallaAdmin({ resumen }: { resumen: React.ReactNode }) {
         ))}
         <button
           className="admin-tile admin-tile-refined admin-export-tile"
+          data-admin-only="control"
           onClick={() => router.push("/admin/historial")}
         >
           <span className="admin-export-icon" aria-hidden="true">

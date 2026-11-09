@@ -76,11 +76,13 @@ export default async function VistaPrevia({
       )}
 
       {seccion === "propuestas" && (
-        <PantallaPropuestas
-          propuestas={7}
-          votacion={{ titulo: "¿Qué escuchamos después?", abierta: true, candidaturas: 4 }}
-          esAdmin
-        />
+        <PantallaPropuestas propuestas={7}>
+          <article className="club-voting-hero">
+            <span className="club-status">VOTACIÓN ACTIVA</span>
+            <h2>¿Qué escuchamos después?</h2>
+            <p>La elección está abierta. Vota por los episodios que te gustaría escuchar.</p>
+          </article>
+        </PantallaPropuestas>
       )}
 
       {seccion === "comunidad" && (

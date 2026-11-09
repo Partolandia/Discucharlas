@@ -157,76 +157,103 @@ export async function alternarAsistencia(
 // ---------------------------------------------------------------------------
 // votación
 // ---------------------------------------------------------------------------
-export async function crearRonda(_previo: Resultado, datos: FormData): Promise<Resultado> {
-  await exigirAdministradora();
-  const titulo = z.string().trim().max(160).safeParse(datos.get("titulo") ?? "");
-  if (!titulo.success) return { error: "Ese título es demasiado largo." };
-
-  const supabase = await crearClienteServidor();
-  const { error } = await supabase
-    .from("voting_rounds")
-    .insert({ title: titulo.data || null, status: "draft" });
-
-  if (error) {
-    return {
-      error: comoMensaje(
-        error,
-        "Ya hay una votación en preparación. Ábrela o descártala antes de crear otra."
-      )!,
-    };
-  }
-  revalidatePath("/admin/votacion");
-  return {};
-}
-
-const candidata = z.object({
-  ronda: z.string().uuid(),
-  propuesta: z.string().uuid(),
-});
-
-export async function alternarCandidata(
-  _previo: Resultado,
-  datos: FormData
-): Promise<Resultado> {
-  const perfil = await exigirAdministradora();
-  const leido = candidata.safeParse({
-    ronda: datos.get("ronda"),
-    propuesta: datos.get("propuesta"),
-  });
-  if (!leido.success) return { error: "Candidatura no válida." };
-
-  const supabase = await crearClienteServidor();
-  const { data: existe } = await supabase
+/**
+ * Deja las candidaturas de una ronda exactamente en el conjunto elegido.
+ *
+ * Quitar una candidatura de una votación abierta borra sus votos: `votes`
+ * referencia `voting_candidates` con `on delete cascade`. Es el comportamiento
+ * que el prototipo anuncia antes de confirmar.
+ */
+async function sincronizarCandidaturas(
+  supabase: Awaited<ReturnType<typeof crearClienteServidor>>,
+  ronda: string,
+  propuestas: string[],
+  quienAgrega: string
+) {
+  const { data: actuales } = await supabase
     .from("voting_candidates")
     .select("proposal_id")
-    .eq("voting_round_id", leido.data.ronda)
-    .eq("proposal_id", leido.data.propuesta)
-    .maybeSingle();
+    .eq("voting_round_id", ronda);
 
-  const { error } = existe
-    ? await supabase
-        .from("voting_candidates")
-        .delete()
-        .eq("voting_round_id", leido.data.ronda)
-        .eq("proposal_id", leido.data.propuesta)
-    : await supabase.from("voting_candidates").insert({
-        voting_round_id: leido.data.ronda,
-        proposal_id: leido.data.propuesta,
-        added_by: perfil.id,
-      });
+  const antes = new Set((actuales ?? []).map((c) => c.proposal_id));
+  const ahora = new Set(propuestas);
+  const sobran = [...antes].filter((id) => !ahora.has(id));
+  const faltan = [...ahora].filter((id) => !antes.has(id));
 
-  if (error) return { error: "No se pudo cambiar la candidatura." };
-  revalidatePath("/admin/votacion");
-  return {};
+  if (sobran.length) {
+    const { error } = await supabase
+      .from("voting_candidates")
+      .delete()
+      .eq("voting_round_id", ronda)
+      .in("proposal_id", sobran);
+    if (error) return "No se pudieron retirar esos episodios de la votación.";
+  }
+
+  if (faltan.length) {
+    const { error } = await supabase.from("voting_candidates").insert(
+      faltan.map((id) => ({
+        voting_round_id: ronda,
+        proposal_id: id,
+        added_by: quienAgrega,
+      }))
+    );
+    if (error) return "No se pudieron sumar esos episodios a la votación.";
+  }
+
+  return null;
 }
 
-export async function abrirRonda(_previo: Resultado, datos: FormData): Promise<Resultado> {
-  await exigirAdministradora();
-  const id = z.string().uuid().safeParse(datos.get("ronda"));
-  if (!id.success) return { error: "Votación no válida." };
+const constructor = z.object({
+  ronda: z.union([z.string().uuid(), z.literal("")]),
+  titulo: z.string().trim().max(200),
+  propuestas: z.array(z.string().uuid()).min(2, "Elige al menos dos episodios."),
+});
+
+/**
+ * "Abrir votación" del prototipo: en un solo paso crea la ronda si hace falta,
+ * fija los episodios participantes y la abre. La regla de una sola votación
+ * abierta la sigue aplicando `open_voting_round`.
+ */
+export async function abrirVotacion(_previo: Resultado, datos: FormData): Promise<Resultado> {
+  const perfil = await exigirAdministradora();
+  const leido = constructor.safeParse({
+    ronda: datos.get("ronda") ?? "",
+    titulo: datos.get("titulo") ?? "",
+    propuestas: datos.getAll("propuestas"),
+  });
+  if (!leido.success) {
+    return { error: leido.error.issues[0]?.message ?? "Datos de la votación no válidos." };
+  }
 
   const supabase = await crearClienteServidor();
-  const { error } = await supabase.rpc("open_voting_round", { p_round_id: id.data });
+  let ronda = leido.data.ronda;
+
+  if (!ronda) {
+    const { data, error } = await supabase
+      .from("voting_rounds")
+      .insert({ title: leido.data.titulo || null, status: "draft" })
+      .select("id")
+      .single();
+    if (error || !data) {
+      return {
+        error: comoMensaje(
+          error,
+          "Ya hay una votación en preparación. Ábrela o descártala antes de crear otra."
+        )!,
+      };
+    }
+    ronda = data.id;
+  } else {
+    await supabase
+      .from("voting_rounds")
+      .update({ title: leido.data.titulo || null })
+      .eq("id", ronda);
+  }
+
+  const problema = await sincronizarCandidaturas(supabase, ronda, leido.data.propuestas, perfil.id);
+  if (problema) return { error: problema };
+
+  const { error } = await supabase.rpc("open_voting_round", { p_round_id: ronda });
   if (error) return { error: comoMensaje(error, "No se pudo abrir la votación.")! };
 
   await supabase.rpc("notify_all_members", {
@@ -234,12 +261,48 @@ export async function abrirRonda(_previo: Resultado, datos: FormData): Promise<R
     p_title: "Se abrió la votación",
     p_body: "Pasa a elegir el episodio de la próxima discucharla.",
     p_entity_type: "voting_round",
-    p_entity_id: id.data,
+    p_entity_id: ronda,
   });
 
   revalidatePath("/admin/votacion");
   revalidatePath("/propuestas");
   return { exito: "Votación abierta. El club ya puede votar." };
+}
+
+/**
+ * "Guardar cambios de la votación": cambia título y episodios de la votación
+ * abierta. Los episodios que se conservan mantienen sus votos.
+ */
+export async function guardarVotacion(_previo: Resultado, datos: FormData): Promise<Resultado> {
+  const perfil = await exigirAdministradora();
+  const leido = constructor.safeParse({
+    ronda: datos.get("ronda") ?? "",
+    titulo: datos.get("titulo") ?? "",
+    propuestas: datos.getAll("propuestas"),
+  });
+  if (!leido.success || !leido.data.ronda) {
+    return { error: leido.success ? "Votación no válida." : leido.error.issues[0]!.message };
+  }
+
+  const supabase = await crearClienteServidor();
+  const { error } = await supabase
+    .from("voting_rounds")
+    .update({ title: leido.data.titulo || null })
+    .eq("id", leido.data.ronda)
+    .eq("status", "open");
+  if (error) return { error: "No se pudo guardar la votación." };
+
+  const problema = await sincronizarCandidaturas(
+    supabase,
+    leido.data.ronda,
+    leido.data.propuestas,
+    perfil.id
+  );
+  if (problema) return { error: problema };
+
+  revalidatePath("/admin/votacion");
+  revalidatePath("/propuestas");
+  return { exito: "Votación actualizada." };
 }
 
 const cierre = z.object({
@@ -269,6 +332,86 @@ export async function cerrarRonda(_previo: Resultado, datos: FormData): Promise<
   revalidatePath("/admin/votacion");
   revalidatePath("/propuestas");
   return { exito: "Votación cerrada. Ya puedes crear la discucharla con el episodio ganador." };
+}
+
+/**
+ * "Reabrir votación" del prototipo. No hay función de negocio para esto: el
+ * índice único parcial sobre `status = 'open'` es quien garantiza que siga
+ * habiendo una sola abierta, así que basta con comprobarlo y actualizar.
+ */
+export async function reabrirRonda(_previo: Resultado, datos: FormData): Promise<Resultado> {
+  await exigirAdministradora();
+  const id = z.string().uuid().safeParse(datos.get("ronda"));
+  if (!id.success) return { error: "Votación no válida." };
+
+  const supabase = await crearClienteServidor();
+  const { error } = await supabase
+    .from("voting_rounds")
+    .update({
+      status: "open",
+      closed_at: null,
+      closed_by: null,
+      winning_proposal_id: null,
+      override_by: null,
+      override_note: null,
+    })
+    .eq("id", id.data)
+    .eq("status", "closed");
+
+  if (error) {
+    return {
+      error: comoMensaje(error, "Ya hay otra votación abierta. Ciérrala antes de reabrir esta.")!,
+    };
+  }
+  revalidatePath("/admin/votacion");
+  revalidatePath("/propuestas");
+  return { exito: "Votación reabierta. El club puede volver a votar." };
+}
+
+const seleccionFinal = z.object({
+  ronda: z.string().uuid(),
+  ganadora: z.string().uuid(),
+  nota: z.string().trim().max(500),
+});
+
+/**
+ * "Guardar selección final" sobre una votación ya cerrada: cambia el episodio
+ * elegido sin tocar los votos, y queda registrado como decisión de
+ * administración.
+ */
+export async function fijarGanadora(_previo: Resultado, datos: FormData): Promise<Resultado> {
+  const perfil = await exigirAdministradora();
+  const leido = seleccionFinal.safeParse({
+    ronda: datos.get("ronda"),
+    ganadora: datos.get("ganadora"),
+    nota: datos.get("nota") ?? "",
+  });
+  if (!leido.success) return { error: "Elige un episodio de esta votación." };
+
+  const supabase = await crearClienteServidor();
+  const { data: candidata } = await supabase
+    .from("voting_candidates")
+    .select("proposal_id")
+    .eq("voting_round_id", leido.data.ronda)
+    .eq("proposal_id", leido.data.ganadora)
+    .maybeSingle();
+
+  if (!candidata) return { error: "Ese episodio no es candidato de esta votación." };
+
+  const { error } = await supabase
+    .from("voting_rounds")
+    .update({
+      winning_proposal_id: leido.data.ganadora,
+      override_by: perfil.id,
+      override_note: leido.data.nota || null,
+    })
+    .eq("id", leido.data.ronda)
+    .eq("status", "closed");
+
+  if (error) return { error: "No se pudo guardar la selección final." };
+  revalidatePath("/admin/votacion");
+  revalidatePath("/propuestas");
+  return { exito: "Selección final guardada. Los votos se conservan." };
 }
 
 // ---------------------------------------------------------------------------

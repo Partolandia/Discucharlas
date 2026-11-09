@@ -2,31 +2,21 @@
 
 import { useRouter } from "next/navigation";
 
-export type EstadoVotacion = {
-  titulo: string;
-  abierta: boolean;
-  candidaturas: number;
-} | null;
-
 /**
- * Pantalla "Propuestas y votaciones" del prototipo v2: el concentrador desde el
- * que se entra al banco de propuestas, a la votación y al historial.
+ * Pantalla "Propuestas y votaciones" (`#votacion`) del prototipo v2.
  *
- * Los botones de administración del prototipo (crear, cerrar o modificar la
- * votación) no se repiten aquí: en la app esas acciones viven en /admin/votacion,
- * donde ya se validan contra la base.
+ * Es el concentrador: resume el banco de propuestas y luego muestra la
+ * votación completa en línea —boleta, resultado y herramientas de
+ * administración—, que llega como `children` desde el servidor.
  */
 export function PantallaPropuestas({
   propuestas,
-  votacion,
-  esAdmin,
+  children,
 }: {
   propuestas: number;
-  votacion: EstadoVotacion;
-  esAdmin: boolean;
+  children: React.ReactNode;
 }) {
   const router = useRouter();
-  const abierta = Boolean(votacion?.abierta);
 
   return (
     <section className="page proposals-page active" id="votacion">
@@ -41,49 +31,24 @@ export function PantallaPropuestas({
         <p id="clubProposalSummary">
           Actualmente hay {propuestas} {propuestas === 1 ? "propuesta activa" : "propuestas activas"}
         </p>
-        <button className="club-button" onClick={() => router.push("/propuestas/lista")}>
+        <button
+          className="club-button"
+          id="clubViewProposals"
+          onClick={() => router.push("/propuestas/lista")}
+        >
           Ver propuestas →
         </button>
       </section>
 
       <h2 className="club-section-title">2. VOTACIONES</h2>
 
-      <article className="club-voting-hero">
-        <span className="club-status">
-          {votacion ? (abierta ? "VOTACIÓN ACTIVA" : "VOTACIÓN CERRADA") : "SIN VOTACIÓN"}
-        </span>
-        <h2>{votacion?.titulo || "Pronto elegiremos qué escuchar"}</h2>
-        <p>
-          {votacion
-            ? abierta
-              ? "La elección está abierta. Vota por los episodios que te gustaría escuchar."
-              : "La elección terminó. Consulta los resultados y el episodio elegido."
-            : "Mientras tanto, comparte episodios para la próxima selección."}
-        </p>
-        {votacion && (
-          <button className="club-button" onClick={() => router.push("/propuestas/votar")}>
-            {abierta ? "Ir a votar →" : "Ver resultados →"}
-          </button>
-        )}
-        {esAdmin && (
-          <div className="club-actions">
-            <button
-              className="club-button secondary"
-              onClick={() => router.push("/admin/votacion")}
-            >
-              {abierta ? "Administrar votación" : "Crear nueva votación"}
-            </button>
-          </div>
-        )}
-      </article>
+      {children}
 
-      {!votacion && (
-        <p className="club-muted">
-          Aún no hay una votación. Puedes explorar o agregar propuestas.
-        </p>
-      )}
-
-      <button className="club-history-link" onClick={() => router.push("/propuestas/historial")}>
+      <button
+        className="club-history-link"
+        id="clubOpenHistory"
+        onClick={() => router.push("/propuestas/historial")}
+      >
         Historial de votaciones <span>→</span>
       </button>
     </section>

@@ -58,3 +58,17 @@
   background-size: cover !important;
   background-position: var(--home-focus-x, 50%) var(--home-focus-y, 50%) !important;
 }
+
+/*
+ * El prototipo reserva cuatro filas en `.phone` porque intercala la barra de
+ * sincronización de Netlify. Aquí no existe (cada navegación ya trae las
+ * sesiones del servidor), así que la cuarta fila solo hace falta cuando se
+ * muestra la ceja de administración.
+ */
+.phone {
+  grid-template-rows: 62px minmax(0, 1fr) 62px !important;
+}
+
+.disc-admin-view .phone {
+  grid-template-rows: 62px auto minmax(0, 1fr) 62px !important;
+}
