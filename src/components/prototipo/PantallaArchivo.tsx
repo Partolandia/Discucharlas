@@ -93,13 +93,15 @@ export function PantallaArchivo({ fichas }: { fichas: FichaArchivo[] }) {
         ))}
       </div>
 
-      {visibles.length === 0 && (
-        <div className="prototype-empty-state" style={{ display: "block" }}>
-          <span className="empty-mark">◦</span>
-          <b>Todavía no hay Discucharlas guardadas</b>
-          <p>Cuando se cree o cierre una sesión, podrás encontrarla aquí.</p>
-        </div>
-      )}
+      <div
+        className="prototype-empty-state"
+        id="archiveEmptyState"
+        style={{ display: visibles.length === 0 ? "block" : "none" }}
+      >
+        <span className="empty-mark">◦</span>
+        <b>Todavía no hay Discucharlas guardadas</b>
+        <p>Cuando se cree o cierre una sesión, podrás encontrarla aquí.</p>
+      </div>
     </section>
   );
 }

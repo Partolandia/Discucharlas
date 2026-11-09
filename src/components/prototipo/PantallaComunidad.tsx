@@ -43,6 +43,7 @@ export function PantallaComunidad({ hilos }: { hilos: HiloComunidad[] }) {
 
       <button
         className="community-create community-create-compact"
+        id="openCommunityComposer"
         type="button"
         onClick={() => router.push("/comunidad/nueva")}
       >

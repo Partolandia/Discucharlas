@@ -9,19 +9,19 @@ export function AbrirConversacion() {
   return (
     <form action={accion}>
       <div className="community-form-card">
-        <label htmlFor="titulo">TÍTULO</label>
+        <label htmlFor="communityPostTitle">TÍTULO</label>
         <input
           className="form-input"
-          id="titulo"
+          id="communityPostTitle"
           name="titulo"
           required
           maxLength={160}
           placeholder="Ej. ¿Qué están escuchando esta semana?"
         />
-        <label htmlFor="cuerpo">MENSAJE</label>
+        <label htmlFor="communityPostBody">MENSAJE</label>
         <textarea
           className="form-input community-textarea"
-          id="cuerpo"
+          id="communityPostBody"
           name="cuerpo"
           required
           maxLength={4000}
@@ -33,7 +33,12 @@ export function AbrirConversacion() {
           {estado.error}
         </p>
       )}
-      <button className="community-publish" type="submit" disabled={pendiente}>
+      <button
+        className="community-publish"
+        id="publishCommunityPost"
+        type="submit"
+        disabled={pendiente}
+      >
         {pendiente ? "Publicando…" : "Publicar conversación"}
       </button>
     </form>

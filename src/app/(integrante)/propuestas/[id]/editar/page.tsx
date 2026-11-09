@@ -36,6 +36,7 @@ export default async function EditarPropuesta({ params }: { params: Promise<{ id
           url: data.episode_url,
           duracion: data.duration,
           descripcion: data.description,
+          portada: data.image_path,
         }}
       />
     </section>

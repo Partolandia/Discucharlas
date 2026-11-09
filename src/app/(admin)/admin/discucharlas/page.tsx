@@ -6,6 +6,7 @@ import { IMAGENES } from "@/lib/prototipo";
 import { Backline } from "@/components/prototipo/Backline";
 import { FormularioAccion } from "@/components/admin/FormularioAccion";
 import { BotonAccion } from "@/components/admin/BotonAccion";
+import { PortadaDiscucharla } from "@/components/admin/PortadaDiscucharla";
 import {
   crearDiscucharla,
   activarDiscucharla,
@@ -48,13 +49,19 @@ export default async function AdminDiscucharlas() {
         </div>
       </div>
 
-      <FormularioAccion accion={crearDiscucharla} etiquetaEnvio="Guardar ficha">
+      <FormularioAccion
+        accion={crearDiscucharla}
+        avisoAlPie
+        clase="new create-save-primary"
+        etiquetaEnvio="Guardar ficha"
+        id="saveSessionBtn"
+      >
         <div className="form-card create-form-card">
           <div className="create-field">
-            <label htmlFor="episodio">TÍTULO DEL EPISODIO</label>
+            <label htmlFor="createTitle">TÍTULO DEL EPISODIO</label>
             <input
               className="form-input"
-              id="episodio"
+              id="createTitle"
               name="episodio"
               required
               maxLength={200}
@@ -62,21 +69,20 @@ export default async function AdminDiscucharlas() {
             />
           </div>
           <div className="create-field">
-            <label htmlFor="podcast">NOMBRE DEL PODCAST</label>
+            <label htmlFor="createPodcast">NOMBRE DEL PODCAST · OPCIONAL</label>
             <input
               className="form-input"
-              id="podcast"
+              id="createPodcast"
               name="podcast"
-              required
               maxLength={200}
-              placeholder="Radio Ambulante"
+              placeholder="Opcional"
             />
           </div>
           <div className="create-field">
-            <label htmlFor="url">ENLACE DEL EPISODIO · OPCIONAL</label>
+            <label htmlFor="createLink">ENLACE DEL EPISODIO · OPCIONAL</label>
             <input
               className="form-input"
-              id="url"
+              id="createLink"
               name="url"
               type="url"
               placeholder="Opcional · https://…"
@@ -86,22 +92,21 @@ export default async function AdminDiscucharlas() {
             <label htmlFor="resumen">RESUMEN · OPCIONAL</label>
             <textarea className="form-input" id="resumen" name="resumen" rows={3} maxLength={4000} />
           </div>
+          <PortadaDiscucharla />
         </div>
 
         <div className="create-status-note create-status-note-second">
           <span>02</span>
           <div>
             <b>Encuentro y estado</b>
-            <small>
-              Se crea como borrador: el club no la ve hasta que la actives como próxima.
-            </small>
+            <small>“Próxima” la convierte en la sesión activa que aparece en Inicio.</small>
           </div>
         </div>
 
         <div className="form-card create-form-card create-form-card-compact">
           <div className="create-field">
-            <label htmlFor="fecha">FECHA</label>
-            <input className="form-input" id="fecha" name="fecha" type="date" />
+            <label htmlFor="createDate">FECHA Y HORA</label>
+            <input className="form-input" id="createDate" name="fecha" type="date" />
             <p className="cloud-date-hint">Fecha y hora de Ciudad de México.</p>
           </div>
           <div className="create-field">
@@ -113,20 +118,32 @@ export default async function AdminDiscucharlas() {
             <input className="form-input" id="fin" name="fin" type="time" />
           </div>
           <div className="create-field">
-            <label htmlFor="lugar">LUGAR</label>
+            <label htmlFor="createPlace">LUGAR</label>
             <input
               className="form-input"
-              id="lugar"
+              id="createPlace"
               name="lugar"
               maxLength={200}
               placeholder="Opcional"
             />
           </div>
+          <div className="create-field">
+            <label htmlFor="createState">ESTADO</label>
+            <select className="form-input" defaultValue="draft" id="createState" name="estado">
+              <option value="draft">Borrador</option>
+              <option value="upcoming">Próxima</option>
+              <option value="past">Realizada</option>
+              <option value="cancelled">Cancelada</option>
+            </select>
+            <small className="field-help" id="createStateHelp">
+              Borrador: solo administración puede verla.
+            </small>
+          </div>
         </div>
 
         <p className="cloud-date-hint">
-          Puedes guardar un borrador incompleto y terminarlo después. Enlace, resumen y lugar son
-          opcionales.
+          Puedes guardar un borrador incompleto y terminarlo después. Podcast, enlace, imagen y
+          lugar son opcionales.
         </p>
       </FormularioAccion>
 

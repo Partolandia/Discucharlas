@@ -49,7 +49,9 @@ export default async function VistaPrevia({
             meta: ["Viernes 21 de agosto · 6:00 PM", "Casa de Tessie · Tlacoquemécatl"],
             enlace: "https://example.com",
             portada: null,
+            encuadre: { x: 50, y: 50 },
           }}
+          esAdmin
           realizadas={11}
           propuestas={7}
           votacionAbierta

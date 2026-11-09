@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { crearClienteServidor } from "@/lib/supabase/servidor";
 import { exigirIntegrante, exigirAdministradora, esAdministradora } from "@/lib/sesion";
+import { guardarImagen, borrarImagen } from "@/lib/imagenes";
 
 export type Resultado = { error?: string; exito?: string };
 
@@ -29,6 +30,9 @@ export async function proponerPodcast(
   });
   if (!leido.success) return { error: leido.error.issues[0].message };
 
+  const portada = await guardarImagen(datos.get("portada"), `propuestas/${perfil.id}`);
+  if (portada.error) return { error: portada.error };
+
   const supabase = await crearClienteServidor();
   const { error } = await supabase.from("podcast_proposals").insert({
     proposed_by: perfil.id,
@@ -37,6 +41,7 @@ export async function proponerPodcast(
     episode_url: leido.data.url || null,
     duration: leido.data.duracion || null,
     description: leido.data.descripcion || null,
+    image_path: portada.url,
   });
 
   if (error) return { error: "No se pudo guardar tu propuesta." };
@@ -67,7 +72,7 @@ export async function editarPropuesta(_previo: Resultado, datos: FormData): Prom
   const supabase = await crearClienteServidor();
   const { data: actual } = await supabase
     .from("podcast_proposals")
-    .select("proposed_by, status")
+    .select("proposed_by, status, image_path")
     .eq("id", id.data)
     .maybeSingle();
   if (!actual) return { error: "Esa propuesta ya no existe." };
@@ -77,6 +82,11 @@ export async function editarPropuesta(_previo: Resultado, datos: FormData): Prom
     return { error: "Esta propuesta no es tuya." };
   }
 
+  const nueva = await guardarImagen(datos.get("portada"), `propuestas/${perfil.id}`);
+  if (nueva.error) return { error: nueva.error };
+  const quitar = datos.get("quitarPortada") === "1";
+  const portada = nueva.url ?? (quitar ? null : actual.image_path);
+
   const { error } = await supabase
     .from("podcast_proposals")
     .update({
@@ -85,10 +95,12 @@ export async function editarPropuesta(_previo: Resultado, datos: FormData): Prom
       episode_url: leido.data.url || null,
       duration: leido.data.duracion || null,
       description: leido.data.descripcion || null,
+      image_path: portada,
     })
     .eq("id", id.data);
 
   if (error) return { error: "No se pudo guardar el cambio." };
+  if (portada !== actual.image_path) await borrarImagen(actual.image_path);
   revalidatePath("/propuestas/lista");
   revalidatePath("/propuestas");
   return { exito: "Propuesta actualizada." };

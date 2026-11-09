@@ -246,6 +246,7 @@ export type Database = {
       Row: {
         id: string,
         code_hash: string,
+        code: string | null,
         label: string | null,
         status: string,
         created_by: string | null,
@@ -255,6 +256,7 @@ export type Database = {
       Insert: {
         id?: string,
         code_hash: string,
+        code?: string | null,
         label?: string | null,
         status?: string,
         created_by?: string | null,
@@ -264,6 +266,7 @@ export type Database = {
       Update: {
         id?: string,
         code_hash?: string,
+        code?: string | null,
         label?: string | null,
         status?: string,
         created_by?: string | null,
@@ -878,7 +881,9 @@ export type Database = {
         summary: string | null,
         created_by: string | null,
         created_at: string,
-        updated_at: string
+        updated_at: string,
+        focus_x: number,
+        focus_y: number
       }
       Insert: {
         id?: string,
@@ -895,7 +900,9 @@ export type Database = {
         summary?: string | null,
         created_by?: string | null,
         created_at?: string,
-        updated_at?: string
+        updated_at?: string,
+        focus_x?: number,
+        focus_y?: number
       }
       Update: {
         id?: string,
@@ -912,7 +919,9 @@ export type Database = {
         summary?: string | null,
         created_by?: string | null,
         created_at?: string,
-        updated_at?: string
+        updated_at?: string,
+        focus_x?: number,
+        focus_y?: number
       }
       Relationships: [
         {

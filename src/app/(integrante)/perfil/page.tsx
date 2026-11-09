@@ -6,6 +6,7 @@ import { iniciales } from "@/lib/nombres";
 import { fechaLarga } from "@/lib/fechas";
 import { Backline } from "@/components/prototipo/Backline";
 import { FormularioPerfil } from "@/components/club/FormularioPerfil";
+import { FotoDePerfil } from "@/components/club/FotoDePerfil";
 
 export const metadata = { title: "Mi perfil" };
 
@@ -60,27 +61,37 @@ export default async function MiPerfil() {
       <Backline a="/club" texto="Volver al Club" etiqueta="Volver al Club" />
 
       <div className="profile-hero">
-        <div className="profile-avatar">{iniciales(nombre)}</div>
-        <h1>{nombre}</h1>
-        {cumple && <p style={{ fontSize: "9px", color: "var(--muted)" }}>{cumple}</p>}
+        {/* El prototipo pinta la foto como fondo del círculo, no como <img>. */}
+        <div
+          className={perfil.avatar_path ? "profile-avatar has-photo" : "profile-avatar"}
+          id="profileAvatar"
+          style={perfil.avatar_path ? { backgroundImage: `url("${perfil.avatar_path}")` } : undefined}
+        >
+          {perfil.avatar_path ? "" : iniciales(nombre)}
+        </div>
+        <h1 id="profileName">{nombre}</h1>
+        <p hidden={!cumple} id="profileBirthday">
+          {cumple}
+        </p>
+        <FotoDePerfil tieneFoto={Boolean(perfil.avatar_path)} />
       </div>
 
       <FormularioPerfil perfil={perfil} />
 
       <div className="stat-grid">
         <div className="stat">
-          <b>{ids.length}</b>
+          <b id="profileAttendance">{ids.length}</b>
           <small>Discucharlas asistidas</small>
         </div>
         <div className="stat">
-          <b>{propuestas.count ?? 0}</b>
+          <b id="profileProposals">{propuestas.count ?? 0}</b>
           <small>Podcasts propuestos</small>
         </div>
       </div>
 
       <section className="content-card">
         <h2>Le interesa</h2>
-        <p>
+        <p id="profileInterests">
           {perfil.interests ??
             "Todavía no has escrito qué te interesa. Puedes hacerlo arriba, en Editar perfil."}
         </p>
@@ -88,7 +99,7 @@ export default async function MiPerfil() {
 
       <section className="content-card">
         <h2>Discucharlas a las que ha asistido</h2>
-        <div>
+        <div id="profileSessions">
           {asistidas && asistidas.length > 0 ? (
             asistidas.map((s) => (
               <p key={s.id}>

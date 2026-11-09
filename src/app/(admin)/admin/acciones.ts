@@ -3,7 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { crearClienteServidor } from "@/lib/supabase/servidor";
+import { crearClienteAdministrador } from "@/lib/supabase/administrador";
 import { exigirAdministradora } from "@/lib/sesion";
+import { guardarImagen } from "@/lib/imagenes";
 import { hashear, nuevoToken, nuevaClaveDeInvitada } from "@/lib/tokens";
 import { urlDelSitio } from "@/lib/entorno";
 
@@ -26,40 +28,101 @@ function comoMensaje(error: { message: string } | null, respaldo: string) {
 // ---------------------------------------------------------------------------
 const discucharla = z.object({
   episodio: z.string().trim().min(1, "Ponle el título del episodio.").max(200),
-  podcast: z.string().trim().min(1, "¿De qué podcast es?").max(160),
+  podcast: z.string().trim().max(160),
   url: z.union([z.string().trim().url("Ese enlace no parece válido."), z.literal("")]),
   fecha: z.union([z.string().regex(/^\d{4}-\d{2}-\d{2}$/), z.literal("")]),
   inicio: z.union([z.string().regex(/^\d{2}:\d{2}$/), z.literal("")]),
   fin: z.union([z.string().regex(/^\d{2}:\d{2}$/), z.literal("")]),
   lugar: z.string().trim().max(200),
   resumen: z.string().trim().max(4000),
+  estado: z.enum(["draft", "upcoming", "past", "cancelled"]),
 });
 
 export async function crearDiscucharla(_previo: Resultado, datos: FormData): Promise<Resultado> {
   const perfil = await exigirAdministradora();
-  const leido = discucharla.safeParse(Object.fromEntries(
-    ["episodio", "podcast", "url", "fecha", "inicio", "fin", "lugar", "resumen"]
-      .map((k) => [k, datos.get(k) ?? ""])
-  ));
+  const leido = discucharla.safeParse({
+    ...Object.fromEntries(
+      ["episodio", "podcast", "url", "fecha", "inicio", "fin", "lugar", "resumen"]
+        .map((k) => [k, datos.get(k) ?? ""])
+    ),
+    estado: datos.get("estado") || "draft",
+  });
   if (!leido.success) return { error: leido.error.issues[0].message };
 
-  const supabase = await crearClienteServidor();
-  const { error } = await supabase.from("sessions").insert({
-    episode_title: leido.data.episodio,
-    podcast_name: leido.data.podcast,
-    episode_url: leido.data.url || null,
-    date: leido.data.fecha || null,
-    start_time: leido.data.inicio || null,
-    end_time: leido.data.fin || null,
-    place: leido.data.lugar || null,
-    summary: leido.data.resumen || null,
-    created_by: perfil.id,
-  });
+  const portada = await guardarImagen(datos.get("portada"), "sesiones");
+  if (portada.error) return { error: portada.error };
 
-  if (error) return { error: comoMensaje(error, "No se pudo crear la discucharla.")! };
+  const supabase = await crearClienteServidor();
+  // "Próxima" se pide aparte: `activate_session` es quien garantiza que solo
+  // haya una, jubilando a la anterior en la misma transacción.
+  const proxima = leido.data.estado === "upcoming";
+  const { data: creada, error } = await supabase
+    .from("sessions")
+    .insert({
+      episode_title: leido.data.episodio,
+      // La columna es NOT NULL; el prototipo deja el podcast opcional, así que
+      // lo que viaja vacío se guarda vacío y se filtra al mostrarlo.
+      podcast_name: leido.data.podcast,
+      episode_url: leido.data.url || null,
+      image_path: portada.url,
+      date: leido.data.fecha || null,
+      start_time: leido.data.inicio || null,
+      end_time: leido.data.fin || null,
+      place: leido.data.lugar || null,
+      summary: leido.data.resumen || null,
+      status: proxima ? "draft" : leido.data.estado,
+      created_by: perfil.id,
+    })
+    .select("id")
+    .single();
+
+  if (error || !creada) return { error: comoMensaje(error, "No se pudo crear la discucharla.")! };
+
+  if (proxima) {
+    const { error: fallo } = await supabase.rpc("activate_session", { p_session_id: creada.id });
+    if (fallo) {
+      return {
+        error: comoMensaje(fallo, "Se guardó como borrador, pero no pude activarla como próxima.")!,
+      };
+    }
+  }
+
   revalidatePath("/admin/discucharlas");
   revalidatePath("/calendario");
-  return { exito: "Creada como borrador. Actívala cuando esté lista." };
+  revalidatePath("/inicio");
+  revalidatePath("/nuestras-discucharlas");
+  return {
+    exito: proxima
+      ? "Creada y activada. El club ya la ve en Inicio."
+      : "Ficha guardada. Puedes activarla cuando esté lista.",
+  };
+}
+
+const encuadre = z.object({
+  sesion: z.string().uuid(),
+  x: z.coerce.number().int().min(0).max(100),
+  y: z.coerce.number().int().min(0).max(100),
+});
+
+/** Punto focal de la portada en el hero de Inicio. */
+export async function guardarEncuadre(_previo: Resultado, datos: FormData): Promise<Resultado> {
+  await exigirAdministradora();
+  const leido = encuadre.safeParse({
+    sesion: datos.get("sesion"),
+    x: datos.get("x"),
+    y: datos.get("y"),
+  });
+  if (!leido.success) return { error: "Encuadre no válido." };
+
+  const supabase = await crearClienteServidor();
+  const { error } = await supabase
+    .from("sessions")
+    .update({ focus_x: leido.data.x, focus_y: leido.data.y })
+    .eq("id", leido.data.sesion);
+
+  if (error) return { error: "No se pudo guardar el encuadre." };
+  revalidatePath("/inicio");
+  return { exito: "Encuadre guardado." };
 }
 
 export async function activarDiscucharla(_previo: Resultado, datos: FormData): Promise<Resultado> {
@@ -486,6 +549,45 @@ export async function transferirPropiedad(
   return { exito: "Propiedad transferida. Sigues siendo administradora." };
 }
 
+/**
+ * Elimina una cuenta suspendida, con todo lo suyo.
+ *
+ * Borrar en `auth.users` es lo único que pide la llave de servicio: no existe
+ * otra forma de quitar la cuenta de autenticación. El permiso se comprueba
+ * antes y a mano, y las condiciones (suspendida, no propietaria, no tú misma)
+ * se leen con la sesión de quien lo pide, no con la llave.
+ */
+export async function eliminarIntegrante(
+  _previo: Resultado,
+  datos: FormData
+): Promise<Resultado> {
+  const yo = await exigirAdministradora();
+  const id = z.string().uuid().safeParse(datos.get("integrante"));
+  if (!id.success) return { error: "Integrante no válida." };
+  if (id.data === yo.id) return { error: "No puedes eliminar tu propia cuenta." };
+
+  const supabase = await crearClienteServidor();
+  const { data: cuenta } = await supabase
+    .from("profiles")
+    .select("status, is_owner, first_name")
+    .eq("id", id.data)
+    .maybeSingle();
+
+  if (!cuenta) return { error: "Esa cuenta ya no existe." };
+  if (cuenta.is_owner) return { error: "La propietaria del club no se puede eliminar." };
+  if (cuenta.status !== "suspended") {
+    return { error: "Suspende la cuenta antes de eliminarla." };
+  }
+
+  const admin = crearClienteAdministrador();
+  const { error } = await admin.auth.admin.deleteUser(id.data);
+  if (error) return { error: "No se pudo eliminar la cuenta." };
+
+  revalidatePath("/admin/integrantes");
+  revalidatePath("/club");
+  return { exito: `Cuenta de ${cuenta.first_name} eliminada.` };
+}
+
 // ---------------------------------------------------------------------------
 // accesos
 // ---------------------------------------------------------------------------
@@ -576,17 +678,55 @@ export async function generarClaveDeInvitadas(
 
   const clave = nuevaClaveDeInvitada();
   const { error } = await supabase.from("guest_access").insert({
-    code_hash: hashear(clave.toUpperCase().replace(/\s+/g, "")),
+    code_hash: hashear(normalizarClave(clave)),
+    code: clave,
     label: (etiqueta.success && etiqueta.data) || null,
     created_by: perfil.id,
   });
 
   if (error) return { error: "No se pudo generar la clave." };
   revalidatePath("/admin/accesos");
-  return {
-    exito: "Clave nueva. La anterior dejó de servir en este momento.",
-    secreto: clave,
-  };
+  return { exito: "Clave nueva. La anterior dejó de servir en este momento." };
+}
+
+/** Así se escribe y se compara siempre: en mayúsculas y sin espacios. */
+function normalizarClave(clave: string) {
+  return clave.toUpperCase().replace(/\s+/g, "");
+}
+
+/**
+ * "Editar código": administración escribe la clave a mano, sin cambiar de fila.
+ * Útil cuando ya se repartió un código impreso y se quiere que la app lo acepte.
+ */
+export async function editarClaveDeInvitadas(
+  _previo: Resultado,
+  datos: FormData
+): Promise<Resultado> {
+  await exigirAdministradora();
+  const leido = z
+    .object({
+      clave: z.string().uuid(),
+      codigo: z
+        .string()
+        .trim()
+        .min(6, "El código necesita al menos 6 caracteres.")
+        .max(40)
+        .regex(/^[A-Za-z0-9-]+$/, "Usa solo letras, números y guiones."),
+    })
+    .safeParse({ clave: datos.get("clave"), codigo: datos.get("codigo") ?? "" });
+  if (!leido.success) return { error: leido.error.issues[0].message };
+
+  const codigo = normalizarClave(leido.data.codigo);
+  const supabase = await crearClienteServidor();
+  const { error } = await supabase
+    .from("guest_access")
+    .update({ code: codigo, code_hash: hashear(codigo) })
+    .eq("id", leido.data.clave)
+    .eq("status", "active");
+
+  if (error) return { error: "No se pudo guardar el código." };
+  revalidatePath("/admin/accesos");
+  return { exito: "Código actualizado. El anterior ya no sirve." };
 }
 
 export async function revocarClaveDeInvitadas(

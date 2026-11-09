@@ -40,7 +40,7 @@ export function PantallaPropuestasLista({
 
   return (
     <section id="club-proposals" className="page active">
-      <button className="club-back" onClick={() => router.push("/propuestas")}>
+      <button className="club-back" id="clubProposalsBack" onClick={() => router.push("/propuestas")}>
         ‹ Volver a propuestas y votaciones
       </button>
 

@@ -13,6 +13,7 @@ export function FormularioAccion({
   children,
   clase = "new",
   id,
+  avisoAlPie = false,
 }: {
   accion: Accion;
   etiquetaEnvio: string;
@@ -20,18 +21,26 @@ export function FormularioAccion({
   /** Para las zonas que usan los botones del prototipo (`club-button`). */
   clase?: string;
   id?: string;
+  /** Crear Discucharla pone el resultado debajo del botón, no arriba. */
+  avisoAlPie?: boolean;
 }) {
   const [estado, ejecutar, pendiente] = useActionState<Resultado, FormData>(accion, {});
+  const mensaje = estado.error ?? estado.exito;
 
   return (
     <form action={ejecutar} className="admin-flow">
       {children}
-      {estado.error && <Aviso>{estado.error}</Aviso>}
-      {estado.exito && <Aviso tono="exito">{estado.exito}</Aviso>}
+      {!avisoAlPie && estado.error && <Aviso>{estado.error}</Aviso>}
+      {!avisoAlPie && estado.exito && <Aviso tono="exito">{estado.exito}</Aviso>}
       {estado.secreto && <p className="code-box">{estado.secreto}</p>}
       <button className={clase} id={id} data-admin-only="control" type="submit" disabled={pendiente}>
         {pendiente ? "Guardando…" : etiquetaEnvio}
       </button>
+      {avisoAlPie && (
+        <p aria-live="polite" className="cloud-inline-feedback" role="status">
+          {mensaje}
+        </p>
+      )}
     </form>
   );
 }

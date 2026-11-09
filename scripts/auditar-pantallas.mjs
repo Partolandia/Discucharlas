@@ -53,6 +53,9 @@ const RECOGER = (raiz) => {
       .filter((n) => n.nodeType === 3)
       .map((n) => n.textContent.trim())
       .join(" ")
+      // React parte el texto en más nodos que el prototipo (`{" "}`), así que
+      // los espacios de más no cuentan como diferencia.
+      .replace(/\s+/g, " ")
       .trim();
     if (propio && propio.length < 90) textos.add(propio);
   }

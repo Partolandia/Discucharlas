@@ -1,10 +1,12 @@
 import { crearClienteServidor } from "@/lib/supabase/servidor";
+import { exigirIntegrante, esAdministradora } from "@/lib/sesion";
 import { fechaLarga, hora12 } from "@/lib/fechas";
 import { PantallaInicio, type HiloResumen } from "@/components/prototipo/PantallaInicio";
 
 export const metadata = { title: "Inicio" };
 
 export default async function Inicio() {
+  const perfil = await exigirIntegrante();
   const supabase = await crearClienteServidor();
 
   const [proxima, realizadas, propuestas, ronda, hilos, respuestas] = await Promise.all([
@@ -52,9 +54,11 @@ export default async function Inicio() {
               ].filter((linea): linea is string => Boolean(linea)),
               enlace: s.episode_url,
               portada: s.image_path,
+              encuadre: { x: s.focus_x, y: s.focus_y },
             }
           : null
       }
+      esAdmin={esAdministradora(perfil)}
       realizadas={realizadas.count ?? 0}
       propuestas={propuestas.count ?? 0}
       votacionAbierta={Boolean(ronda.data)}

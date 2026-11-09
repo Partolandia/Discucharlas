@@ -8,7 +8,7 @@ export function FormularioPerfil({ perfil }: { perfil: Perfil }) {
   const [estado, accion, pendiente] = useActionState<Resultado, FormData>(guardarPerfil, {});
 
   return (
-    <form action={accion} className="content-card profile-edit-card">
+    <form action={accion} className="content-card profile-edit-card" id="profileEditCard">
       <div className="profile-edit-head">
         <div>
           <span className="mini-kicker">MI CUENTA</span>
@@ -25,6 +25,7 @@ export function FormularioPerfil({ perfil }: { perfil: Perfil }) {
           Nombre
           <input
             className="form-input"
+            id="profileEditName"
             name="nombre"
             type="text"
             autoComplete="given-name"
@@ -45,9 +46,23 @@ export function FormularioPerfil({ perfil }: { perfil: Perfil }) {
           />
         </label>
         <label>
+          Correo electrónico
+          <input
+            className="form-input"
+            defaultValue={perfil.email}
+            id="profileEditEmail"
+            readOnly
+            type="email"
+          />
+          <small className="club-muted">
+            El correo identifica tu cuenta. Para cambiarlo, escríbele a administración.
+          </small>
+        </label>
+        <label>
           Teléfono
           <input
             className="form-input"
+            id="profileEditPhone"
             name="telefono"
             type="tel"
             autoComplete="tel"
@@ -59,6 +74,7 @@ export function FormularioPerfil({ perfil }: { perfil: Perfil }) {
           Cumpleaños · día
           <input
             className="form-input"
+            id="profileEditBirthday"
             name="dia"
             type="number"
             min={1}
@@ -91,6 +107,7 @@ export function FormularioPerfil({ perfil }: { perfil: Perfil }) {
           Intereses / gustos
           <textarea
             className="form-input"
+            id="profileEditInterests"
             name="intereses"
             rows={3}
             maxLength={1000}
@@ -119,8 +136,11 @@ export function FormularioPerfil({ perfil }: { perfil: Perfil }) {
       )}
 
       <div className="profile-edit-actions">
-        <button className="new" type="submit" disabled={pendiente}>
+        <button className="new" id="saveProfileDataBtn" type="submit" disabled={pendiente}>
           {pendiente ? "Guardando…" : "Guardar cambios"}
+        </button>
+        <button className="mini-btn" id="resetProfileDataBtn" type="reset" disabled={pendiente}>
+          Cancelar cambios
         </button>
       </div>
     </form>

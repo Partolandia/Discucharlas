@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { crearClienteServidor } from "@/lib/supabase/servidor";
 import { exigirIntegrante } from "@/lib/sesion";
+import { guardarImagen, borrarImagen } from "@/lib/imagenes";
 
 export type Resultado = { error?: string; exito?: string };
 
@@ -88,4 +89,32 @@ export async function guardarPerfil(_previo: Resultado, datos: FormData): Promis
   revalidatePath("/perfil");
   revalidatePath("/club");
   return { exito: "Perfil guardado." };
+}
+
+/**
+ * Foto de perfil. Sin archivo y con `quitar`, la borra; es la pareja de los
+ * botones "Cambiar foto" y "Quitar foto" del prototipo.
+ */
+export async function guardarFotoDePerfil(
+  _previo: Resultado,
+  datos: FormData
+): Promise<Resultado> {
+  const perfil = await exigirIntegrante();
+  const quitar = datos.get("quitar") === "1";
+
+  const nueva = await guardarImagen(datos.get("foto"), `perfiles/${perfil.id}`);
+  if (nueva.error) return { error: nueva.error };
+  if (!nueva.url && !quitar) return { error: "Elige una imagen primero." };
+
+  const supabase = await crearClienteServidor();
+  const { error } = await supabase
+    .from("profiles")
+    .update({ avatar_path: nueva.url })
+    .eq("id", perfil.id);
+
+  if (error) return { error: "No se pudo guardar tu foto." };
+  await borrarImagen(perfil.avatar_path);
+  revalidatePath("/perfil");
+  revalidatePath("/club");
+  return { exito: quitar ? "Foto quitada." : "Foto actualizada." };
 }

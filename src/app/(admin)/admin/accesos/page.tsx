@@ -6,9 +6,9 @@ import { Backline } from "@/components/prototipo/Backline";
 import { FormularioAccion } from "@/components/admin/FormularioAccion";
 import { BotonAccion } from "@/components/admin/BotonAccion";
 import { TarjetaIngreso, type Ingreso } from "@/components/admin/TarjetaIngreso";
+import { ClaveDeInvitadas } from "@/components/admin/ClaveDeInvitadas";
 import {
   emitirInvitacion,
-  generarClaveDeInvitadas,
   revocarClaveDeInvitadas,
   rechazarSolicitud,
   reabrirSolicitud,
@@ -69,7 +69,7 @@ export default async function AdminAccesos() {
 
       <section className="content-card">
         <h2>Solicitudes de ingreso</h2>
-        <p className="proposal-intro" style={{ margin: "4px 0 10px" }}>
+        <p className="proposal-intro">
           Solicitudes enviadas por las integrantes. Revisa cada propuesta y registra tu decisión.
           Al aprobarla se genera un enlace único de un solo uso para que esa persona cree su
           cuenta.
@@ -137,19 +137,29 @@ export default async function AdminAccesos() {
               </article>
             ))
           ) : (
-            <p className="social-note">No hay solicitudes todavía.</p>
+            <p className="social-note">No hay solicitudes pendientes.</p>
           )}
         </div>
       </section>
 
-      <FormularioAccion accion={emitirInvitacion} etiquetaEnvio="＋ Crear ingreso">
+      <FormularioAccion
+        accion={emitirInvitacion}
+        etiquetaEnvio="＋ Crear ingreso"
+        id="createInviteBtn"
+      >
         <h2>Crear ingreso de nuevo integrante</h2>
         <p className="access-helper">
           Crea un enlace de un solo uso para una persona, sin una solicitud previa. El enlace se
           muestra una sola vez.
         </p>
-        <label htmlFor="nombre">NOMBRE</label>
-        <input id="nombre" name="nombre" required maxLength={120} placeholder="Nombre de la persona" />
+        <label htmlFor="inviteName">NOMBRE</label>
+        <input
+          id="inviteName"
+          name="nombre"
+          required
+          maxLength={120}
+          placeholder="Nombre de la persona"
+        />
         <input name="email" type="email" required placeholder="Correo de la persona" />
       </FormularioAccion>
 
@@ -180,47 +190,29 @@ export default async function AdminAccesos() {
 
       <div className="access-section-label access-section-label-guests">INVITADOS</div>
 
-      <section className="content-card guest-code-card">
-        <h2>Acceso para invitados</h2>
-        <p className="proposal-intro" style={{ margin: "4px 0 10px" }}>
-          Con esta clave, alguien de fuera ve la próxima Discucharla y la guía del club sin crear
-          una cuenta. Nada más: ni comunidad, ni perfiles, ni historial.
+      <ClaveDeInvitadas
+        clave={clave.data ? { id: clave.data.id, codigo: clave.data.code ?? "" } : null}
+      />
+
+      {clave.data && !clave.data.code && (
+        <p className="club-muted">
+          Esta clave se creó cuando todavía no se guardaba en claro, así que no se puede mostrar.
+          Escribe uno en “Editar código” o genera otro con “Cambiar código”.
         </p>
+      )}
 
-        {clave.data ? (
-          <>
-            <div className="guest-code-current">
-              <span>Clave vigente</span>
-              <b>
-                {clave.data.label ?? "Sin etiqueta"} · creada el {fechaLarga(clave.data.created_at)}
-              </b>
-            </div>
-            <p className="club-muted">
-              La clave no se puede volver a mostrar. Si se perdió, genera una nueva.
-            </p>
-            <div className="guest-code-actions">
-              <BotonAccion
-                accion={revocarClaveDeInvitadas}
-                campos={{ clave: clave.data.id }}
-                tono="delicado"
-                confirmacion="Quien tenga esa clave dejará de entrar en este momento."
-              >
-                Desactivar clave
-              </BotonAccion>
-            </div>
-          </>
-        ) : (
-          <p className="club-muted">No hay ninguna clave activa.</p>
-        )}
-
-        <FormularioAccion accion={generarClaveDeInvitadas} etiquetaEnvio="Generar clave nueva">
-          <label htmlFor="etiqueta">GENERAR UNA CLAVE NUEVA</label>
-          <p className="access-helper">
-            Al generar una nueva, la anterior deja de servir de inmediato.
-          </p>
-          <input id="etiqueta" name="etiqueta" maxLength={120} placeholder="Sesión de octubre" />
-        </FormularioAccion>
-      </section>
+      {clave.data && (
+        <div className="guest-code-actions">
+          <BotonAccion
+            accion={revocarClaveDeInvitadas}
+            campos={{ clave: clave.data.id }}
+            tono="delicado"
+            confirmacion="Quien tenga esa clave dejará de entrar en este momento."
+          >
+            Desactivar acceso para invitados
+          </BotonAccion>
+        </div>
+      )}
     </section>
   );
 }

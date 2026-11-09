@@ -15,7 +15,7 @@ export function PantallaHistorialVotaciones({ rondas }: { rondas: RondaCerrada[]
 
   return (
     <section id="club-history" className="page active">
-      <button className="club-back" onClick={() => router.push("/propuestas")}>
+      <button className="club-back" id="clubHistoryBack" onClick={() => router.push("/propuestas")}>
         ‹ Volver a propuestas
       </button>
 

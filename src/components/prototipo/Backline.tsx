@@ -8,12 +8,16 @@ export function Backline({
   texto,
   etiqueta,
   clase,
+  idBoton,
+  idTexto,
 }: {
   a: string;
   texto: string;
   etiqueta?: string;
   /** p. ej. "backline-home" en el Historial. */
   clase?: string;
+  idBoton?: string;
+  idTexto?: string;
 }) {
   const router = useRouter();
   const ir = () => router.push(a);
@@ -31,10 +35,10 @@ export function Backline({
         }
       }}
     >
-      <button aria-label={etiqueta ?? texto} type="button">
+      <button aria-label={etiqueta ?? texto} id={idBoton} type="button">
         ‹
       </button>
-      <span>{texto}</span>
+      <span id={idTexto}>{texto}</span>
     </div>
   );
 }

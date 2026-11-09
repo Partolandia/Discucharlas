@@ -146,14 +146,14 @@ export function PantallaCalendario({
 
       <div className="calendar calendar-editorial">
         <div className="month calendar-month">
-          <button aria-label="Mes anterior" type="button" onClick={() => mover(-1)}>
+          <button aria-label="Mes anterior" id="calendarPrev" type="button" onClick={() => mover(-1)}>
             ‹
           </button>
           <div>
             <b id="calendarMonthLabel">{MESES[mes]}</b>
             <span id="calendarYearLabel">{anio}</span>
           </div>
-          <button aria-label="Mes siguiente" type="button" onClick={() => mover(1)}>
+          <button aria-label="Mes siguiente" id="calendarNext" type="button" onClick={() => mover(1)}>
             ›
           </button>
         </div>
@@ -186,7 +186,11 @@ export function PantallaCalendario({
             Cancelada
           </span>
           {esAdmin && (
-            <span className="admin-only-field" style={{ display: "inline-flex" }}>
+            <span
+              className="admin-only-field"
+              id="calendarDraftLegend"
+              style={{ display: "inline-flex" }}
+            >
               <i className="cal-dot cal-dot-draft" />
               Borrador
             </span>

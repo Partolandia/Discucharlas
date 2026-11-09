@@ -9,7 +9,12 @@ export default async function NuevaConversacion() {
 
   return (
     <section className="page active" id="nueva-conversacion">
-      <Backline a="/comunidad" texto="Volver a Comunidad" etiqueta="Volver a Comunidad" />
+      <Backline
+        a="/comunidad"
+        texto="Volver a Comunidad"
+        etiqueta="Volver a Comunidad"
+        idBoton="backFromCommunityComposer"
+      />
 
       <header className="editorial-head community-head community-head-v1">
         <div className="eyebrow">NUEVA CONVERSACIÓN</div>

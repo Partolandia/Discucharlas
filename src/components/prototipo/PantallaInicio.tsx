@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import type { CSSProperties } from "react";
 import { IMAGENES } from "@/lib/prototipo";
+import { EncuadreDePortada } from "@/components/prototipo/EncuadreDePortada";
 
 export type HiloResumen = {
   id: string;
@@ -17,7 +18,10 @@ export type DatosInicio = {
     meta: string[];
     enlace: string | null;
     portada: string | null;
+    /** Punto focal de la portada, en porcentaje. */
+    encuadre: { x: number; y: number };
   } | null;
+  esAdmin: boolean;
   realizadas: number;
   propuestas: number | null;
   votacionAbierta: boolean;
@@ -30,7 +34,14 @@ export type DatosInicio = {
  * El hero sin sesión reproduce el estado "SIN PRÓXIMA DEFINIDA" que el
  * prototipo monta desde JS, no el marcado estático de ejemplo.
  */
-export function PantallaInicio({ sesion, realizadas, propuestas, votacionAbierta, hilos }: DatosInicio) {
+export function PantallaInicio({
+  sesion,
+  esAdmin,
+  realizadas,
+  propuestas,
+  votacionAbierta,
+  hilos,
+}: DatosInicio) {
   const router = useRouter();
 
   const estadoVoto = propuestas === null ? "loading" : votacionAbierta ? "active" : "inactive";
@@ -47,7 +58,11 @@ export function PantallaInicio({ sesion, realizadas, propuestas, votacionAbierta
         className={sesion?.portada ? "hero custom-cover" : "hero"}
         style={
           sesion?.portada
-            ? ({ "--hero-cover": `url("${sesion.portada}")` } as CSSProperties)
+            ? ({
+                "--hero-cover": `url("${sesion.portada}")`,
+                "--home-focus-x": `${sesion.encuadre.x}%`,
+                "--home-focus-y": `${sesion.encuadre.y}%`,
+              } as CSSProperties)
             : undefined
         }
       >
@@ -88,6 +103,7 @@ export function PantallaInicio({ sesion, realizadas, propuestas, votacionAbierta
           </button>
           <button
             className="cta"
+            id="openCurrentSessionHome"
             style={sesion ? undefined : { display: "none" }}
             onClick={() => sesion && router.push(`/discucharla/${sesion.id}`)}
           >
@@ -95,6 +111,17 @@ export function PantallaInicio({ sesion, realizadas, propuestas, votacionAbierta
           </button>
         </div>
       </article>
+
+      {/* El prototipo lo deja siempre en el DOM y lo enciende cuando hay
+          portada que encuadrar. */}
+      {esAdmin && (
+        <EncuadreDePortada
+          activo={Boolean(sesion?.portada)}
+          sesion={sesion?.id ?? ""}
+          x={sesion?.encuadre.x ?? 50}
+          y={sesion?.encuadre.y ?? 50}
+        />
+      )}
 
       <div aria-label="Resumen del club" className="archive-memory-strip" id="archiveMemoryStrip">
         <article

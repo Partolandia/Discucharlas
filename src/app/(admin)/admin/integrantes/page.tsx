@@ -7,6 +7,7 @@ import {
   cambiarRol,
   cambiarEstadoCuenta,
   transferirPropiedad,
+  eliminarIntegrante,
 } from "@/app/(admin)/admin/acciones";
 
 export const metadata = { title: "Integrantes" };
@@ -55,7 +56,7 @@ export default async function AdminIntegrantes() {
         administrador; el Club debe conservar siempre al menos un administrador activo.
       </p>
 
-      <div>
+      <div id="memberAdminList">
         {(integrantes ?? []).map((p) => {
           const nombre = nombreCompleto(p);
           const suspendida = p.status === "suspended";
@@ -98,7 +99,11 @@ export default async function AdminIntegrantes() {
                         ? `${nombre} dejará de poder activar discucharlas, cerrar votaciones y gestionar accesos.`
                         : undefined
                     }
-                    tono={p.role === "admin" ? "normal" : "principal"}
+                    clase={
+                      p.role === "admin"
+                        ? "mini-btn role-action revoke"
+                        : "mini-btn role-action"
+                    }
                   >
                     {p.role === "admin" ? "Quitar rol admin" : "Hacer administrador"}
                   </BotonAccion>
@@ -127,6 +132,17 @@ export default async function AdminIntegrantes() {
                     confirmacion={`${nombre} pasará a ser la propietaria del club. Tú sigues siendo administradora, pero ya no podrás transferir la propiedad.`}
                   >
                     Transferir propiedad
+                  </BotonAccion>
+                )}
+
+                {suspendida && !p.is_owner && p.id !== yo.id && (
+                  <BotonAccion
+                    accion={eliminarIntegrante}
+                    campos={{ integrante: p.id }}
+                    tono="delicado"
+                    confirmacion={`Se borra la cuenta de ${nombre} y todo lo que depende de ella: votos, confirmaciones, notas privadas y reacciones. Sus propuestas y comentarios se quedan, pero sin autora. No hay vuelta atrás.`}
+                  >
+                    Eliminar
                   </BotonAccion>
                 )}
               </div>

@@ -9,12 +9,12 @@ export default async function NuevaPropuesta() {
 
   return (
     <section className="page active" id="proponer">
-      <Link className="club-back" href="/propuestas">
+      <Link className="club-back" href="/propuestas" id="clubProposalBack">
         ‹ Volver a propuestas
       </Link>
       <div className="club-head">
         <span>EL PRÓXIMO EPISODIO</span>
-        <h1>Proponer un podcast</h1>
+        <h1 id="clubPropHeading">Proponer un podcast</h1>
       </div>
       <ProponerPodcast />
     </section>
