@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { IMAGENES } from "@/lib/prototipo";
+import { BotonCorazon } from "@/components/comunidad/BotonCorazon";
 
 export type HiloComunidad = {
   id: string;
@@ -12,6 +13,8 @@ export type HiloComunidad = {
   cuerpo: string;
   respuestas: number;
   corazones: number;
+  /** Ya le di corazón a esta conversación. */
+  miCorazon: boolean;
 };
 
 /**
@@ -63,31 +66,32 @@ export function PantallaComunidad({ hilos }: { hilos: HiloComunidad[] }) {
           </div>
         ) : (
           hilos.map((h) => (
-            <button
-              key={h.id}
-              type="button"
-              className="community-post-card"
-              onClick={() => router.push(`/comunidad/${h.id}`)}
-            >
+            <article key={h.id} className="community-post-card social-feed-card">
               <span className="community-avatar">{h.iniciales}</span>
-              <span className="community-post-main">
-                <span className="community-post-meta">
-                  <span className="community-post-time">{h.cuando}</span>
-                </span>
-                <h3>{h.titulo}</h3>
-                <small className="community-opened-by">Abierta por {h.autor}</small>
-                <p>{h.cuerpo}</p>
-                <span className="community-post-footer">
-                  <span>
+              <div className="community-post-main">
+                <small>
+                  {h.autor} · {h.cuando}
+                </small>
+                <button
+                  type="button"
+                  className="social-thread-link"
+                  onClick={() => router.push(`/comunidad/${h.id}`)}
+                >
+                  <h3>{h.titulo}</h3>
+                  <p>{h.cuerpo}</p>
+                </button>
+                <div className="social-card-footer">
+                  <button
+                    type="button"
+                    className="social-replies"
+                    onClick={() => router.push(`/comunidad/${h.id}`)}
+                  >
                     {h.respuestas} {h.respuestas === 1 ? "respuesta" : "respuestas"}
-                  </span>
-                  <span>
-                    {h.corazones} {h.corazones === 1 ? "corazón" : "corazones"}
-                  </span>
-                </span>
-              </span>
-              <span className="community-card-heart" aria-hidden="true" />
-            </button>
+                  </button>
+                  <BotonCorazon hilo={h.id} cuenta={h.corazones} mio={h.miCorazon} />
+                </div>
+              </div>
+            </article>
           ))
         )}
       </div>

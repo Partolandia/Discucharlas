@@ -5,7 +5,7 @@
  * prototipo-sesiones-v2.html. Incluye las hojas que el prototipo inyecta desde
  * JavaScript, que es donde vive buena parte de las pantallas nuevas.
  *
- * 63 hojas · 1958 reglas
+ * 68 hojas · 2066 reglas
  */
 /* ====================================================================
    STYLE · 629 reglas
@@ -1902,6 +1902,94 @@ html.disc-admin-view .phone[data-section] .top button.admin[data-admin-only]::be
 .disc-admin-view [data-admin-only="control"]:disabled { cursor: default; opacity: 0.65; }
 
 /* ====================================================================
+   STYLE · 25 reglas
+   ==================================================================== */
+.social-note { font-size: 12px; line-height: 1.5; color: rgb(102, 91, 104); overflow-wrap: anywhere; }
+.social-note:empty { display: none; }
+.social-error { color: rgb(162, 48, 55) !important; }
+.social-feed-card { display: grid !important; grid-template-columns: 32px minmax(0px, 1fr) !important; gap: 10px !important; }
+.social-thread-link { display: block; width: 100%; border: 0px; padding: 0px; background: none; color: inherit; text-align: left; cursor: pointer; }
+.social-thread-link p { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; white-space: pre-wrap; }
+.social-card-footer { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 10px; }
+.social-card-footer button { border: 0px; background: transparent; padding: 7px 0px; font-size: 12px; color: rgb(112, 91, 120); }
+.social-card-footer .social-heart { padding: 6px 9px; border-radius: 9px; background: rgb(241, 234, 244); }
+.social-heart.on { color: rgb(160, 77, 104) !important; }
+.social-message-body { white-space: pre-wrap; overflow-wrap: anywhere; }
+.social-message-body a { color: inherit; text-decoration: underline; }
+.social-home-post { display: block; width: 100%; border: 1px solid var(--line); border-radius: 12px; padding: 12px; margin: 8px 0px; background: var(--white); text-align: left; color: var(--aub); }
+.social-home-post b { display: block; font-size: 13px; line-height: 1.4; }
+.social-home-post span { display: block; font-size: 11px; color: var(--muted); margin-top: 5px; }
+.social-request { border: 1px solid var(--line); border-radius: 12px; padding: 13px; margin: 10px 0px; background: var(--white); font-size: 13px; }
+.social-request strong { font-size: 14px; }
+.social-request p { white-space: pre-wrap; line-height: 1.5; }
+.social-request small { font-size: 11px; color: var(--muted); }
+.social-request-status { display: inline-block; font-size: 10px; margin-left: 9px; padding: 5px 7px; border-radius: 8px; background: rgb(238, 232, 242); color: var(--aub); }
+#socialMyRequests h2 { font-size: 17px; }
+#hilo .community-reply-compose { position: static; margin-bottom: 18px; }
+#hilo .community-thread-message p { white-space: pre-wrap; }
+#hilo textarea, #nueva-conversacion textarea, #solicitar-invitacion textarea { font-size: 16px !important; min-height: 100px; }
+#nueva-conversacion input, #solicitar-invitacion input { font-size: 16px !important; }
+
+/* ====================================================================
+   STYLE · 30 reglas
+   ==================================================================== */
+#accesos .content-card, #accesos .admin-flow { padding: 14px !important; margin: 12px 0px !important; border-radius: 14px !important; }
+#accesos :is(h2, h3, label, p, small, input, button, summary, .entry-state) { font-family: var(--sans) !important; text-transform: none !important; letter-spacing: normal !important; }
+#accesos h2, #accesos > .content-card.admin-generated-invites > h2 { font-size: 16px !important; font-weight: 700 !important; line-height: 1.3 !important; margin: 0px 0px 9px !important; color: var(--aub) !important; }
+#accesos :is(.proposal-intro, .access-helper, .social-note) { font-size: 12px !important; line-height: 1.45 !important; margin: 6px 0px 10px !important; color: rgb(101, 86, 107) !important; }
+#accesos .admin-flow label { font-size: 12px !important; font-weight: 600 !important; }
+#accesos input#inviteName { display: block; box-sizing: border-box; font-size: 16px !important; padding: 10px 11px !important; min-height: 42px !important; margin: 10px 0px !important; width: 100% !important; }
+#accesos #createInviteBtn { min-height: 40px !important; padding: 10px 12px !important; font-size: 12px !important; margin: 0px !important; width: auto !important; }
+#accesos .social-request, #accesos .entry-card { overflow: hidden; background: rgb(255, 253, 249) !important; border: 1px solid var(--line) !important; border-radius: 11px !important; padding: 12px !important; margin: 10px 0px !important; }
+#accesos .entry-card h3, #accesos .social-request > strong { overflow-wrap: anywhere; font-family: var(--sans) !important; font-size: 14px !important; line-height: 1.3 !important; font-weight: 700 !important; margin: 0px 0px 7px !important; }
+#accesos .social-request p { font-size: 12px !important; line-height: 1.45 !important; margin: 7px 0px !important; }
+#accesos .social-request small { font-size: 10.5px !important; line-height: 1.4 !important; }
+#accesos .social-request .club-actions { display: flex; gap: 7px; margin: 9px 0px; flex-wrap: wrap; }
+#accesos .social-request .club-actions button { font-size: 11px !important; min-height: 34px !important; padding: 7px 10px !important; flex: 0 0 auto !important; width: auto !important; }
+#accesos .entry-state-line { display: flex; flex-wrap: wrap; gap: 7px; align-items: center; margin: 7px 0px; }
+#accesos .entry-state-line small { font-size: 10.5px !important; color: rgb(117, 106, 119); }
+#accesos .entry-state { display: inline-block; font-weight: 700; padding: 4px 7px; border-radius: 6px; background: rgb(238, 233, 239); color: rgb(104, 86, 108); font-size: 10px !important; }
+#accesos .entry-state.active { background: rgb(230, 237, 223); color: rgb(79, 103, 57); }
+#accesos .entry-state.used { background: rgb(238, 234, 231); color: rgb(107, 100, 105); }
+#accesos .entry-state.revoked, #accesos .entry-state.expired { background: rgb(243, 229, 233); color: rgb(145, 94, 112); }
+#accesos input.entry-link { color: rgb(99, 81, 107); background: rgb(247, 243, 248); width: 100%; box-sizing: border-box; font-family: var(--sans) !important; font-size: 11px !important; line-height: 1.3 !important; min-height: 32px !important; height: 32px !important; border: 1px solid rgb(222, 212, 226) !important; margin: 8px 0px !important; padding: 7px 8px !important; border-radius: 7px !important; }
+#accesos .entry-actions { display: flex; gap: 8px; align-items: flex-start; margin-top: 8px; }
+#accesos .entry-actions .entry-copy, #accesos .entry-renew { font-family: var(--sans); font-weight: 700; min-height: 34px; border: 1px solid rgb(140, 175, 181); border-radius: 8px; background: rgb(232, 245, 246); color: rgb(0, 91, 107); cursor: pointer; font-size: 11px !important; padding: 8px 10px !important; }
+#accesos .entry-more { min-width: 65px; flex: 1 1 0%; margin: 0px !important; padding: 0px !important; }
+#accesos .entry-more summary { font-size: 11px; font-weight: 700; cursor: pointer; min-height: 34px; padding: 8px 10px; box-sizing: border-box; color: rgb(0, 91, 107); border: 1px solid rgb(183, 207, 210); border-radius: 8px; background: rgb(242, 248, 248); list-style: disclosure-closed; }
+#accesos .entry-more[open] summary { list-style: disclosure-open; }
+#accesos .entry-more button, #accesos .entry-more a { display: block; width: 100%; line-height: 1.35; padding: 8px; border-top: 0px; border-right: 0px; border-left: 0px; border-image: none; border-bottom: 1px solid var(--line); background: rgb(255, 253, 249); color: rgb(104, 78, 112); text-align: left; cursor: pointer; box-sizing: border-box; text-decoration: none; font-size: 11px !important; }
+#accesos .entry-request-controls { margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--line); }
+#accesos .entry-used { color: rgb(117, 106, 119); font-size: 11px !important; line-height: 1.4 !important; margin: 6px 0px !important; }
+#accesos .entry-refresh { font-size: 11px; border: 0px; background: none; padding: 3px 0px 9px; color: rgb(0, 91, 107); text-decoration: underline; cursor: pointer; }
+#accesos [hidden] { display: none !important; }
+
+/* ====================================================================
+   STYLE · 21 reglas
+   ==================================================================== */
+html body .phone .top .icon.is-current-tool { background: rgb(109, 77, 135) !important; color: rgb(255, 255, 255) !important; border-radius: 10px !important; box-shadow: rgb(228, 216, 239) 0px 0px 0px 2px !important; }
+html body .phone .top .icon.is-current-tool svg { stroke: rgb(255, 255, 255) !important; }
+#club-proposals .compact-proposal { padding: 12px !important; margin: 9px 0px !important; border-radius: 12px !important; }
+.compact-proposal .proposal-card-main { display: flex; gap: 11px; align-items: flex-start; }
+#club-proposals .compact-proposal .proposal-card-thumb { align-self: flex-start; border-radius: 6px; display: block !important; width: auto !important; height: auto !important; max-width: 104px !important; max-height: 96px !important; aspect-ratio: auto !important; object-fit: contain !important; object-position: center center !important; flex: 0 0 auto !important; background: transparent !important; margin: 0px !important; padding: 0px !important; }
+.compact-proposal .proposal-card-copy { flex: 1 1 0%; min-width: 0px; }
+#club-proposals .compact-proposal .club-kicker { font-size: 8px; letter-spacing: 0.9px; line-height: 1.3; }
+#club-proposals .compact-proposal h3 { overflow-wrap: anywhere; font: 600 15px/1.3 var(--sans) !important; margin: 5px 0px !important; }
+#club-proposals .compact-proposal .proposal-card-meta { color: var(--muted); font-size: 11px !important; line-height: 1.35 !important; margin: 4px 0px !important; }
+#club-proposals .compact-proposal :is(.proposal-review-text, .proposal-review-preview, .proposal-review-full p) { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 12px !important; line-height: 1.45 !important; margin: 9px 0px !important; }
+.compact-proposal:has(.proposal-review-full[open]) .proposal-review-preview { display: none; }
+.proposal-review-full > summary { font-size: 11px; font-weight: 600; color: rgb(102, 81, 109); cursor: pointer; padding: 3px 0px 5px; }
+.proposal-card-footer { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 7px; margin-top: 8px; }
+.proposal-card-footer small, .proposal-card-footer a { font-size: 10.5px !important; line-height: 1.35; }
+.proposal-card-footer a { color: var(--aub); font-weight: 600; white-space: nowrap; }
+#club-proposals .compact-proposal .club-actions { gap: 6px; margin: 9px 0px 0px; }
+#club-proposals .compact-proposal .club-actions:empty { display: none; }
+#club-proposals .compact-proposal .club-actions button { font-family: var(--sans); line-height: 1.2; min-height: 33px; font-size: 10.5px !important; padding: 7px 9px !important; border-radius: 7px !important; }
+#club-proposals .club-list-heading h2 { font-size: 18px; margin: 6px 0px; }
+#club-proposals #clubNewProposal { font-size: 11px; min-height: 38px; padding: 9px 10px; }
+#miembros-admin .member-attendance-note { display: block; font-family: var(--sans) !important; font-size: 11px !important; line-height: 1.4 !important; color: rgb(138, 129, 138) !important; margin: 4px 0px !important; font-weight: 400 !important; letter-spacing: 0px !important; text-transform: none !important; }
+
+/* ====================================================================
    poll-colors-v6 · 18 reglas
    ==================================================================== */
 #attendancePoll .poll-choice { background: rgb(245, 241, 250) !important; border-color: rgb(222, 211, 235) !important; color: rgb(36, 21, 46) !important; }
@@ -2351,3 +2439,43 @@ html.disc-admin-view #calendario #calendarDraftLegend { color: rgb(255, 255, 255
   .phone[data-section="propuestas"] .club-proposals-header p { font-size: 8.5px !important; max-width: 44%; }
   .phone[data-section="propuestas"] .club-proposals-header .club-kicker { font-size: 7px; max-width: 55%; }
 }
+
+/* ====================================================================
+   discucharlas-consistencia-compacta · 27 reglas
+   ==================================================================== */
+#inicio #archiveMemoryStrip .archive-memory-card::before { position: static; display: block; flex: 0 0 auto; width: 25px; height: 4px; margin: 0px 0px 9px; border-radius: 3px; box-shadow: rgb(109, 77, 135) 0px 2px 0px; overflow: visible; background: var(--coral) !important; }
+#inicio #archiveMemoryStrip .home-stat-number { font-weight: 750; letter-spacing: -0.8px; line-height: 1.1; font-family: var(--sans) !important; font-size: 28px !important; }
+#inicio #archiveMemoryStrip .home-stat-copy { font-family: var(--sans); font-size: 12px; line-height: 1.35; }
+#inicio #archiveMemoryStrip h4 { margin-top: 6px; min-height: 34px; }
+#days .cal-day.has-session::after { content: none !important; display: none !important; }
+#days .cal-day.is-selected { outline: rgb(255, 255, 255) solid 2px !important; outline-offset: -3px !important; }
+#clubBallot { background: rgb(36, 21, 46); border-radius: 17px; padding: 14px; margin: 10px 0px 12px; color: rgb(255, 255, 255); }
+#clubBallot .club-voting-hero { background: transparent !important; padding: 0px !important; margin: 0px 0px 9px !important; border-radius: 0px !important; }
+#clubBallot .club-voting-hero h2 { font: 500 22px/1.12 var(--serif) !important; margin: 10px 0px 7px !important; }
+#clubBallot .club-voting-hero p { font-size: 12px !important; line-height: 1.45 !important; margin: 5px 0px !important; }
+#clubBallot #clubVoteHelp { margin: 8px 0px 10px; font-size: 11px !important; line-height: 1.4 !important; color: rgb(224, 213, 228) !important; }
+#clubBallot .club-vote-option { border-radius: 10px; gap: 9px; padding: 11px; margin: 8px 0px; background: rgba(255, 255, 255, 0.05) !important; border: 1px solid rgba(255, 255, 255, 0.208) !important; color: rgb(255, 255, 255) !important; }
+#clubBallot .club-vote-option.on { background: rgba(255, 255, 255, 0.098) !important; border: 1.5px solid rgb(200, 187, 215) !important; }
+#clubBallot .club-vote-option strong { font-family: var(--sans); font-size: 13px; font-weight: 700; line-height: 1.35; margin-bottom: 4px; color: rgb(255, 255, 255) !important; }
+#clubBallot .club-vote-option small { margin-bottom: 3px; font-size: 11px !important; color: rgb(226, 216, 230) !important; }
+#clubBallot .club-vote-option span > span { margin: 0px; -webkit-line-clamp: unset; display: block; overflow: visible; font-size: 11px !important; line-height: 1.4 !important; color: rgb(222, 210, 227) !important; }
+#clubBallot .club-vote-option img { width: 42px; height: 48px; }
+#clubWinnerPanel { border-radius: 13px; padding: 13px !important; margin: 10px 0px !important; }
+#clubWinnerPanel .club-kicker { font-size: 9px; }
+#clubWinnerPanel #clubVoteLeaders { font-family: var(--sans); line-height: 1.45; margin: 8px 0px; font-size: 12px !important; }
+#clubWinnerPanel #clubWinnerTitle { font-family: var(--sans); font-weight: 700; line-height: 1.35; margin: 8px 0px; font-size: 15px !important; }
+#clubWinnerPanel #clubWinnerHint { font-size: 11px; line-height: 1.45; margin: 7px 0px; }
+#clubWinnerPanel .club-label { font-size: 9px; margin: 8px 0px 6px; }
+#clubWinnerPanel .form-input { font-size: 12px; min-height: 38px; margin: 5px 0px; padding: 9px; }
+#clubWinnerToSession, #clubSaveWinner { margin-top: 7px; min-height: 38px; padding: 9px; font-size: 11px; }
+#clubRoundAdmin .club-actions { gap: 7px; margin: 5px 0px; }
+#clubRoundAdmin .club-button { padding: 9px; min-height: 38px; font-size: 11px; }
+
+/* ====================================================================
+   discucharlas-admin-compacto · 5 reglas
+   ==================================================================== */
+#clubAdminTools { margin: 10px 0px; border: 1px solid rgb(121, 173, 181); border-radius: 11px; padding: 0px 12px; background: rgb(239, 247, 247); color: rgb(0, 91, 107); }
+#clubAdminTools > summary { cursor: pointer; font-family: var(--sans); font-size: 12px; font-weight: 700; padding: 12px 0px; min-height: 40px; }
+html:not(.disc-admin-view) #clubAdminTools { display: none !important; }
+#clubAdminTools #clubWinnerAdmin, #clubAdminTools #clubRoundAdmin { margin-top: 13px !important; margin-bottom: 12px !important; padding: 17px 10px 10px !important; }
+#clubAdminTools .club-button { min-height: 38px; padding: 9px; font-size: 11px; }

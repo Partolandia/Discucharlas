@@ -1,9 +1,10 @@
-import Link from "next/link";
 import { crearClienteServidor } from "@/lib/supabase/servidor";
 import { directorioDelClub, nombreDe } from "@/lib/club";
+import { Backline } from "@/components/prototipo/Backline";
 import { FormularioAccion } from "@/components/admin/FormularioAccion";
 import { BotonAccion } from "@/components/admin/BotonAccion";
 import { Campo } from "@/components/ui/Campo";
+import { masVotadas, resultadoEnPalabras } from "@/lib/votaciones";
 import {
   crearRonda,
   alternarCandidata,
@@ -43,113 +44,58 @@ export default async function AdminVotacion() {
   const votos = new Map(
     (resultados.data ?? []).map((r) => [r.proposal_id, Number(r.vote_count ?? 0)])
   );
-  const maximo = Math.max(0, ...votos.values());
-  const empatadas = [...votos.entries()].filter(([, n]) => n === maximo && n > 0);
-  const hayEmpate = maximo > 0 && empatadas.length > 1;
+  const titulos = new Map((propuestas.data ?? []).map((p) => [p.id, p.episode_title]));
+  const { maximo, lideres } = masVotadas(votos);
+  const hayEmpate = lideres.length > 1;
+  const abierta = ronda?.status === "open";
 
-  const nombrePropuesta = (id: string) =>
-    propuestas.data?.find((p) => p.id === id)?.episode_title ?? "Propuesta";
+  const nombrePropuesta = (id: string) => titulos.get(id) ?? "Propuesta";
 
   return (
-    <main className="px-5 pb-8">
-      <Link
-        href="/admin"
-        className="text-[15px] text-[var(--color-tinta-suave)] underline underline-offset-4"
-      >
-        Volver a administración
-      </Link>
+    <section className="page vote-screen-editorial active" id="voto" data-admin-page="true">
+      <Backline a="/admin" texto="Volver a Administración" />
 
-      <h1 className="editorial mt-5 text-[1.9rem] leading-tight">Votación</h1>
-
-      {!ronda && (
-        <section className="mt-6 rounded-[var(--radius-tarjeta)] border border-[var(--color-linea)] bg-[var(--color-blanco)] p-5">
-          <h2 className="editorial text-[1.3rem]">Preparar una nueva</h2>
-          <p className="mt-1 mb-4 text-[14px] leading-relaxed text-[var(--color-tinta-suave)]">
-            Se crea en preparación: eliges las candidaturas y luego la abres.
+      <div id="clubBallot">
+        <article className="club-voting-hero">
+          <span className="club-status">
+            {!ronda ? "SIN VOTACIÓN" : abierta ? "VOTACIÓN ACTIVA" : "EN PREPARACIÓN"}
+          </span>
+          <h2>{ronda?.title ?? "¿Qué escuchamos después?"}</h2>
+          <p>
+            {!ronda
+              ? "Todavía no hay ninguna votación. Prepara una con las propuestas del banco."
+              : abierta
+                ? "La votación está abierta. Aquí ves cómo va antes de cerrarla."
+                : "Elige las candidaturas y ábrela cuando esté lista."}
           </p>
-          <FormularioAccion accion={crearRonda} etiquetaEnvio="Crear votación">
-            <Campo
-              etiqueta="Título"
-              name="titulo"
-              maxLength={160}
-              placeholder="¿Qué escuchamos después?"
-            />
-          </FormularioAccion>
-        </section>
-      )}
+        </article>
 
-      {ronda && (
-        <>
-          <section className="mt-6 rounded-[var(--radius-tarjeta)] border border-[var(--color-linea)] bg-[var(--color-blanco)] p-5">
-            <span
-              className="text-[11px] font-semibold tracking-wide uppercase"
-              style={{ color: "var(--color-votacion-boton)" }}
-            >
-              {ronda.status === "open" ? "Abierta" : "En preparación"}
-            </span>
-            <h2 className="editorial mt-1 text-[1.35rem] leading-tight">
-              {ronda.title ?? "¿Qué escuchamos después?"}
-            </h2>
-
-            {ronda.status === "draft" && (
-              <div className="mt-4">
-                <BotonAccion accion={abrirRonda} campos={{ ronda: ronda.id }} tono="principal">
-                  Abrir la votación
-                </BotonAccion>
-                <p className="mt-2 text-[13px] text-[var(--color-tinta-suave)]">
-                  Hacen falta al menos dos candidaturas. Al abrirla, el club recibe aviso.
-                </p>
-              </div>
-            )}
-          </section>
-
-          {/* ---------------------------------------------------------------- */}
-          {/* Candidaturas                                                      */}
-          {/* ---------------------------------------------------------------- */}
-          <section className="mt-7">
-            <h2 className="editorial text-[1.4rem]">
-              {ronda.status === "open" ? "Cómo va" : "Elige las candidaturas"}
-            </h2>
-
+        {ronda && (
+          <div id="clubVoteOptions">
             {propuestas.data && propuestas.data.length > 0 ? (
-              <ul className="mt-4 space-y-3">
-                {propuestas.data
-                  .filter((p) => ronda.status !== "open" || elegidas.has(p.id))
-                  .map((p) => {
-                    const dentro = elegidas.has(p.id);
-                    const cuenta = votos.get(p.id) ?? 0;
+              propuestas.data
+                .filter((p) => !abierta || elegidas.has(p.id))
+                .map((p) => {
+                  const dentro = elegidas.has(p.id);
+                  const cuenta = votos.get(p.id) ?? 0;
 
-                    return (
-                      <li
-                        key={p.id}
-                        className="rounded-[var(--radius-tarjeta)] border border-[var(--color-linea)] bg-[var(--color-blanco)] p-4"
-                        style={dentro ? { borderColor: "var(--color-votacion-boton)" } : undefined}
-                      >
-                        <h3 className="text-[16px] leading-snug font-medium">
-                          {p.episode_title}
-                        </h3>
-                        <p className="mt-0.5 text-[14px] text-[var(--color-tinta-suave)]">
+                  return (
+                    <article
+                      key={p.id}
+                      className={`club-vote-option${dentro ? " on" : ""}`}
+                    >
+                      <span>
+                        <strong>{p.episode_title}</strong>
+                        <small>
                           {p.podcast_name} · {nombreDe(directorio, p.proposed_by)}
-                        </p>
-
-                        {ronda.status === "open" ? (
-                          <p className="mt-2 text-[15px]">
-                            {cuenta === 0
-                              ? "Sin votos"
-                              : cuenta === 1
-                                ? "1 voto"
-                                : `${cuenta} votos`}
-                            {cuenta === maximo && maximo > 0 && (
-                              <span
-                                className="ml-2 text-[13px] font-medium"
-                                style={{ color: "var(--color-votacion-boton)" }}
-                              >
-                                va arriba
-                              </span>
-                            )}
-                          </p>
+                        </small>
+                        {abierta ? (
+                          <span>
+                            {cuenta === 0 ? "Sin votos" : `${cuenta} ${cuenta === 1 ? "voto" : "votos"}`}
+                            {cuenta === maximo && maximo > 0 && " · va arriba"}
+                          </span>
                         ) : (
-                          <div className="mt-3">
+                          <span className="club-actions">
                             <BotonAccion
                               accion={alternarCandidata}
                               campos={{ ronda: ronda.id, propuesta: p.id }}
@@ -157,84 +103,111 @@ export default async function AdminVotacion() {
                             >
                               {dentro ? "Es candidata ✓" : "Sumar a la votación"}
                             </BotonAccion>
-                          </div>
+                          </span>
                         )}
-                      </li>
-                    );
-                  })}
-              </ul>
+                      </span>
+                    </article>
+                  );
+                })
             ) : (
-              <p className="mt-4 text-[15px] text-[var(--color-tinta-suave)]">
-                No hay propuestas activas en el banco.
-              </p>
+              <p className="club-muted">No hay propuestas activas en el banco.</p>
             )}
-          </section>
+          </div>
+        )}
+      </div>
 
-          {/* ---------------------------------------------------------------- */}
-          {/* Cierre                                                            */}
-          {/* ---------------------------------------------------------------- */}
-          {ronda.status === "open" && (
-            <section className="mt-7 rounded-[var(--radius-tarjeta)] border border-[var(--color-linea)] bg-[var(--color-blanco)] p-5">
-              <h2 className="editorial text-[1.3rem]">Cerrar la votación</h2>
-
-              {hayEmpate ? (
-                <p className="mt-2 mb-4 text-[15px] leading-relaxed" style={{ color: "var(--color-aviso)" }}>
-                  Hay empate entre {empatadas.map(([id]) => nombrePropuesta(id!)).join(" y ")}.
-                  Elige cuál gana para poder cerrar.
-                </p>
-              ) : (
-                <p className="mt-1 mb-4 text-[14px] leading-relaxed text-[var(--color-tinta-suave)]">
-                  Si dejas la ganadora en blanco, gana la más votada. Elegir una distinta queda
-                  registrado como decisión de administración.
-                </p>
-              )}
-
-              <FormularioAccion accion={cerrarRonda} etiquetaEnvio="Cerrar votación">
-                <input type="hidden" name="ronda" value={ronda.id} />
-                <div className="space-y-1.5">
-                  <label htmlFor="ganadora" className="block text-[15px] font-medium">
-                    Ganadora
-                  </label>
-                  <select
-                    id="ganadora"
-                    name="ganadora"
-                    defaultValue=""
-                    className="w-full rounded-[var(--radius-suave)] border border-[var(--color-linea)] bg-white px-4 py-3 text-[16px]"
-                  >
-                    <option value="">La más votada</option>
-                    {[...elegidas].map((pid) => (
-                      <option key={pid} value={pid}>
-                        {nombrePropuesta(pid)}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <Campo
-                  etiqueta="Nota (opcional)"
-                  name="nota"
-                  maxLength={500}
-                  ayuda="Si eliges una distinta a la más votada, conviene explicar por qué."
-                />
-              </FormularioAccion>
-            </section>
-          )}
-        </>
-      )}
-
-      {cerradas.data && cerradas.data.length > 0 && (
-        <section className="mt-9">
-          <h2 className="editorial text-[1.4rem]">Votaciones anteriores</h2>
-          <ul className="mt-3 space-y-2 text-[15px]">
-            {cerradas.data.map((r) => (
-              <li key={r.id} className="text-[var(--color-tinta-suave)]">
-                {r.title ?? "Votación"}
-                {r.override_by && " · resuelta por administración"}
-                {r.override_note && ` — ${r.override_note}`}
-              </li>
-            ))}
-          </ul>
+      {abierta && (
+        <section className="club-panel" id="clubWinnerPanel">
+          <span className="club-kicker">CÓMO VA</span>
+          <p id="clubVoteLeaders">{resultadoEnPalabras(votos, titulos)}</p>
         </section>
       )}
-    </main>
+
+      {/* El prototipo guarda la administración de la votación en un desplegable
+          para que no coma pantalla en el celular. */}
+      <details className="club-admin-tools" id="clubAdminTools" data-admin-only="panel">
+        <summary>Administrar votación</summary>
+
+        {!ronda && (
+          <div id="clubRoundAdmin">
+            <p className="club-muted">
+              Se crea en preparación: eliges las candidaturas y luego la abres.
+            </p>
+            <FormularioAccion accion={crearRonda} etiquetaEnvio="Crear votación">
+              <Campo
+                etiqueta="Título"
+                name="titulo"
+                maxLength={160}
+                placeholder="¿Qué escuchamos después?"
+              />
+            </FormularioAccion>
+          </div>
+        )}
+
+        {ronda?.status === "draft" && (
+          <div id="clubRoundAdmin">
+            <div className="club-actions">
+              <BotonAccion accion={abrirRonda} campos={{ ronda: ronda.id }} tono="principal">
+                Abrir la votación
+              </BotonAccion>
+            </div>
+            <p className="club-muted">
+              Hacen falta al menos dos candidaturas. Al abrirla, el club recibe aviso.
+            </p>
+          </div>
+        )}
+
+        {abierta && ronda && (
+          <div id="clubWinnerAdmin">
+            <span className="club-kicker">CERRAR LA VOTACIÓN</span>
+            {hayEmpate ? (
+              <p className="club-message">
+                Hay empate entre {lideres.map(nombrePropuesta).join(" y ")}. Elige cuál gana para
+                poder cerrar.
+              </p>
+            ) : (
+              <p className="club-muted">
+                Si dejas la ganadora en blanco, gana la más votada. Elegir una distinta queda
+                registrado como decisión de administración.
+              </p>
+            )}
+
+            <FormularioAccion accion={cerrarRonda} etiquetaEnvio="Cerrar votación">
+              <input type="hidden" name="ronda" value={ronda.id} />
+              <label className="club-label" htmlFor="ganadora">
+                SELECCIÓN FINAL
+              </label>
+              <select className="form-input" defaultValue="" id="ganadora" name="ganadora">
+                <option value="">La más votada</option>
+                {[...elegidas].map((pid) => (
+                  <option key={pid} value={pid}>
+                    {nombrePropuesta(pid)}
+                  </option>
+                ))}
+              </select>
+              <Campo
+                etiqueta="Nota (opcional)"
+                name="nota"
+                maxLength={500}
+                ayuda="Si eliges una distinta a la más votada, conviene explicar por qué."
+              />
+            </FormularioAccion>
+          </div>
+        )}
+      </details>
+
+      {cerradas.data && cerradas.data.length > 0 && (
+        <section className="club-panel">
+          <span className="club-kicker">VOTACIONES ANTERIORES</span>
+          {cerradas.data.map((r) => (
+            <p className="club-muted" key={r.id}>
+              {r.title ?? "Votación"}
+              {r.override_by && " · resuelta por administración"}
+              {r.override_note && ` — ${r.override_note}`}
+            </p>
+          ))}
+        </section>
+      )}
+    </section>
   );
 }

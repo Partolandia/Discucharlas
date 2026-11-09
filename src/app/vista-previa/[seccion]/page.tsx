@@ -57,9 +57,7 @@ export default async function VistaPrevia({
             {
               id: "demo",
               titulo: "¿Qué están escuchando esta semana?",
-              cuerpo: "Busco algo ligero pero con carnita para un viaje largo.",
-              iniciales: "MJ",
-              pie: "6 respuestas · Hace 1 hora",
+              respuestas: 6,
             },
           ]}
         />
@@ -97,6 +95,7 @@ export default async function VistaPrevia({
               cuerpo: "Busco algo ligero pero con carnita para un viaje largo.",
               respuestas: 6,
               corazones: 8,
+              miCorazon: false,
             },
             {
               id: "b",
@@ -107,6 +106,7 @@ export default async function VistaPrevia({
               cuerpo: "Dejo aquí el enlace para que no se nos pierda.",
               respuestas: 3,
               corazones: 5,
+              miCorazon: true,
             },
           ]}
         />

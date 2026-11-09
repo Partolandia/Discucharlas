@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { crearClienteServidor } from "@/lib/supabase/servidor";
-import { exigirIntegrante, exigirAdministradora } from "@/lib/sesion";
+import { exigirIntegrante, exigirAdministradora, esAdministradora } from "@/lib/sesion";
 
 export type Resultado = { error?: string; exito?: string };
 
@@ -43,6 +43,88 @@ export async function proponerPodcast(
   revalidatePath("/propuestas");
   revalidatePath("/inicio");
   return { exito: "Ya está en el banco de propuestas." };
+}
+
+/**
+ * Editar una propuesta. Puede su autora mientras siga activa, y puede
+ * administración en cualquier estado. La comprobación se hace aquí y además la
+ * repite RLS: la interfaz solo esconde el botón.
+ */
+export async function editarPropuesta(_previo: Resultado, datos: FormData): Promise<Resultado> {
+  const perfil = await exigirIntegrante();
+  const id = z.string().uuid().safeParse(datos.get("propuesta"));
+  if (!id.success) return { error: "Propuesta no válida." };
+
+  const leido = propuesta.safeParse({
+    episodio: datos.get("episodio"),
+    podcast: datos.get("podcast"),
+    url: datos.get("url") ?? "",
+    duracion: datos.get("duracion") ?? "",
+    descripcion: datos.get("descripcion") ?? "",
+  });
+  if (!leido.success) return { error: leido.error.issues[0].message };
+
+  const supabase = await crearClienteServidor();
+  const { data: actual } = await supabase
+    .from("podcast_proposals")
+    .select("proposed_by, status")
+    .eq("id", id.data)
+    .maybeSingle();
+  if (!actual) return { error: "Esa propuesta ya no existe." };
+
+  const suya = actual.proposed_by === perfil.id;
+  if (!esAdministradora(perfil) && !(suya && actual.status === "active")) {
+    return { error: "Esta propuesta no es tuya." };
+  }
+
+  const { error } = await supabase
+    .from("podcast_proposals")
+    .update({
+      episode_title: leido.data.episodio,
+      podcast_name: leido.data.podcast,
+      episode_url: leido.data.url || null,
+      duration: leido.data.duracion || null,
+      description: leido.data.descripcion || null,
+    })
+    .eq("id", id.data);
+
+  if (error) return { error: "No se pudo guardar el cambio." };
+  revalidatePath("/propuestas/lista");
+  revalidatePath("/propuestas");
+  return { exito: "Propuesta actualizada." };
+}
+
+/**
+ * Retirar una propuesta del banco. La archiva en vez de borrarla para no
+ * perder los votos históricos que la referencian.
+ */
+export async function retirarPropuesta(_previo: Resultado, datos: FormData): Promise<Resultado> {
+  const perfil = await exigirIntegrante();
+  const id = z.string().uuid().safeParse(datos.get("propuesta"));
+  if (!id.success) return { error: "Propuesta no válida." };
+
+  const supabase = await crearClienteServidor();
+  const { data: actual } = await supabase
+    .from("podcast_proposals")
+    .select("proposed_by, status")
+    .eq("id", id.data)
+    .maybeSingle();
+  if (!actual) return { error: "Esa propuesta ya no existe." };
+  if (actual.status !== "active") return { error: "Esa propuesta ya no está activa." };
+  if (!esAdministradora(perfil) && actual.proposed_by !== perfil.id) {
+    return { error: "Esta propuesta no es tuya." };
+  }
+
+  const { error } = await supabase
+    .from("podcast_proposals")
+    .update({ status: "deleted" })
+    .eq("id", id.data);
+
+  if (error) return { error: "No se pudo retirar la propuesta." };
+  revalidatePath("/propuestas/lista");
+  revalidatePath("/propuestas");
+  revalidatePath("/inicio");
+  return {};
 }
 
 const voto = z.object({

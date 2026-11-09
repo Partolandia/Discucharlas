@@ -30,8 +30,10 @@ export default async function ListaDePropuestas() {
     resena: p.description,
     autor: nombreDe(directorio, p.proposed_by),
     enlace: p.episode_url,
-    suspendida: p.status === "suspended",
+    portada: p.image_path,
+    estado: p.status as PropuestaFila["estado"],
+    propia: p.proposed_by === perfil.id,
   }));
 
-  return <PantallaPropuestasLista propuestas={filas} />;
+  return <PantallaPropuestasLista propuestas={filas} esAdmin={admin} />;
 }

@@ -9,7 +9,7 @@ const MOSAICOS = [
     ruta: "/admin/accesos",
     imagen: IMAGENES.adminAccesos,
     titulo: "Accesos",
-    texto: "Nuevos integrantes y acceso de invitados",
+    texto: "Solicitudes e ingresos de integrantes",
   },
   {
     ruta: "/admin/integrantes",

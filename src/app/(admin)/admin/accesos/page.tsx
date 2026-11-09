@@ -5,33 +5,46 @@ import { IMAGENES } from "@/lib/prototipo";
 import { Backline } from "@/components/prototipo/Backline";
 import { FormularioAccion } from "@/components/admin/FormularioAccion";
 import { BotonAccion } from "@/components/admin/BotonAccion";
+import { TarjetaIngreso, type Ingreso } from "@/components/admin/TarjetaIngreso";
 import {
   emitirInvitacion,
-  revocarInvitacion,
   generarClaveDeInvitadas,
   revocarClaveDeInvitadas,
   rechazarSolicitud,
+  reabrirSolicitud,
 } from "@/app/(admin)/admin/acciones";
 
 export const metadata = { title: "Accesos" };
 
-/** Las clases de `.access-status` que trae el prototipo. */
-const ESTADO_INVITACION: Record<string, { texto: string; clase: string }> = {
-  unused: { texto: "SIN USAR", clase: "unused" },
-  used: { texto: "USADA", clase: "used" },
-  revoked: { texto: "REVOCADA", clase: "revoked" },
-  expired: { texto: "CADUCADA", clase: "revoked" },
+const ESTADO_SOLICITUD: Record<string, string> = {
+  pending: "Pendiente",
+  approved: "Aprobada",
+  rejected: "Rechazada",
 };
+
+/** Los estados que el prototipo v2 pinta en `.entry-state`. */
+const ESTADO_INGRESO: Record<string, Ingreso["estado"]> = {
+  unused: "active",
+  used: "used",
+  revoked: "revoked",
+  expired: "expired",
+};
+
+function detalleIngreso(
+  estado: string | null,
+  usado: string | null,
+  caduca: string | null
+): string {
+  if (estado === "used") return usado ? `Cuenta creada el ${fechaLarga(usado)}` : "Cuenta creada";
+  if (estado === "unused" && caduca) return `Vence el ${fechaLarga(caduca)}`;
+  return "Puedes generar un enlace nuevo";
+}
 
 export default async function AdminAccesos() {
   const supabase = await crearClienteServidor();
 
   const [solicitudes, invitaciones, clave, directorio] = await Promise.all([
-    supabase
-      .from("member_requests")
-      .select("*")
-      .eq("status", "pending")
-      .order("created_at", { ascending: false }),
+    supabase.from("member_requests").select("*").order("created_at", { ascending: false }),
     supabase.from("invitation_status").select("*").order("created_at", { ascending: false }),
     supabase.from("guest_access").select("*").eq("status", "active").maybeSingle(),
     directorioDelClub(),
@@ -44,7 +57,7 @@ export default async function AdminAccesos() {
       <header className="editorial-head proposal-head admin-editorial-head header-with-admin-art">
         <div className="editorial-head-copy">
           <div className="eyebrow">ADMINISTRACIÓN</div>
-          <h1 className="page-title">Integrantes e invitados</h1>
+          <h1 className="page-title">Ingresos de integrantes</h1>
         </div>
         <div className="editorial-head-admin-art">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -57,30 +70,27 @@ export default async function AdminAccesos() {
       <section className="content-card">
         <h2>Solicitudes de ingreso</h2>
         <p className="proposal-intro" style={{ margin: "4px 0 10px" }}>
-          Aquí aparecen las solicitudes enviadas por Integrantes para sumar a una nueva persona al
-          Club. Al activar una solicitud, se genera un enlace único para que esa persona pueda crear
-          su cuenta como Integrante.
+          Solicitudes enviadas por las integrantes. Revisa cada propuesta y registra tu decisión.
+          Al aprobarla se genera un enlace único de un solo uso para que esa persona cree su
+          cuenta.
         </p>
-        <div>
+        <div id="inviteRequestList">
           {solicitudes.data && solicitudes.data.length > 0 ? (
             solicitudes.data.map((s) => (
-              <div key={s.id} className="invite-row">
-                <div>
-                  <b>{s.invitee_name}</b>
-                  <div className="invite-request-meta">
-                    Solicitó: {nombreDe(directorio, s.proposed_by)}
-                    {s.invitee_email && ` · ${s.invitee_email}`}
-                    {s.note && (
-                      <>
-                        <br />
-                        {s.note}
-                      </>
-                    )}
-                  </div>
-                  <div className="access-status-row">
-                    <span className="access-status pending">PENDIENTE</span>
-                  </div>
-                  <FormularioAccion accion={emitirInvitacion} etiquetaEnvio="Activar invitación">
+              <article className="social-request" data-request-status={s.status} key={s.id}>
+                <strong>{s.invitee_name}</strong>
+                <span className="social-request-status">{ESTADO_SOLICITUD[s.status]}</span>
+                {s.note && <p>{s.note}</p>}
+                <small>
+                  {nombreDe(directorio, s.proposed_by)} · {fechaLarga(s.created_at)}
+                  {s.invitee_email && ` · ${s.invitee_email}`}
+                </small>
+
+                {s.status === "pending" && (
+                  <FormularioAccion
+                    accion={emitirInvitacion}
+                    etiquetaEnvio="Aprobar y crear ingreso"
+                  >
                     <input type="hidden" name="solicitud" value={s.id} />
                     <label htmlFor={`nombre-${s.id}`}>NOMBRE</label>
                     <input
@@ -98,70 +108,72 @@ export default async function AdminAccesos() {
                       required
                     />
                   </FormularioAccion>
+                )}
+
+                <div className="club-actions">
+                  {s.status !== "rejected" && (
+                    <BotonAccion
+                      accion={rechazarSolicitud}
+                      campos={{ solicitud: s.id }}
+                      tono="delicado"
+                      confirmacion="La propuesta se marca como rechazada. Quien la hizo no recibe aviso."
+                    >
+                      Rechazar
+                    </BotonAccion>
+                  )}
+                  {s.status !== "pending" && (
+                    <BotonAccion accion={reabrirSolicitud} campos={{ solicitud: s.id }}>
+                      Volver a pendiente
+                    </BotonAccion>
+                  )}
                 </div>
-                <div className="request-actions">
-                  <BotonAccion
-                    accion={rechazarSolicitud}
-                    campos={{ solicitud: s.id }}
-                    tono="delicado"
-                    confirmacion="La propuesta se marca como rechazada. Quien la hizo no recibe aviso."
-                  >
-                    Rechazar
-                  </BotonAccion>
-                </div>
-              </div>
+
+                {s.status === "approved" && (
+                  <p className="social-note">
+                    La propuesta está aprobada. El alta de la cuenta y su acceso se realizan desde
+                    la administración habitual; no se conceden automáticamente.
+                  </p>
+                )}
+              </article>
             ))
           ) : (
-            <p className="club-muted">No hay solicitudes pendientes.</p>
+            <p className="social-note">No hay solicitudes todavía.</p>
           )}
         </div>
       </section>
 
-      <FormularioAccion accion={emitirInvitacion} etiquetaEnvio="＋ Crear invitación">
-        <label htmlFor="nombre">CREAR INVITACIÓN DE INTEGRANTE</label>
+      <FormularioAccion accion={emitirInvitacion} etiquetaEnvio="＋ Crear ingreso">
+        <h2>Crear ingreso de nuevo integrante</h2>
         <p className="access-helper">
-          Genera directamente un enlace único para una persona, sin necesidad de una solicitud
-          previa. El enlace se muestra una sola vez.
+          Crea un enlace de un solo uso para una persona, sin una solicitud previa. El enlace se
+          muestra una sola vez.
         </p>
+        <label htmlFor="nombre">NOMBRE</label>
         <input id="nombre" name="nombre" required maxLength={120} placeholder="Nombre de la persona" />
         <input name="email" type="email" required placeholder="Correo de la persona" />
       </FormularioAccion>
 
       <section className="content-card admin-generated-invites">
-        <h2>INVITACIONES CREADAS POR ADMINISTRACIÓN</h2>
-        <div>
+        <h2>Ingresos creados por administración</h2>
+        <div id="inviteList">
           {invitaciones.data && invitaciones.data.length > 0 ? (
-            invitaciones.data.map((i) => {
-              const estado = ESTADO_INVITACION[i.effective_status ?? "unused"];
-              return (
-                <div key={i.id} className="invite-row">
-                  <div>
-                    <b>Invitación para {i.invitee_name}</b>
-                    <small>{i.invitee_email}</small>
-                    {i.expires_at && i.effective_status === "unused" && (
-                      <small>Caduca el {fechaLarga(i.expires_at)}</small>
-                    )}
-                    <div className="access-status-row">
-                      <span className={`access-status ${estado.clase}`}>{estado.texto}</span>
-                    </div>
-                  </div>
-                  <div className="invite-actions">
-                    {i.effective_status === "unused" && i.id && (
-                      <BotonAccion
-                        accion={revocarInvitacion}
-                        campos={{ invitacion: i.id }}
-                        tono="delicado"
-                        confirmacion="El enlace deja de servir en este momento."
-                      >
-                        Desactivar
-                      </BotonAccion>
-                    )}
-                  </div>
-                </div>
-              );
-            })
+            invitaciones.data.map((i) => (
+              <TarjetaIngreso
+                key={i.id}
+                ingreso={{
+                  id: i.id!,
+                  nombre: i.invitee_name ?? "Nuevo integrante",
+                  enlace: null,
+                  estado: ESTADO_INGRESO[i.effective_status ?? "unused"],
+                  detalle: detalleIngreso(i.effective_status, i.used_at, i.expires_at),
+                }}
+              />
+            ))
           ) : (
-            <p className="club-muted">Todavía no has creado invitaciones.</p>
+            <p className="social-note">
+              Aún no has creado ingresos directos. Los ingresos de solicitudes aprobadas aparecen
+              junto a cada solicitud.
+            </p>
           )}
         </div>
       </section>

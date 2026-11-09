@@ -55,7 +55,18 @@ const RUTAS: Array<[string, Pantalla]> = [
   ["/admin", { id: "administracion", seccion: "", pestana: null, titulo: "Administración" }],
 ];
 
+/** Rutas con un id en medio, que el prefijo no sabe distinguir. */
+const RUTAS_CON_ID: Array<[RegExp, Pantalla]> = [
+  [
+    /^\/propuestas\/[^/]+\/editar$/,
+    { id: "proponer", seccion: "propuestas", pestana: "propuestas", titulo: "Editar propuesta" },
+  ],
+];
+
 export function pantallaDe(ruta: string): Pantalla {
+  for (const [patron, pantalla] of RUTAS_CON_ID) {
+    if (patron.test(ruta)) return pantalla;
+  }
   // El orden importa: /propuestas/votar tiene que ganarle a /propuestas.
   for (const [prefijo, pantalla] of RUTAS) {
     if (ruta === prefijo || ruta.startsWith(`${prefijo}/`)) return pantalla;

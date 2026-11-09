@@ -39,9 +39,16 @@ yarn-error.log*
 
 # prototipos HTML pesados (mantener copias locales con fecha)
 prototipo-sesiones-backup-*.html
+prototipo-sesiones-v2.ANTERIOR-*.html
 
 # material derivado del prototipo (se regenera con los scripts)
 .prototipo/
+
+# paquete de traspaso descomprimido (el original vive en Developer Pack/)
+.devpack/
+
+# paquete de handoff: 75 MB de material de origen, no de la app
+/Developer Pack/
 
 # typescript
 *.tsbuildinfo

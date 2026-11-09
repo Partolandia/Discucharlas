@@ -483,3 +483,23 @@ export async function rechazarSolicitud(
   revalidatePath("/admin/accesos");
   return {};
 }
+
+/**
+ * Devolver una solicitud ya revisada a pendiente. No reactiva ningún ingreso
+ * que se hubiera generado: eso se gestiona por separado desde su tarjeta.
+ */
+export async function reabrirSolicitud(_previo: Resultado, datos: FormData): Promise<Resultado> {
+  await exigirAdministradora();
+  const id = z.string().uuid().safeParse(datos.get("solicitud"));
+  if (!id.success) return { error: "Solicitud no válida." };
+
+  const supabase = await crearClienteServidor();
+  const { error } = await supabase
+    .from("member_requests")
+    .update({ status: "pending", reviewed_by: null, reviewed_at: null })
+    .eq("id", id.data);
+
+  if (error) return { error: "No se pudo reabrir la solicitud." };
+  revalidatePath("/admin/accesos");
+  return {};
+}

@@ -8,7 +8,7 @@ import { PantallaComunidad, type HiloComunidad } from "@/components/prototipo/Pa
 export const metadata = { title: "Comunidad" };
 
 export default async function Comunidad() {
-  await exigirIntegrante();
+  const perfil = await exigirIntegrante();
   const supabase = await crearClienteServidor();
 
   const [hilos, respuestas, corazones, directorio] = await Promise.all([
@@ -18,7 +18,10 @@ export default async function Comunidad() {
       .is("deleted_at", null)
       .order("created_at", { ascending: false }),
     supabase.from("community_replies").select("thread_id").is("deleted_at", null),
-    supabase.from("community_reactions").select("thread_id").not("thread_id", "is", null),
+    supabase
+      .from("community_reactions")
+      .select("thread_id, user_id")
+      .not("thread_id", "is", null),
     directorioDelClub(),
   ]);
 
@@ -32,6 +35,9 @@ export default async function Comunidad() {
 
   const porRespuestas = cuenta(respuestas.data);
   const porCorazones = cuenta(corazones.data);
+  const mios = new Set(
+    (corazones.data ?? []).filter((c) => c.user_id === perfil.id).map((c) => c.thread_id)
+  );
 
   const lista: HiloComunidad[] = (hilos.data ?? []).map((h) => {
     const autor = nombreDe(directorio, h.user_id);
@@ -44,6 +50,7 @@ export default async function Comunidad() {
       cuerpo: h.body,
       respuestas: porRespuestas.get(h.id) ?? 0,
       corazones: porCorazones.get(h.id) ?? 0,
+      miCorazon: mios.has(h.id),
     };
   });
 

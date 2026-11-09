@@ -7,9 +7,7 @@ import { IMAGENES } from "@/lib/prototipo";
 export type HiloResumen = {
   id: string;
   titulo: string;
-  cuerpo: string;
-  iniciales: string;
-  pie: string;
+  respuestas: number;
 };
 
 export type DatosInicio = {
@@ -188,21 +186,32 @@ export function PantallaInicio({ sesion, realizadas, propuestas, votacionAbierta
             Ver todas
           </button>
         </div>
-        {hilos.map((hilo) => (
-          <article
-            key={hilo.id}
-            className="post"
-            style={{ cursor: "pointer" }}
-            onClick={() => router.push(`/comunidad/${hilo.id}`)}
-          >
-            <span className="avatar">{hilo.iniciales}</span>
-            <div>
-              <b>{hilo.titulo}</b>
-              <p>{hilo.cuerpo}</p>
-              <small>{hilo.pie}</small>
-            </div>
-          </article>
-        ))}
+        {/*
+         * El prototipo nuevo retira las tarjetas `.post` de Inicio y deja una
+         * lista mínima: título y número de respuestas. La conversación completa
+         * vive en Comunidad.
+         */}
+        <div id="socialHomePreview">
+          {hilos.length === 0 ? (
+            <p className="social-note">
+              Todavía no hay conversaciones. Comparte la primera en Comunidad.
+            </p>
+          ) : (
+            hilos.map((hilo) => (
+              <button
+                key={hilo.id}
+                type="button"
+                className="social-home-post"
+                onClick={() => router.push(`/comunidad/${hilo.id}`)}
+              >
+                <b>{hilo.titulo}</b>
+                <span>
+                  {hilo.respuestas} {hilo.respuestas === 1 ? "respuesta" : "respuestas"}
+                </span>
+              </button>
+            ))
+          )}
+        </div>
       </section>
     </section>
   );

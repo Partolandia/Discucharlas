@@ -7,6 +7,7 @@ import { hace } from "@/lib/fechas";
 import { Backline } from "@/components/prototipo/Backline";
 import { Responder } from "@/components/comunidad/Responder";
 import { BotonCorazon } from "@/components/comunidad/BotonCorazon";
+import { CuerpoMensaje } from "@/components/comunidad/CuerpoMensaje";
 
 export default async function Hilo({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -56,7 +57,7 @@ export default async function Hilo({ params }: { params: Promise<{ id: string }>
             <strong>
               {autor} · {hace(hilo.created_at)}
             </strong>
-            <p style={{ whiteSpace: "pre-line" }}>{hilo.body}</p>
+            <CuerpoMensaje texto={hilo.body} />
             <BotonCorazon
               hilo={hilo.id}
               cuenta={cuenta("thread_id", hilo.id)}
@@ -74,7 +75,7 @@ export default async function Hilo({ params }: { params: Promise<{ id: string }>
                 <strong>
                   {quien} · {hace(r.created_at)}
                 </strong>
-                <p style={{ whiteSpace: "pre-line" }}>{r.body}</p>
+                <CuerpoMensaje texto={r.body} />
                 <BotonCorazon
                   respuesta={r.id}
                   cuenta={cuenta("reply_id", r.id)}

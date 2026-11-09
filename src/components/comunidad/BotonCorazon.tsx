@@ -2,8 +2,11 @@
 
 import { useActionState } from "react";
 import { alternarCorazon, type Resultado } from "@/app/(integrante)/comunidad/acciones";
-import { IconoCorazon } from "@/components/Iconos";
 
+/**
+ * Corazón del prototipo v2: uno por cuenta y conversación, sin reacción
+ * negativa. El prototipo lo dibuja con el carácter, no con un icono.
+ */
 export function BotonCorazon({
   hilo,
   respuesta,
@@ -26,14 +29,9 @@ export function BotonCorazon({
         disabled={pendiente}
         aria-pressed={mio}
         aria-label={mio ? "Quitar corazón" : "Dar corazón"}
-        className="flex items-center gap-1.5 text-[13px] text-[var(--color-tinta-suave)] disabled:opacity-60"
+        className={`social-heart${mio ? " on" : ""}`}
       >
-        <IconoCorazon
-          className="h-5 w-5"
-          relleno={mio}
-          {...(mio ? { style: { color: "var(--color-inicio)" } } : {})}
-        />
-        {cuenta > 0 && <span>{cuenta}</span>}
+        {mio ? "♥" : "♡"} {cuenta}
       </button>
     </form>
   );

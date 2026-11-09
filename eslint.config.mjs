@@ -15,6 +15,8 @@ const eslintConfig = defineConfig([
     // Material derivado del prototipo: se regenera, no se edita.
     ".prototipo/**",
     "src/estilos/prototipo-v2.css",
+    // Paquete de traspaso descomprimido: código ajeno, solo de referencia.
+    ".devpack/**",
   ]),
 ]);
 

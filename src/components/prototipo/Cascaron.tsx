@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { pantallaDe, PESTANAS, IMAGENES, type Pantalla } from "@/lib/prototipo";
 
@@ -29,6 +30,26 @@ export function Cascaron({
   const ruta = usePathname();
   const pantalla = pantallaForzada ?? pantallaDe(ruta);
 
+  /*
+   * El prototipo enciende la vista administrativa con una clase en <html>. De
+   * ella cuelgan el acento cian, los distintivos "Solo administración" y la
+   * visibilidad de `[data-admin-only]` y `#clubAdminTools`. Es solo pintura:
+   * quien autoriza de verdad sigue siendo la base.
+   */
+  useEffect(() => {
+    document.documentElement.classList.toggle("disc-admin-view", esAdmin);
+    return () => document.documentElement.classList.remove("disc-admin-view");
+  }, [esAdmin]);
+
+  /*
+   * El prototipo resalta el icono de la herramienta abierta con fondo morado y
+   * `aria-current`. Su pantalla `ajustes` es aquí `/perfil`.
+   */
+  const herramienta = (id: string) => ({
+    className: pantalla.id === id ? "icon is-current-tool" : "icon",
+    "aria-current": pantalla.id === id ? ("page" as const) : undefined,
+  });
+
   return (
     <main className="stage">
       <section className="phone" data-section={pantalla.seccion}>
@@ -43,7 +64,7 @@ export function Cascaron({
           <div className="tools">
             <button
               aria-label="Notificaciones"
-              className="icon"
+              {...herramienta("notificaciones")}
               onClick={() => router.push("/avisos")}
             >
               <svg aria-hidden="true" viewBox="0 0 24 24">
@@ -51,7 +72,11 @@ export function Cascaron({
                 <path d="M10 21h4" />
               </svg>
             </button>
-            <button aria-label="Ajustes" className="icon" onClick={() => router.push("/perfil")}>
+            <button
+              aria-label="Ajustes"
+              {...herramienta("perfil")}
+              onClick={() => router.push("/perfil")}
+            >
               <svg aria-hidden="true" viewBox="0 0 24 24">
                 <circle cx="12" cy="12" r="3" />
                 <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21H9.6v-.09A1.7 1.7 0 0 0 8.5 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H3V9.6h.09A1.7 1.7 0 0 0 4.6 8.5a1.7 1.7 0 0 0-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1V3h4v.09A1.7 1.7 0 0 0 15.5 4.6a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 19.4 9c.13.38.34.72.6 1 .3.3.68.47 1.1.5h.09v4h-.09A1.7 1.7 0 0 0 19.4 15Z" />

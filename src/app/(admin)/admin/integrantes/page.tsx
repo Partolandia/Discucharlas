@@ -17,7 +17,23 @@ export default async function AdminIntegrantes() {
 
   // Administración sí lee el perfil completo: necesita los datos de contacto
   // para operar el club.
-  const { data: integrantes } = await supabase.from("profiles").select("*").order("first_name");
+  const [{ data: integrantes }, asistencias] = await Promise.all([
+    supabase.from("profiles").select("*").order("first_name"),
+    /*
+     * Asistencia real a Discucharlas ya realizadas. No cuenta el RSVP a la
+     * próxima ni las canceladas o en borrador: son cosas distintas.
+     */
+    supabase
+      .from("session_attendance")
+      .select("user_id, sessions!inner(status)")
+      .eq("present", true)
+      .eq("sessions.status", "past"),
+  ]);
+
+  const asistio = new Map<string, number>();
+  for (const a of asistencias.data ?? []) {
+    asistio.set(a.user_id, (asistio.get(a.user_id) ?? 0) + 1);
+  }
 
   return (
     <section className="page active" id="miembros-admin" data-admin-page="true">
@@ -43,11 +59,20 @@ export default async function AdminIntegrantes() {
         {(integrantes ?? []).map((p) => {
           const nombre = nombreCompleto(p);
           const suspendida = p.status === "suspended";
+          const veces = asistio.get(p.id) ?? 0;
 
           return (
-            <div key={p.id} className="member-admin-row">
+            <div key={p.id} className="member-admin-row" data-member-key={p.id}>
               <div>
                 <b>{nombre}</b>
+                <small
+                  className="member-attendance-note"
+                  title="Asistencia real registrada en Discucharlas realizadas."
+                >
+                  {veces
+                    ? `Asistió a ${veces} ${veces === 1 ? "Discucharla" : "Discucharlas"}`
+                    : "Sin asistencias registradas"}
+                </small>
                 {p.is_owner ? (
                   <span className="member-role-pill">PROPIETARIA</span>
                 ) : (

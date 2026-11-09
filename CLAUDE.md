@@ -48,6 +48,24 @@ cuenta por la API. No sustituye al de SQL —ese también prueba disparadores,
 Para revisar las pantallas contra el prototipo: `npm run capturar` entra como
 `ana@discucharlas.local` y deja las capturas en `.prototipo/app/`.
 
+## Cuando llegue una versión nueva del prototipo
+
+El HTML son 9 MB y casi todo su peso son imágenes en base64, así que no se
+compara línea a línea. El orden que funciona:
+
+```bash
+node scripts/diff-prototipo.mjs <html-viejo> <html-nuevo>   # bloques <style>/<script>
+node scripts/diff-cuerpo.mjs    <html-viejo> <html-nuevo>   # marcado, sin estilos ni scripts
+node scripts/portar-prototipo.mjs prototipo-sesiones-v2.html  # imágenes
+node scripts/portar-estilos.mjs  prototipo-sesiones-v2.html   # CSS desde el DOM ya renderizado
+```
+
+`portar-estilos` tiene que ir después y es el que manda: buena parte del
+sistema visual lo inyectan los guiones tardíos y solo aparece en el DOM.
+
+El material de origen (`Developer Pack/`, el HTML y `.devpack/`) está en
+`.gitignore`: son decenas de megas que no son la app.
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 # This is NOT the Next.js you know

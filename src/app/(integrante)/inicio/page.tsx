@@ -1,7 +1,5 @@
 import { crearClienteServidor } from "@/lib/supabase/servidor";
-import { directorioDelClub, nombreDe } from "@/lib/club";
-import { fechaLarga, hora12, hace } from "@/lib/fechas";
-import { iniciales } from "@/lib/nombres";
+import { fechaLarga, hora12 } from "@/lib/fechas";
 import { PantallaInicio, type HiloResumen } from "@/components/prototipo/PantallaInicio";
 
 export const metadata = { title: "Inicio" };
@@ -9,7 +7,7 @@ export const metadata = { title: "Inicio" };
 export default async function Inicio() {
   const supabase = await crearClienteServidor();
 
-  const [proxima, realizadas, propuestas, ronda, hilos, respuestas, directorio] = await Promise.all([
+  const [proxima, realizadas, propuestas, ronda, hilos, respuestas] = await Promise.all([
     supabase.from("sessions").select("*").eq("status", "upcoming").maybeSingle(),
     supabase.from("sessions").select("id", { count: "exact", head: true }).eq("status", "past"),
     supabase
@@ -19,12 +17,11 @@ export default async function Inicio() {
     supabase.from("voting_rounds").select("id").eq("status", "open").maybeSingle(),
     supabase
       .from("community_threads")
-      .select("id, title, body, user_id, created_at")
+      .select("id, title, created_at")
       .is("deleted_at", null)
       .order("created_at", { ascending: false })
       .limit(2),
     supabase.from("community_replies").select("thread_id").is("deleted_at", null),
-    directorioDelClub(),
   ]);
 
   const s = proxima.data;
@@ -34,16 +31,11 @@ export default async function Inicio() {
     porHilo.set(r.thread_id, (porHilo.get(r.thread_id) ?? 0) + 1);
   }
 
-  const resumenHilos: HiloResumen[] = (hilos.data ?? []).map((h) => {
-    const n = porHilo.get(h.id) ?? 0;
-    return {
-      id: h.id,
-      titulo: h.title ?? "Conversación",
-      cuerpo: h.body ?? "",
-      iniciales: iniciales(nombreDe(directorio, h.user_id)),
-      pie: `${n} ${n === 1 ? "respuesta" : "respuestas"} · ${hace(h.created_at)}`,
-    };
-  });
+  const resumenHilos: HiloResumen[] = (hilos.data ?? []).map((h) => ({
+    id: h.id,
+    titulo: h.title ?? "Conversación",
+    respuestas: porHilo.get(h.id) ?? 0,
+  }));
 
   return (
     <PantallaInicio

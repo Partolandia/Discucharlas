@@ -18,6 +18,16 @@
 }
 
 /*
+ * El prototipo dispara sus acciones con JavaScript suelto, así que sus botones
+ * son hijos directos de `.club-actions`. Aquí cada acción es una server action
+ * y necesita su propio <form>; `display: contents` deja que el botón siga
+ * siendo el elemento flex y la fila no se rompa.
+ */
+.club-actions > form {
+  display: contents;
+}
+
+/*
  * Hero de Inicio. La foto de respaldo es un collage vertical completo
  * (520x1440) que ya trae su propio círculo rojo sobre la cabeza. El prototipo
  * la recorta a una franja estrecha y encima le superpone `.hero::before` con
