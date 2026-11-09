@@ -14,7 +14,7 @@ function esPublica(ruta: string) {
  * entrado. La autorización de verdad vive en RLS y en cada server action;
  * esto solo evita pantallas rotas.
  */
-export async function middleware(peticion: NextRequest) {
+export async function proxy(peticion: NextRequest) {
   let respuesta = NextResponse.next({ request: peticion });
   const ruta = peticion.nextUrl.pathname;
 

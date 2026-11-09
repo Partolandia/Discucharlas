@@ -26,7 +26,7 @@ export async function crearClienteServidor() {
             }
           } catch {
             // Desde un componente de servidor no se pueden escribir cookies.
-            // El middleware ya refrescó la sesión, así que aquí es inofensivo.
+            // El proxy ya refrescó la sesión, así que aquí es inofensivo.
           }
         },
       },
