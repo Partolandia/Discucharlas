@@ -68,6 +68,11 @@ export default async function Historial({
                   key={e}
                   className="admin-history-chip"
                   href={rutaCon(estados, e)}
+                  // Cada chip apunta a esta misma pantalla con otro filtro, y
+                  // armar la vista previa cuesta varias consultas. Precargar
+                  // las cuatro combinaciones que nadie va a tocar deja peticiones
+                  // colgando que estorban a la navegación de verdad.
+                  prefetch={false}
                   aria-pressed={activo}
                   data-activo={activo ? "si" : undefined}
                 >

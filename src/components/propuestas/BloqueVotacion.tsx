@@ -22,30 +22,37 @@ export async function BloqueVotacion({
 
   // Mientras no haya una abierta se muestra la última cerrada con su resultado,
   // igual que el prototipo.
-  const { data: enCurso } = await supabase
-    .from("voting_rounds")
-    .select("*")
-    .in("status", ["draft", "open"])
-    .maybeSingle();
-
-  const { data: ultima } = enCurso
-    ? { data: null }
-    : await supabase
-        .from("voting_rounds")
-        .select("*")
-        .eq("status", "closed")
-        .order("closed_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+  /*
+   * Las dos rondas que nos interesan se piden a la vez: cada consulta son unos
+   * 100 ms contra Supabase y encadenarlas se notaba al abrir la pantalla. La
+   * cerrada solo se usa si no hay ninguna en curso.
+   */
+  const [{ data: enCurso }, { data: ultima }] = await Promise.all([
+    supabase.from("voting_rounds").select("*").in("status", ["draft", "open"]).maybeSingle(),
+    supabase
+      .from("voting_rounds")
+      .select("*")
+      .eq("status", "closed")
+      .order("closed_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
 
   const ronda = enCurso ?? ultima;
   const abierta = ronda?.status === "open";
   const borrador = ronda?.status === "draft";
 
   const [candidatas, resultados, misVotos, banco] = await Promise.all([
+    // La propuesta viaja con su candidatura: así no hace falta una segunda
+    // consulta para traer los episodios por id. Hay que nombrar la llave
+    // foránea porque las dos tablas se tocan por más de un lado y si no
+    // PostgREST no sabe por cuál entrar.
     ronda
-      ? supabase.from("voting_candidates").select("proposal_id").eq("voting_round_id", ronda.id)
-      : Promise.resolve({ data: [] as { proposal_id: string }[] }),
+      ? supabase
+          .from("voting_candidates")
+          .select("proposal_id, podcast_proposals!proposal_id(*)")
+          .eq("voting_round_id", ronda.id)
+      : Promise.resolve({ data: [] as never[] }),
     ronda
       ? supabase.from("voting_results").select("*").eq("voting_round_id", ronda.id)
       : Promise.resolve({ data: [] as { proposal_id: string | null; vote_count: number | null }[] }),
@@ -63,9 +70,9 @@ export async function BloqueVotacion({
   ]);
 
   const ids = (candidatas.data ?? []).map((c) => c.proposal_id);
-  const { data: opciones } = ids.length
-    ? await supabase.from("podcast_proposals").select("*").in("id", ids)
-    : { data: [] };
+  const opciones = (candidatas.data ?? [])
+    .map((c) => c.podcast_proposals)
+    .filter((p): p is NonNullable<typeof p> => Boolean(p));
 
   const votos = new Map(
     (resultados.data ?? []).map((r) => [r.proposal_id, Number(r.vote_count ?? 0)])

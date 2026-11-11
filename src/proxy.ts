@@ -48,13 +48,21 @@ export async function proxy(peticion: NextRequest) {
     }
   );
 
-  // Si Supabase no responde, la sesión queda sin resolver. No es motivo para
-  // tumbar el sitio entero: las páginas públicas siguen sirviéndose y las
-  // privadas mandan a entrar, que es lo mismo que haríamos sin sesión.
+  /*
+   * `getClaims()` comprueba la firma del token sin salir a la red cuando el
+   * proyecto usa llaves asimétricas, así que la navegación no paga un viaje a
+   * Supabase por pantalla. Aquí basta: esto solo decide a qué pantalla mandar.
+   * Quien autoriza de verdad es RLS, y cada página vuelve a resolver la sesión
+   * con `getUser()` antes de leer nada.
+   *
+   * Si Supabase no responde, la sesión queda sin resolver. No es motivo para
+   * tumbar el sitio entero: las páginas públicas siguen sirviéndose y las
+   * privadas mandan a entrar, que es lo mismo que haríamos sin sesión.
+   */
   let user = null;
   try {
-    const { data } = await supabase.auth.getUser();
-    user = data.user;
+    const { data } = await supabase.auth.getClaims();
+    user = data?.claims ?? null;
   } catch (fallo) {
     console.error("[discucharlas] no se pudo verificar la sesión:", fallo);
   }

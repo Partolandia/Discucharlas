@@ -4,7 +4,16 @@ import { useActionState } from "react";
 import { aceptarInvitacion, type Resultado } from "@/app/invitacion/acciones";
 import { Aviso } from "@/components/ui/Aviso";
 
-export function FormularioInvitacion({ token, nombre }: { token: string; nombre: string }) {
+export function FormularioInvitacion({
+  token,
+  nombre,
+  correo,
+}: {
+  token: string;
+  nombre: string;
+  /** Los ingresos antiguos traían el correo puesto por administración. */
+  correo?: string | null;
+}) {
   const [estado, accion, pendiente] = useActionState<Resultado, FormData>(aceptarInvitacion, {});
 
   return (
@@ -44,6 +53,20 @@ export function FormularioInvitacion({ token, nombre }: { token: string; nombre:
           />
         </label>
       </div>
+
+      <label>
+        Correo electrónico*
+        <input
+          className="form-input"
+          name="email"
+          type="email"
+          autoComplete="email"
+          defaultValue={correo ?? ""}
+          readOnly={Boolean(correo)}
+          required
+        />
+        <small>Con este correo entrarás al club.</small>
+      </label>
 
       <label>
         Teléfono / WhatsApp*

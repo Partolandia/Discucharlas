@@ -28,6 +28,17 @@ export function fechaCorta(fechaISO: string) {
   }).format(comoFecha(fechaISO));
 }
 
+/** "8 nov, 9:20 a.m.": el sello que el prototipo pone en las solicitudes. */
+export function fechaHoraCorta(fechaISO: string) {
+  return new Intl.DateTimeFormat("es-MX", {
+    day: "numeric",
+    month: "short",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZone: ZONA_HORARIA_CLUB,
+  }).format(comoFecha(fechaISO));
+}
+
 /** "19:00" a partir de un TIME de Postgres ("19:00:00"). */
 export function hora(horaSQL: string | null) {
   if (!horaSQL) return null;

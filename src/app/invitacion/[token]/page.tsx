@@ -13,7 +13,7 @@ export default async function Invitacion({ params }: { params: Promise<{ token: 
   const admin = crearClienteAdministrador();
   const { data: invitacion } = await admin
     .from("member_invitations")
-    .select("invitee_name, status, expires_at")
+    .select("invitee_name, invitee_email, status, expires_at")
     .eq("token_hash", hashear(token))
     .maybeSingle();
 
@@ -47,7 +47,11 @@ export default async function Invitacion({ params }: { params: Promise<{ token: 
           </section>
 
           {sirve ? (
-            <FormularioInvitacion token={token} nombre={invitacion.invitee_name} />
+            <FormularioInvitacion
+              token={token}
+              nombre={invitacion.invitee_name}
+              correo={invitacion.invitee_email}
+            />
           ) : (
             <section className="member-invite-state">
               <div className="eyebrow">INVITACIÓN NO DISPONIBLE</div>

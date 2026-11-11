@@ -14,6 +14,7 @@ const alta = z
     token: z.string().min(10),
     nombre: z.string().trim().min(1, "Escribe tu nombre.").max(80),
     apellido: z.string().trim().max(80),
+    email: z.string().trim().email("Ese correo no parece válido."),
     telefono: z.string().trim().min(1, "El club pide un teléfono de contacto.").max(40),
     password: z.string().min(8, "Usa al menos 8 caracteres."),
     confirmacion: z.string(),
@@ -38,6 +39,7 @@ export async function aceptarInvitacion(
     token: datos.get("token"),
     nombre: datos.get("nombre"),
     apellido: datos.get("apellido") ?? "",
+    email: datos.get("email"),
     telefono: datos.get("telefono"),
     password: datos.get("password"),
     confirmacion: datos.get("confirmacion"),
@@ -73,8 +75,11 @@ export async function aceptarInvitacion(
     return { error: "Esta invitación acaba de usarse." };
   }
 
+  // Administración solo apuntó el nombre; el correo lo pone quien se da de alta.
+  const correo = invitacion.invitee_email || leido.data.email;
+
   const { data: creada, error: errorAlta } = await admin.auth.admin.createUser({
-    email: invitacion.invitee_email,
+    email: correo,
     password: leido.data.password,
     email_confirm: true,
     user_metadata: {
@@ -100,12 +105,12 @@ export async function aceptarInvitacion(
 
   await admin
     .from("member_invitations")
-    .update({ used_by: creada.user.id })
+    .update({ used_by: creada.user.id, invitee_email: correo })
     .eq("id", invitacion.id);
 
   const supabase = await crearClienteServidor();
   await supabase.auth.signInWithPassword({
-    email: invitacion.invitee_email,
+    email: correo,
     password: leido.data.password,
   });
 

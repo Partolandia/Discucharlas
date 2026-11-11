@@ -65,6 +65,19 @@ export function Cascaron({
   }, [esAdmin, ruta]);
 
   /*
+   * Navegamos con el router en vez de con <Link>, así que nadie precarga las
+   * pestañas por nosotros y cada toque pagaba el viaje entero al servidor. Son
+   * cinco rutas y el propio router descarta las repetidas, así que se piden en
+   * cuanto hay marco en pantalla.
+   */
+  useEffect(() => {
+    for (const p of PESTANAS) router.prefetch(p.ruta);
+    router.prefetch("/avisos");
+    router.prefetch("/perfil");
+    if (esAdmin) router.prefetch("/admin");
+  }, [router, esAdmin]);
+
+  /*
    * El prototipo resalta el icono de la herramienta abierta con fondo morado y
    * `aria-current`. Su pantalla `ajustes` es aquí `/perfil`.
    */

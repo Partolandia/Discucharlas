@@ -1,11 +1,17 @@
 import { crearClienteServidor } from "@/lib/supabase/servidor";
 import { directorioDelClub, nombreDe } from "@/lib/club";
-import { fechaLarga } from "@/lib/fechas";
+import { fechaCorta, fechaHoraCorta, fechaLarga } from "@/lib/fechas";
+import { urlDelSitio } from "@/lib/entorno";
 import { IMAGENES } from "@/lib/prototipo";
 import { Backline } from "@/components/prototipo/Backline";
 import { FormularioAccion } from "@/components/admin/FormularioAccion";
 import { BotonAccion } from "@/components/admin/BotonAccion";
-import { TarjetaIngreso, type Ingreso } from "@/components/admin/TarjetaIngreso";
+import { ActualizarIngresos } from "@/components/admin/ActualizarIngresos";
+import {
+  TarjetaIngreso,
+  ControlesDeIngreso,
+  type Ingreso,
+} from "@/components/admin/TarjetaIngreso";
 import { ClaveDeInvitadas } from "@/components/admin/ClaveDeInvitadas";
 import {
   emitirInvitacion,
@@ -22,7 +28,7 @@ const ESTADO_SOLICITUD: Record<string, string> = {
   rejected: "Rechazada",
 };
 
-/** Los estados que el prototipo v2 pinta en `.entry-state`. */
+/** Los estados que el prototipo pinta en `.entry-state`. */
 const ESTADO_INGRESO: Record<string, Ingreso["estado"]> = {
   unused: "active",
   used: "used",
@@ -30,13 +36,9 @@ const ESTADO_INGRESO: Record<string, Ingreso["estado"]> = {
   expired: "expired",
 };
 
-function detalleIngreso(
-  estado: string | null,
-  usado: string | null,
-  caduca: string | null
-): string {
+function detalleIngreso(estado: string | null, usado: string | null, caduca: string | null): string {
   if (estado === "used") return usado ? `Cuenta creada el ${fechaLarga(usado)}` : "Cuenta creada";
-  if (estado === "unused" && caduca) return `Vence el ${fechaLarga(caduca)}`;
+  if (estado === "unused" && caduca) return `Vence el ${fechaCorta(caduca)}`;
   return "Puedes generar un enlace nuevo";
 }
 
@@ -49,6 +51,24 @@ export default async function AdminAccesos() {
     supabase.from("guest_access").select("*").eq("status", "active").maybeSingle(),
     directorioDelClub(),
   ]);
+
+  const sitio = urlDelSitio();
+  type FilaIngreso = NonNullable<typeof invitaciones.data>[number];
+  const comoIngreso = (i: FilaIngreso): Ingreso => ({
+    id: i.id!,
+    nombre: i.invitee_name ?? "Nuevo integrante",
+    enlace: i.token ? `${sitio}/invitacion/${i.token}` : null,
+    estado: ESTADO_INGRESO[i.effective_status ?? "unused"],
+    detalle: detalleIngreso(i.effective_status, i.used_at, i.expires_at),
+  });
+
+  // Una solicitud aprobada enseña su ingreso dentro de la propia tarjeta.
+  const porSolicitud = new Map<string, Ingreso>();
+  const sueltos: Ingreso[] = [];
+  for (const i of invitaciones.data ?? []) {
+    if (i.request_id) porSolicitud.set(i.request_id, comoIngreso(i));
+    else sueltos.push(comoIngreso(i));
+  }
 
   return (
     <section className="page active" id="accesos" data-admin-page="true">
@@ -71,71 +91,65 @@ export default async function AdminAccesos() {
         <h2>Solicitudes de ingreso</h2>
         <p className="proposal-intro">
           Solicitudes enviadas por las integrantes. Revisa cada propuesta y registra tu decisión.
-          Al aprobarla se genera un enlace único de un solo uso para que esa persona cree su
-          cuenta.
         </p>
         <div id="inviteRequestList">
           {solicitudes.data && solicitudes.data.length > 0 ? (
-            solicitudes.data.map((s) => (
-              <article className="social-request" data-request-status={s.status} key={s.id}>
-                <strong>{s.invitee_name}</strong>
-                <span className="social-request-status">{ESTADO_SOLICITUD[s.status]}</span>
-                {s.note && <p>{s.note}</p>}
-                <small>
-                  {nombreDe(directorio, s.proposed_by)} · {fechaLarga(s.created_at)}
-                  {s.invitee_email && ` · ${s.invitee_email}`}
-                </small>
+            solicitudes.data.map((s) => {
+              const ingreso = porSolicitud.get(s.id);
 
-                {s.status === "pending" && (
-                  <FormularioAccion
-                    accion={emitirInvitacion}
-                    etiquetaEnvio="Aprobar y crear ingreso"
-                  >
-                    <input type="hidden" name="solicitud" value={s.id} />
-                    <label htmlFor={`nombre-${s.id}`}>NOMBRE</label>
-                    <input
-                      id={`nombre-${s.id}`}
-                      name="nombre"
-                      defaultValue={s.invitee_name}
-                      required
-                    />
-                    <label htmlFor={`email-${s.id}`}>CORREO</label>
-                    <input
-                      id={`email-${s.id}`}
-                      name="email"
-                      type="email"
-                      defaultValue={s.invitee_email ?? ""}
-                      required
-                    />
-                  </FormularioAccion>
-                )}
+              return (
+                <article className="social-request" data-request-status={s.status} key={s.id}>
+                  <strong>{s.invitee_name}</strong>
+                  <span className="social-request-status">{ESTADO_SOLICITUD[s.status]}</span>
+                  {s.note && <p>{s.note}</p>}
+                  <small>
+                    {nombreDe(directorio, s.proposed_by)} · {fechaHoraCorta(s.created_at)}
+                  </small>
 
-                <div className="club-actions">
-                  {s.status !== "rejected" && (
-                    <BotonAccion
-                      accion={rechazarSolicitud}
-                      campos={{ solicitud: s.id }}
-                      tono="delicado"
-                      confirmacion="La propuesta se marca como rechazada. Quien la hizo no recibe aviso."
-                    >
-                      Rechazar
-                    </BotonAccion>
+                  {/*
+                   * Igual que el prototipo: una vez aprobada, la tarjeta deja de
+                   * ofrecer decisiones y pasa a mostrar el ingreso que generó.
+                   */}
+                  <div className="club-actions" hidden={s.status === "approved"}>
+                    {s.status !== "approved" && (
+                      <FormularioAccion
+                        accion={emitirInvitacion}
+                        clase="club-button secondary"
+                        etiquetaEnvio="Aprobar y crear ingreso"
+                      >
+                        <input type="hidden" name="solicitud" value={s.id} />
+                        <input type="hidden" name="nombre" value={s.invitee_name} />
+                      </FormularioAccion>
+                    )}
+                    {s.status !== "rejected" && (
+                      <BotonAccion
+                        accion={rechazarSolicitud}
+                        campos={{ solicitud: s.id }}
+                        clase="club-button secondary"
+                        confirmacion="La propuesta se marca como rechazada. Quien la hizo no recibe aviso."
+                      >
+                        Rechazar
+                      </BotonAccion>
+                    )}
+                    {s.status !== "pending" && (
+                      <BotonAccion
+                        accion={reabrirSolicitud}
+                        campos={{ solicitud: s.id }}
+                        clase="club-button secondary"
+                      >
+                        Volver a pendiente
+                      </BotonAccion>
+                    )}
+                  </div>
+
+                  {ingreso && (
+                    <div className="entry-request-controls">
+                      <ControlesDeIngreso ingreso={ingreso} />
+                    </div>
                   )}
-                  {s.status !== "pending" && (
-                    <BotonAccion accion={reabrirSolicitud} campos={{ solicitud: s.id }}>
-                      Volver a pendiente
-                    </BotonAccion>
-                  )}
-                </div>
-
-                {s.status === "approved" && (
-                  <p className="social-note">
-                    La propuesta está aprobada. El alta de la cuenta y su acceso se realizan desde
-                    la administración habitual; no se conceden automáticamente.
-                  </p>
-                )}
-              </article>
-            ))
+                </article>
+              );
+            })
           ) : (
             <p className="social-note">No hay solicitudes pendientes.</p>
           )}
@@ -144,45 +158,34 @@ export default async function AdminAccesos() {
 
       <FormularioAccion
         accion={emitirInvitacion}
+        avisoAlPie
         etiquetaEnvio="＋ Crear ingreso"
         id="createInviteBtn"
       >
         <h2>Crear ingreso de nuevo integrante</h2>
         <p className="access-helper">
-          Crea un enlace de un solo uso para una persona, sin una solicitud previa. El enlace se
-          muestra una sola vez.
+          Crea un enlace de un solo uso para una persona, sin una solicitud previa.
         </p>
-        <label htmlFor="inviteName">NOMBRE</label>
         <input
+          aria-label="Nombre del nuevo integrante"
           id="inviteName"
+          maxLength={200}
           name="nombre"
+          placeholder="Nombre y apellido"
           required
-          maxLength={120}
-          placeholder="Nombre de la persona"
         />
-        <input name="email" type="email" required placeholder="Correo de la persona" />
       </FormularioAccion>
 
       <section className="content-card admin-generated-invites">
         <h2>Ingresos creados por administración</h2>
+        <ActualizarIngresos />
         <div id="inviteList">
-          {invitaciones.data && invitaciones.data.length > 0 ? (
-            invitaciones.data.map((i) => (
-              <TarjetaIngreso
-                key={i.id}
-                ingreso={{
-                  id: i.id!,
-                  nombre: i.invitee_name ?? "Nuevo integrante",
-                  enlace: null,
-                  estado: ESTADO_INGRESO[i.effective_status ?? "unused"],
-                  detalle: detalleIngreso(i.effective_status, i.used_at, i.expires_at),
-                }}
-              />
-            ))
+          {sueltos.length > 0 ? (
+            sueltos.map((i) => <TarjetaIngreso key={i.id} ingreso={i} />)
           ) : (
             <p className="social-note">
-              Aún no has creado ingresos directos. Los ingresos de solicitudes aprobadas aparecen
-              junto a cada solicitud.
+              Aún no has creado ingresos directos. Los de solicitudes aprobadas aparecen junto a
+              cada solicitud.
             </p>
           )}
         </div>

@@ -72,3 +72,24 @@
 .disc-admin-view .phone {
   grid-template-rows: 62px auto minmax(0, 1fr) 62px !important;
 }
+
+/*
+ * La ceja "Vista de administración" ya dice en cada pantalla que estás en modo
+ * administración, así que los distintivos "Solo administración" del prototipo
+ * sobran: repiten el mismo mensaje una vez por página y otra por panel. Se
+ * quita solo la etiqueta; el acento cian y el borde se quedan, que son los
+ * que distinguen lo administrativo de lo demás.
+ */
+.disc-admin-view [data-admin-page="true"]::before,
+.disc-admin-view [data-admin-only="panel"]::after {
+  content: none !important;
+}
+
+/*
+ * El panel reservaba 23px arriba para que cupiera ese distintivo. Sin él, el
+ * hueco queda descuadrado respecto a los otros tres lados.
+ */
+.disc-admin-view [data-admin-only="panel"] {
+  padding: 13px !important;
+  margin-top: 14px !important;
+}

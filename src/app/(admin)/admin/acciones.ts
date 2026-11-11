@@ -7,8 +7,6 @@ import { crearClienteAdministrador } from "@/lib/supabase/administrador";
 import { exigirAdministradora } from "@/lib/sesion";
 import { guardarImagen } from "@/lib/imagenes";
 import { hashear, nuevoToken, nuevaClaveDeInvitada } from "@/lib/tokens";
-import { urlDelSitio } from "@/lib/entorno";
-
 export type Resultado = { error?: string; exito?: string; secreto?: string };
 
 /**
@@ -592,14 +590,16 @@ export async function eliminarIntegrante(
 // accesos
 // ---------------------------------------------------------------------------
 const invitacion = z.object({
-  nombre: z.string().trim().min(1, "¿Cómo se llama?").max(120),
-  email: z.string().trim().email("Ese correo no parece válido."),
+  nombre: z.string().trim().min(1, "¿Cómo se llama?").max(200),
   solicitud: z.union([z.string().uuid(), z.literal("")]),
 });
 
 /**
- * Emite una invitación. El enlace se muestra una sola vez: en la base solo
- * queda el hash, así que si se pierde hay que emitir otra.
+ * Crea un ingreso de integrante.
+ *
+ * Administración solo pone el nombre: el correo lo escribe la propia persona al
+ * crear su cuenta. El enlace queda a la vista en la ficha, para compartirlo por
+ * donde haga falta.
  */
 export async function emitirInvitacion(
   _previo: Resultado,
@@ -608,7 +608,6 @@ export async function emitirInvitacion(
   const perfil = await exigirAdministradora();
   const leido = invitacion.safeParse({
     nombre: datos.get("nombre"),
-    email: datos.get("email"),
     solicitud: datos.get("solicitud") ?? "",
   });
   if (!leido.success) return { error: leido.error.issues[0].message };
@@ -617,13 +616,13 @@ export async function emitirInvitacion(
   const supabase = await crearClienteServidor();
   const { error } = await supabase.from("member_invitations").insert({
     invitee_name: leido.data.nombre,
-    invitee_email: leido.data.email,
+    token,
     token_hash: hashear(token),
     request_id: leido.data.solicitud || null,
     created_by: perfil.id,
   });
 
-  if (error) return { error: "No se pudo emitir la invitación." };
+  if (error) return { error: "No se pudo crear el ingreso." };
 
   if (leido.data.solicitud) {
     await supabase
@@ -633,10 +632,34 @@ export async function emitirInvitacion(
   }
 
   revalidatePath("/admin/accesos");
-  return {
-    exito: "Invitación creada. Cópiala ahora: no se vuelve a mostrar.",
-    secreto: `${urlDelSitio()}/invitacion/${token}`,
-  };
+  return { exito: `Ingreso creado para ${leido.data.nombre}.` };
+}
+
+/**
+ * "Generar enlace nuevo": el anterior deja de servir en el acto. Útil cuando el
+ * enlace se compartió por donde no debía.
+ */
+export async function renovarInvitacion(
+  _previo: Resultado,
+  datos: FormData
+): Promise<Resultado> {
+  await exigirAdministradora();
+  const id = z.string().uuid().safeParse(datos.get("invitacion"));
+  if (!id.success) return { error: "Ingreso no válido." };
+
+  const token = nuevoToken();
+  const supabase = await crearClienteServidor();
+  const { data, error } = await supabase
+    .from("member_invitations")
+    .update({ token, token_hash: hashear(token), status: "unused", revoked_at: null })
+    .eq("id", id.data)
+    .neq("status", "used")
+    .select("id")
+    .maybeSingle();
+
+  if (error || !data) return { error: "No se pudo generar otro enlace." };
+  revalidatePath("/admin/accesos");
+  return { exito: "Enlace nuevo. El anterior ya no sirve." };
 }
 
 export async function revocarInvitacion(
