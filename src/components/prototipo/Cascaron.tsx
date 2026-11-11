@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useCallback, useEffect, useState, useTransition } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { pantallaDe, PESTANAS, IMAGENES, type Pantalla } from "@/lib/prototipo";
 
@@ -29,6 +29,30 @@ export function Cascaron({
   const router = useRouter();
   const ruta = usePathname();
   const pantalla = pantallaForzada ?? pantallaDe(ruta);
+
+  /*
+   * Navegar dentro de una transición deja la pantalla actual en su sitio
+   * mientras llega la siguiente, en vez de vaciarla y poner un cartel de
+   * "Cargando". Lo único que cambia al instante es la pestaña encendida y una
+   * línea fina arriba, que es lo que hace una app nativa: responde al toque
+   * sin quitarte de dónde estabas.
+   */
+  const [yendoA, setYendoA] = useState<string | null>(null);
+  const [navegando, iniciarNavegacion] = useTransition();
+
+  const ir = useCallback(
+    (destino: string) => {
+      if (destino === ruta) return;
+      setYendoA(destino);
+      iniciarNavegacion(() => router.push(destino));
+    },
+    [router, ruta]
+  );
+
+  // La pestaña que se va a abrir se enciende antes de que llegue su contenido.
+  // Cuando la transición termina se vuelve a mandar la ruta de verdad, así que
+  // no hace falta limpiar a dónde íbamos.
+  const destino = navegando && yendoA ? pantallaDe(yendoA) : pantalla;
 
   /*
    * El prototipo enciende la vista administrativa con una clase en <html>. De
@@ -82,13 +106,14 @@ export function Cascaron({
    * `aria-current`. Su pantalla `ajustes` es aquí `/perfil`.
    */
   const herramienta = (id: string) => ({
-    className: pantalla.id === id ? "icon is-current-tool" : "icon",
-    "aria-current": pantalla.id === id ? ("page" as const) : undefined,
+    className: destino.id === id ? "icon is-current-tool" : "icon",
+    "aria-current": destino.id === id ? ("page" as const) : undefined,
   });
 
   return (
     <main className="stage">
       <section className="phone" data-section={pantalla.seccion}>
+        {navegando && <div className="disc-nav-progress" aria-hidden="true" />}
         <header className="top">
           <div className="identity">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -101,7 +126,7 @@ export function Cascaron({
             <button
               aria-label="Notificaciones"
               {...herramienta("notificaciones")}
-              onClick={() => router.push("/avisos")}
+              onClick={() => ir("/avisos")}
             >
               <svg aria-hidden="true" viewBox="0 0 24 24">
                 <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
@@ -111,7 +136,7 @@ export function Cascaron({
             <button
               aria-label="Ajustes"
               {...herramienta("perfil")}
-              onClick={() => router.push("/perfil")}
+              onClick={() => ir("/perfil")}
             >
               <svg aria-hidden="true" viewBox="0 0 24 24">
                 <circle cx="12" cy="12" r="3" />
@@ -122,7 +147,7 @@ export function Cascaron({
               <button
                 className="admin"
                 data-admin-only="control"
-                onClick={() => router.push("/admin")}
+                onClick={() => ir("/admin")}
               >
                 {inicial}
               </button>
@@ -151,9 +176,9 @@ export function Cascaron({
           {PESTANAS.map((p) => (
             <button
               key={p.pagina}
-              className={pantalla.pestana === p.seccion ? "active" : undefined}
+              className={destino.pestana === p.seccion ? "active" : undefined}
               data-page={p.pagina}
-              onClick={() => router.push(p.ruta)}
+              onClick={() => ir(p.ruta)}
             >
               <IconoPestana pagina={p.pagina} />
               {p.texto}

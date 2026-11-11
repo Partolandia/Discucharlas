@@ -8,10 +8,11 @@ import { PantallaComunidad, type HiloComunidad } from "@/components/prototipo/Pa
 export const metadata = { title: "Comunidad" };
 
 export default async function Comunidad() {
-  const perfil = await exigirIntegrante();
   const supabase = await crearClienteServidor();
 
-  const [hilos, respuestas, corazones, directorio] = await Promise.all([
+  // Las consultas salen antes de esperar el perfil: lo que ven sigue
+  // decidiéndolo RLS, y así la pantalla no paga dos viajes seguidos.
+  const datos = Promise.all([
     supabase
       .from("community_threads")
       .select("id, title, body, user_id, created_at")
@@ -24,6 +25,9 @@ export default async function Comunidad() {
       .not("thread_id", "is", null),
     directorioDelClub(),
   ]);
+
+  const perfil = await exigirIntegrante();
+  const [hilos, respuestas, corazones, directorio] = await datos;
 
   const cuenta = (filas: Array<{ thread_id: string | null }> | null) => {
     const mapa = new Map<string, number>();

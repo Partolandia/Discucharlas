@@ -7,14 +7,18 @@ import { PantallaClub, type IntegranteFila } from "@/components/prototipo/Pantal
 export const metadata = { title: "Club" };
 
 export default async function Club() {
-  const perfil = await exigirIntegrante();
   const supabase = await crearClienteServidor();
 
-  const [directorio, asistencias, realizadas] = await Promise.all([
+  // Las consultas salen antes de esperar el perfil: lo que ven sigue
+  // decidiéndolo RLS, y así la pantalla no paga dos viajes seguidos.
+  const datos = Promise.all([
     directorioDelClub(),
     supabase.from("session_attendance").select("user_id").eq("present", true),
     supabase.from("sessions").select("id", { count: "exact", head: true }).eq("status", "past"),
   ]);
+
+  const perfil = await exigirIntegrante();
+  const [directorio, asistencias, realizadas] = await datos;
 
   const porPersona = new Map<string, number>();
   for (const a of asistencias.data ?? []) {

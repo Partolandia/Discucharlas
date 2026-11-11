@@ -10,16 +10,19 @@ import {
 export const metadata = { title: "Calendario" };
 
 export default async function Calendario() {
-  const perfil = await exigirIntegrante();
   const supabase = await crearClienteServidor();
 
   // RLS ya decide qué estados ve cada quien: las borradoras solo llegan a
-  // administración.
-  const { data } = await supabase
+  // administración. Por eso la consulta puede salir mientras se resuelve el
+  // perfil, en vez de esperar su turno.
+  const sesionesPedidas = supabase
     .from("sessions")
     .select("id, episode_title, date, start_time, place, status")
     .not("date", "is", null)
     .order("date");
+
+  const perfil = await exigirIntegrante();
+  const { data } = await sesionesPedidas;
 
   const sesiones: SesionCalendario[] = (data ?? [])
     .filter((s): s is typeof s & { date: string } => Boolean(s.date))

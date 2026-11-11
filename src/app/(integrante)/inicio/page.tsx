@@ -6,10 +6,15 @@ import { PantallaInicio, type HiloResumen } from "@/components/prototipo/Pantall
 export const metadata = { title: "Inicio" };
 
 export default async function Inicio() {
-  const perfil = await exigirIntegrante();
   const supabase = await crearClienteServidor();
 
-  const [proxima, realizadas, propuestas, ronda, hilos, respuestas] = await Promise.all([
+  /*
+   * Las consultas salen antes de esperar el perfil en vez de después: cada
+   * viaje a Supabase es ~100 ms y encadenarlos se notaba en cada navegación.
+   * No abre ninguna puerta —RLS sigue decidiendo qué devuelve cada consulta y
+   * el portero de abajo sigue mandando a entrar a quien no deba estar aquí.
+   */
+  const datos = Promise.all([
     supabase.from("sessions").select("*").eq("status", "upcoming").maybeSingle(),
     supabase.from("sessions").select("id", { count: "exact", head: true }).eq("status", "past"),
     supabase
@@ -25,6 +30,9 @@ export default async function Inicio() {
       .limit(2),
     supabase.from("community_replies").select("thread_id").is("deleted_at", null),
   ]);
+
+  const perfil = await exigirIntegrante();
+  const [proxima, realizadas, propuestas, ronda, hilos, respuestas] = await datos;
 
   const s = proxima.data;
 

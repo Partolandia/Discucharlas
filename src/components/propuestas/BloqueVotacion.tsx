@@ -1,7 +1,33 @@
+import { cache } from "react";
 import { crearClienteServidor } from "@/lib/supabase/servidor";
 import { BotonVoto } from "@/components/propuestas/BotonVoto";
 import { HerramientasVotacion } from "@/components/propuestas/HerramientasVotacion";
 import { resultadoEnPalabras } from "@/lib/votaciones";
+
+/**
+ * La ronda que toca mostrar: la que esté en curso y, si no hay ninguna, la
+ * última cerrada con su resultado, igual que el prototipo.
+ *
+ * Vive fuera del componente y envuelta en `cache()` para que Propuestas pueda
+ * pedirla en cuanto empieza a renderizar, sin esperar al perfil ni al conteo.
+ * Cuando el bloque la necesita ya viene de camino y no se encadena otro viaje.
+ */
+export const rondaVigente = cache(async function rondaVigente() {
+  const supabase = await crearClienteServidor();
+
+  const [{ data: enCurso }, { data: ultima }] = await Promise.all([
+    supabase.from("voting_rounds").select("*").in("status", ["draft", "open"]).maybeSingle(),
+    supabase
+      .from("voting_rounds")
+      .select("*")
+      .eq("status", "closed")
+      .order("closed_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
+
+  return enCurso ?? ultima;
+});
 
 /**
  * `#clubInlineVote` del prototipo v2: la votación completa vive dentro de la
@@ -20,25 +46,7 @@ export async function BloqueVotacion({
 }) {
   const supabase = await crearClienteServidor();
 
-  // Mientras no haya una abierta se muestra la última cerrada con su resultado,
-  // igual que el prototipo.
-  /*
-   * Las dos rondas que nos interesan se piden a la vez: cada consulta son unos
-   * 100 ms contra Supabase y encadenarlas se notaba al abrir la pantalla. La
-   * cerrada solo se usa si no hay ninguna en curso.
-   */
-  const [{ data: enCurso }, { data: ultima }] = await Promise.all([
-    supabase.from("voting_rounds").select("*").in("status", ["draft", "open"]).maybeSingle(),
-    supabase
-      .from("voting_rounds")
-      .select("*")
-      .eq("status", "closed")
-      .order("closed_at", { ascending: false })
-      .limit(1)
-      .maybeSingle(),
-  ]);
-
-  const ronda = enCurso ?? ultima;
+  const ronda = await rondaVigente();
   const abierta = ronda?.status === "open";
   const borrador = ronda?.status === "draft";
 

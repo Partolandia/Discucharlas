@@ -24,6 +24,8 @@ await Promise.all([
   pagina.locator('button[type="submit"]').first().click(),
 ]);
 await pagina.waitForLoadState("networkidle");
+// El indicador de `next dev` se pone encima de la barra y se come los toques.
+await pagina.addStyleTag({ content: "nextjs-portal{display:none!important}" });
 
 /** Dos vueltas: la primera calienta, la segunda es la que cuenta. */
 for (const vuelta of [1, 2]) {

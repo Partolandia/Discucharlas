@@ -93,3 +93,50 @@
   padding: 13px !important;
   margin-top: 14px !important;
 }
+
+/*
+ * Al cambiar de pestaña no se vacía la pantalla ni se pone un cartel de
+ * "Cargando": se queda lo que ya está mientras llega lo siguiente y el aviso
+ * es esta línea que cruza el borde de arriba. Va en posición absoluta porque
+ * `.phone` es una rejilla de filas fijas y si no se comería una.
+ */
+.disc-nav-progress {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 2px;
+  overflow: hidden;
+  pointer-events: none;
+  /* Por encima de `.top`, que está pegada arriba con z-index 30. */
+  z-index: 40;
+}
+
+.disc-nav-progress::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 38%;
+  border-radius: 2px;
+  background: var(--coral);
+  animation: disc-nav-progress 820ms ease-in-out infinite;
+}
+
+.disc-admin-view .disc-nav-progress::after {
+  background: var(--admin-accent, var(--coral));
+}
+
+@keyframes disc-nav-progress {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(300%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .disc-nav-progress::after {
+    animation-duration: 2s;
+  }
+}
